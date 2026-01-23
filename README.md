@@ -24,11 +24,7 @@ Each framework has its own unique features and tradeoffs. Mountaineer focuses on
 
 ### New Project
 
-To get started as quickly as possible, we bundle a project generator that sets up a simple project after a quick Q&A. Make sure you have pipx [installed](https://pipx.pypa.io/stable/installation/).
-
-```bash
-$ pipx run create-mountaineer-app
-```
+To get started with a new Mountaineer project, refer to our [quickstart guide](https://mountaineer.sh/mountaineer/guides/quickstart) which walks you through setting up a project from scratch.
 
 Mountaineer projects all follow a similar structure. After running this CLI you should see a new folder called `my_webapp`, with folders like the following:
 
@@ -54,7 +50,7 @@ Every service file is nested under the `my_webapp` root package. Views are defin
 
 ### Development
 
-If you're starting a new application from scratch, you'll typically want to create your new database tables. Make sure you have postgres running. We bundle a docker compose file for convenience with `create-mountaineer-app`.
+If you're starting a new application from scratch, you'll typically want to create your new database tables. Make sure you have postgres running.
 
 ```bash
 docker compose up -d

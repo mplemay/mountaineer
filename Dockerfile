@@ -51,7 +51,6 @@ COPY pyproject.toml .
 COPY Cargo.toml .
 COPY Cargo.lock .
 COPY src src
-COPY create_mountaineer_app create_mountaineer_app
 COPY README.md .
 COPY Makefile .
 COPY ci_webapp my_website
