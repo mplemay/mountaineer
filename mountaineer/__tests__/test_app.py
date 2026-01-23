@@ -481,9 +481,7 @@ def test_root_mount_routes(tmp_path: Path):
                     json={"message": "hello"},
                 )
                 assert action_response.status_code == status.HTTP_200_OK
-                assert action_response.json() == {
-                    "passthrough": {"message": "hello"}
-                }
+                assert action_response.json() == {"passthrough": {"message": "hello"}}
 
 
 def test_openapi_exposed_only_on_subapp(tmp_path: Path):

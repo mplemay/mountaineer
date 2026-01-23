@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from fastapi import APIRouter
 
-from mountaineer.app import Mountaineer, ControllerDefinition
+from mountaineer.app import ControllerDefinition, Mountaineer
 from mountaineer.controller import ControllerBase
 from mountaineer.graph.app_graph import ControllerRoute
 

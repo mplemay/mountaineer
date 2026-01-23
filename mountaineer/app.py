@@ -730,9 +730,7 @@ class Mountaineer:
         else:
             raise ValueError("Invalid client script import")
 
-        root_path_script = (
-            f"<script type=\"text/javascript\">window.__MOUNTAINEER_ROOT_PATH = {json_dumps(root_path)};</script>"
-        )
+        root_path_script = f'<script type="text/javascript">window.__MOUNTAINEER_ROOT_PATH = {json_dumps(root_path)};</script>'
 
         page_contents = f"""
         <html>
@@ -1093,4 +1091,3 @@ class Mountaineer:
     @property
     def development_enabled(self):
         return not self.config or self.config.ENVIRONMENT == "development"
-

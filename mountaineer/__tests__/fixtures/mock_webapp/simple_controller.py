@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from mountaineer import Mountaineer, ConfigBase, ControllerBase
+from mountaineer import ConfigBase, ControllerBase, Mountaineer
 
 
 class TestController(ControllerBase):

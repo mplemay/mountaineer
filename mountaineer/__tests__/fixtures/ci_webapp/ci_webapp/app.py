@@ -1,4 +1,4 @@
-from mountaineer import Mountaineer, LinkAttribute, Metadata
+from mountaineer import LinkAttribute, Metadata, Mountaineer
 from mountaineer.client_compiler.postcss import PostCSSBundler
 
 from ci_webapp.config import AppConfig
