@@ -150,10 +150,6 @@ mountaineer/
 │   └── api.ts                      # Prefix URLs with injected root_path
 ├── development/
 │   └── isolation.py                # Accept Mountaineer for dev workflow (expects .app set)
-create_mountaineer_app/
-└── create_mountaineer_app/templates/project/[project_name]/
-    ├── app.py                      # New mount-as-subapp example
-    └── main.py                     # ASGI app uses FastAPI directly
 mountaineer/__tests__/
 ├── test_app.py                     # Add Mountaineer sub-app tests
 └── actions/test_passthrough_dec.py # Ensure action routes work via mounted sub-app
@@ -243,9 +239,9 @@ Export the new `Mountaineer` class alongside existing exports.
 from mountaineer.app import Mountaineer as Mountaineer
 ```
 
-#### `create_mountaineer_app/.../app.py`
+#### Example `app.py`
 
-Update template to show sub-app mounting.
+Example project structure showing sub-app mounting.
 
 ```python
 from fastapi import FastAPI
@@ -327,7 +323,6 @@ Tests should be organized by module/file and cover unit tests, integration tests
   - [x] Update plugin helpers that return `AppController` to return Mountaineer or a mounted host app
 
 - [x] **Docs and templates**
-  - [x] Update `create_mountaineer_app` templates to use `Mountaineer` + `FastAPI.mount`
   - [x] Update quickstart and structure docs with new usage
   - [x] Add `Mountaineer` to API docs
 

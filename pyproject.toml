@@ -29,7 +29,6 @@ dependencies = [
 exclude = [
     "fixtures",
     "ci_webapp",
-    "create_mountaineer_app",
     "media",
     "docs_website",
     "benchmarking",
