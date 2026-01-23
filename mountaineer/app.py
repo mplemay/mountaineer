@@ -723,7 +723,7 @@ class Mountaineer:
             # All major browsers have had support since 2018
             client_import = "\n".join(
                 [
-                    f"<script type='module' src='{import_path}'></script>"
+                    f"<script type='module' src='{root_path}{import_path}'></script>"
                     for import_path in external_client_imports
                 ]
             )
