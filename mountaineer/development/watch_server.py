@@ -159,7 +159,7 @@ class WatcherWebservice:
         ):
             success = False
             LOGGER.info(
-                f"WatcherWebservice still has outstanding threads: {self.webservice_thread} {self.monitor_build_thread}"
+                f"WatcherWebservice still has outstanding threads: {self.webservice_thread} {self.monitor_build_thread}",
             )
         else:
             LOGGER.info("WatcherWebservice has fully stopped")

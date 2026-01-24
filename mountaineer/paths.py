@@ -41,10 +41,7 @@ class ManagedViewPath(type(Path())):  # type: ignore
     def from_view_root(
         cls,
         root_path: PathLike | str,
-        package_root_link: PathLike
-        | str
-        | None
-        | MountaineerUnsetValue = MountaineerUnsetValue(),
+        package_root_link: PathLike | str | None | MountaineerUnsetValue = MountaineerUnsetValue(),
     ):
         """
         Constructor to create a ManagedViewPath from the view root
@@ -73,7 +70,7 @@ class ManagedViewPath(type(Path())):  # type: ignore
         """
         if self.root_link is None:
             raise ValueError(
-                f"Cannot get root link from a non-root linked view path: {self}"
+                f"Cannot get root link from a non-root linked view path: {self}",
             )
         return self.root_link
 
@@ -83,7 +80,7 @@ class ManagedViewPath(type(Path())):  # type: ignore
         """
         if self.package_root_link is None:
             raise ValueError(
-                f"Cannot get package root link from current view path: {self}"
+                f"Cannot get package root link from current view path: {self}",
             )
         return self.package_root_link
 
@@ -94,7 +91,7 @@ class ManagedViewPath(type(Path())):  # type: ignore
         # Only root paths can have static directories
         if not self.is_root_link:
             raise ValueError(
-                "Cannot get static directory from a non-root linked view path"
+                "Cannot get static directory from a non-root linked view path",
             )
         path = self.get_managed_dir_common("_static", create_dir=create_dir)
         if tmp_build:
@@ -106,7 +103,7 @@ class ManagedViewPath(type(Path())):  # type: ignore
         # Only root paths can have SSR directories
         if not self.is_root_link:
             raise ValueError(
-                "Cannot get SSR directory from a non-root linked view path"
+                "Cannot get SSR directory from a non-root linked view path",
             )
         path = self.get_managed_dir_common("_ssr", create_dir=create_dir)
         if tmp_build:
@@ -115,12 +112,14 @@ class ManagedViewPath(type(Path())):  # type: ignore
         return path
 
     def get_managed_metadata_dir(
-        self, tmp_build: bool = False, create_dir: bool = True
+        self,
+        tmp_build: bool = False,
+        create_dir: bool = True,
     ):
         # Only root paths can have SSR directories
         if not self.is_root_link:
             raise ValueError(
-                "Cannot get SSR directory from a non-root linked view path"
+                "Cannot get SSR directory from a non-root linked view path",
             )
         path = self.get_managed_dir_common("_metadata", create_dir=create_dir)
         if tmp_build:
@@ -155,7 +154,7 @@ class ManagedViewPath(type(Path())):  # type: ignore
         # Ensure we are being take relative to the root view
         if not self.is_root_link:
             raise ValueError(
-                "Cannot get controller view path from a non-root linked view path"
+                "Cannot get controller view path from a non-root linked view path",
             )
 
         controller_path = controller.view_path
@@ -208,7 +207,9 @@ class ManagedViewPath(type(Path())):  # type: ignore
 
         def walk(self, top_down=True, on_error=None, follow_symlinks=False):
             for root, dirs, files in super().walk(
-                top_down=top_down, on_error=on_error, follow_symlinks=follow_symlinks
+                top_down=top_down,
+                on_error=on_error,
+                follow_symlinks=follow_symlinks,
             ):
                 yield self._inherit_root_link(root), dirs, files
 
@@ -228,7 +229,7 @@ class ManagedViewPath(type(Path())):  # type: ignore
 
         def relative_to(self, __other, *_deprecated, walk_up: bool = False):
             return self._inherit_root_link(
-                super().relative_to(__other, *_deprecated, walk_up=walk_up)
+                super().relative_to(__other, *_deprecated, walk_up=walk_up),
             )
     else:
 
@@ -267,9 +268,7 @@ def is_path_file(path: Path):
     LOGGER.warning(f"File {path} does not exist. Guessing file status.")
 
     # Only use is_file if the current path is ambiguous
-    dot_components = [
-        component for component in path.name.split(".") if component.strip()
-    ]
+    dot_components = [component for component in path.name.split(".") if component.strip()]
     return len(dot_components) > 1
 
 
@@ -326,11 +325,7 @@ def resolve_package_path(package_name: str):
     # "Path configuration files have an extension of .pth, and each line must
     # contain a single path that will be appended to sys.path."
     package_name = normalize_package(dist.name)
-    symbolic_links = [
-        path
-        for path in (dist.files or [])
-        if path.name.lower() == f"{package_name}.pth"
-    ]
+    symbolic_links = [path for path in (dist.files or []) if path.name.lower() == f"{package_name}.pth"]
     dist_links = [
         path
         for path in (dist.files or [])
@@ -352,7 +347,7 @@ def resolve_package_path(package_name: str):
         f"Resolving package path for {package_name}\n"
         f"Found symbolic links: {symbolic_links}\n"
         f"Explicit links: {explicit_links}\n"
-        f"Dist links: {dist_links}"
+        f"Dist links: {dist_links}",
     )
 
     # The user installed code as an absolute package (ie. with pip install .) instead of
@@ -382,7 +377,7 @@ def resolve_package_path(package_name: str):
 
     if not raw_path:
         raise ValueError(
-            f"Could not find a valid path for package {dist.name}, found files: {dist.files}"
+            f"Could not find a valid path for package {dist.name}, found files: {dist.files}",
         )
 
     # Sniff for the presence of the code directory
@@ -391,5 +386,5 @@ def resolve_package_path(package_name: str):
             return path
 
     raise ValueError(
-        f"No matching package found in root path: {raw_path} {list(raw_path.iterdir())}"
+        f"No matching package found in root path: {raw_path} {list(raw_path.iterdir())}",
     )

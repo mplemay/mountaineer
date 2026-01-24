@@ -88,7 +88,7 @@ async def test_process_css_uses_absolute_paths(css_path_str: str):
             # Check command has absolute paths
             assert str(cli_path.absolute()) == args[0]
             assert str(css_path.absolute()) == args[1]
-            assert "-o" == args[2]
+            assert args[2] == "-o"
 
             # Check that env params are set
             assert kwargs.get("cwd") == css_path.get_root_link().absolute()

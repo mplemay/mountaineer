@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Type
+from typing import Any
 
 from mountaineer.client_builder.file_generators.base import CodeBlock
 from mountaineer.client_builder.interface_builders.base import InterfaceBase
@@ -32,7 +32,10 @@ class ActionInterface(InterfaceBase):
 
     @classmethod
     def from_action(
-        cls, action: ActionWrapper, url: str, controller: Type[ControllerBase] | None
+        cls,
+        action: ActionWrapper,
+        url: str,
+        controller: type[ControllerBase] | None,
     ):
         """
         If controller is None, we should take the union of all response bodies. This is used for global definitions
@@ -46,21 +49,21 @@ class ActionInterface(InterfaceBase):
         # System parameters (always optional)
         system_parameters = {"signal": TSLiteral("signal")}
         system_typehints: dict[str, Any] = {
-            TSLiteral("signal?"): TSLiteral("AbortSignal")
+            TSLiteral("signal?"): TSLiteral("AbortSignal"),
         }
 
         # Add path/query parameters
         for param in action.params:
             parameters_dict[param.name] = TSLiteral(param.name)
-            typehint_dict[
-                TSLiteral(f"{param.name}{'?' if not param.required else ''}")
-            ] = TSLiteral(cls._get_annotated_value(param.value))
+            typehint_dict[TSLiteral(f"{param.name}{'?' if not param.required else ''}")] = TSLiteral(
+                cls._get_annotated_value(param.value),
+            )
 
         for header in action.headers:
             parameters_dict[header.name] = TSLiteral(header.name)
-            typehint_dict[
-                TSLiteral(f"{header.name}{'?' if not header.required else ''}")
-            ] = TSLiteral(cls._get_annotated_value(header.value))
+            typehint_dict[TSLiteral(f"{header.name}{'?' if not header.required else ''}")] = TSLiteral(
+                cls._get_annotated_value(header.value),
+            )
 
         # Add request body if present
         if action.request_body:
@@ -95,7 +98,10 @@ class ActionInterface(InterfaceBase):
 
     @classmethod
     def _build_request_payload(
-        cls, url: str, action: ActionWrapper, parameters: dict[str, Any]
+        cls,
+        url: str,
+        action: ActionWrapper,
+        parameters: dict[str, Any],
     ) -> str:
         payload: dict[str, Any] = {
             "method": "POST",
@@ -121,7 +127,7 @@ class ActionInterface(InterfaceBase):
 
         for exception in action.exceptions:
             payload["errors"][exception.status_code] = TSLiteral(
-                exception.name.global_name
+                exception.name.global_name,
             )
 
         if action.is_raw_response:
@@ -138,12 +144,14 @@ class ActionInterface(InterfaceBase):
                 del payload[key]
 
         return python_payload_to_typescript(
-            {TSLiteral(key): value for key, value in payload.items()}
+            {TSLiteral(key): value for key, value in payload.items()},
         )
 
     @classmethod
     def _get_response_type(
-        cls, action: ActionWrapper, controller: Type[ControllerBase] | None
+        cls,
+        action: ActionWrapper,
+        controller: type[ControllerBase] | None,
     ) -> str:
         if action.is_raw_response:
             return "Promise<Response>"
@@ -164,6 +172,8 @@ class ActionInterface(InterfaceBase):
 
     @classmethod
     def _get_response_body(
-        cls, action: ActionWrapper, controller: Type[ControllerBase]
+        cls,
+        action: ActionWrapper,
+        controller: type[ControllerBase],
     ):
         return action.response_bodies.get(controller)

@@ -31,7 +31,7 @@ def test_merge_render_signatures():
     def reference_fn(a: int, c: int):
         pass
 
-    app = Mountaineer(view_root=Path(""))
+    app = Mountaineer(view_root=Path())
 
     target_definition = ControllerDefinition(
         controller=TargetController(),
@@ -58,7 +58,8 @@ def test_merge_render_signatures():
     assert reference_definition.route is not None
 
     app.graph._merge_render_signatures(
-        target_definition, reference_controller=reference_definition
+        target_definition,
+        reference_controller=reference_definition,
     )
 
     assert list(signature(target_definition.route.view_route).parameters.values()) == [
@@ -83,7 +84,7 @@ def test_merge_render_signatures_conflicting_types():
     def reference_fn(a: str, c: int):
         pass
 
-    app = Mountaineer(view_root=Path(""))
+    app = Mountaineer(view_root=Path())
 
     target_definition = ControllerDefinition(
         controller=TargetController(),
@@ -111,5 +112,6 @@ def test_merge_render_signatures_conflicting_types():
 
     with pytest.raises(TypeError, match="Conflicting types"):
         app.graph._merge_render_signatures(
-            target_definition, reference_controller=reference_definition
+            target_definition,
+            reference_controller=reference_definition,
         )

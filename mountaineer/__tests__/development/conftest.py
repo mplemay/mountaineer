@@ -141,7 +141,7 @@ def app_package(isolated_package_dir: tuple[Path, str]) -> AppPackageType:
     # Controller
     controller_file = package_path / "test_controller.py"
     controller_file.write_text(
-        (get_fixture_path("mock_webapp") / "simple_controller.py").read_text()
+        (get_fixture_path("mock_webapp") / "simple_controller.py").read_text(),
     )
 
     (views_dir / "test_controller").mkdir()

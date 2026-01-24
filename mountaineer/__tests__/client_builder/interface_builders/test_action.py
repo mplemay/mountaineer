@@ -74,7 +74,9 @@ class TestBasicInterfaceGeneration:
         )
 
         interface = ActionInterface.from_action(
-            action, "/api/base/simple_action", ControllerBase
+            action,
+            "/api/base/simple_action",
+            ControllerBase,
         )
 
         assert interface.name == "simple_action"
@@ -119,8 +121,9 @@ class TestBasicInterfaceGeneration:
             request_body=None,
             response_bodies={
                 ControllerBase: create_model_wrapper(
-                    StandardResponse, "StandardResponse"
-                )
+                    StandardResponse,
+                    "StandardResponse",
+                ),
             },
             exceptions=[],
             is_raw_response=False,
@@ -129,7 +132,9 @@ class TestBasicInterfaceGeneration:
         )
 
         interface = ActionInterface.from_action(
-            action, "/api/main/parametrized_action", ControllerBase
+            action,
+            "/api/main/parametrized_action",
+            ControllerBase,
         )
 
         ts_code = interface.to_js()
@@ -149,8 +154,9 @@ class TestRequestBodyHandling:
             request_body=form_data_wrapper,
             response_bodies={
                 ControllerBase: create_model_wrapper(
-                    StandardResponse, "StandardResponse"
-                )
+                    StandardResponse,
+                    "StandardResponse",
+                ),
             },
             exceptions=[],
             is_raw_response=False,
@@ -159,7 +165,9 @@ class TestRequestBodyHandling:
         )
 
         interface = ActionInterface.from_action(
-            action, "/api/main/form", ControllerBase
+            action,
+            "/api/main/form",
+            ControllerBase,
         )
 
         ts_code = interface.to_js()
@@ -203,7 +211,9 @@ class TestResponseTypeHandling:
         )
 
         interface = ActionInterface.from_action(
-            action, "/api/main/stream", ControllerBase
+            action,
+            "/api/main/stream",
+            ControllerBase,
         )
 
         assert "AsyncGenerator<StandardResponse" in interface.response_type
@@ -256,8 +266,9 @@ class TestErrorHandling:
             request_body=None,
             response_bodies={
                 ControllerBase: create_model_wrapper(
-                    StandardResponse, "StandardResponse"
-                )
+                    StandardResponse,
+                    "StandardResponse",
+                ),
             },
             exceptions=[error_response_wrapper],
             is_raw_response=False,
@@ -266,7 +277,9 @@ class TestErrorHandling:
         )
 
         interface = ActionInterface.from_action(
-            action, "/api/main/error", ControllerBase
+            action,
+            "/api/main/error",
+            ControllerBase,
         )
 
         error_payload = "".join(interface.body)
@@ -289,8 +302,9 @@ class TestTypeScriptGeneration:
             request_body=None,
             response_bodies={
                 ControllerBase: create_model_wrapper(
-                    StandardResponse, "StandardResponse"
-                )
+                    StandardResponse,
+                    "StandardResponse",
+                ),
             },
             exceptions=[],
             is_raw_response=False,

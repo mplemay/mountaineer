@@ -32,7 +32,7 @@ def test_expand_typevars():
         {
             K: T,
             T: int,
-        }
+        },
     ) == {
         K: int,
         T: int,

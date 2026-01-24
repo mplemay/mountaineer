@@ -56,4 +56,4 @@ runs:
           ~/.cache/uv
         key: py-${{ inputs.cache-prefix }}-${{ inputs.python-version }}-${{ inputs.os }}-${{ inputs.target }}-${{ hashFiles('**/pyproject.toml', '**/requirements*.txt', '**/Cargo.lock') }}-v1
         restore-keys: |
-          py-${{ inputs.cache-prefix }}-${{ inputs.python-version }}-${{ inputs.os }}-${{ inputs.target }}- 
+          py-${{ inputs.cache-prefix }}-${{ inputs.python-version }}-${{ inputs.os }}-${{ inputs.target }}-

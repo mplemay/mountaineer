@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Type, TypeAlias
+from typing import TypeAlias
 
 from mountaineer.client_compiler.base import APIBuilderBase
 from mountaineer.controller import ControllerBase
@@ -19,14 +19,14 @@ CONTROLLER_TYPE: TypeAlias = ControllerBase | LayoutControllerBase
 @dataclass
 class MountaineerPlugin:
     name: str
-    controllers: list[Type[CONTROLLER_TYPE]]
+    controllers: list[type[CONTROLLER_TYPE]]
 
     view_root: Path
 
     build_config: BuildConfig
 
-    _concrete_controllers: dict[Type[CONTROLLER_TYPE], CONTROLLER_TYPE] = field(
-        default_factory=dict
+    _concrete_controllers: dict[type[CONTROLLER_TYPE], CONTROLLER_TYPE] = field(
+        default_factory=dict,
     )
 
     def init_controller(self, controller: CONTROLLER_TYPE):

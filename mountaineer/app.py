@@ -1,4 +1,5 @@
 from collections import defaultdict
+from collections.abc import Callable
 from functools import partial, wraps
 from hashlib import md5
 from inspect import Parameter, Signature, isawaitable, isclass, signature
@@ -6,7 +7,7 @@ from json import JSONDecodeError, dumps as json_dumps, loads as json_loads
 from pathlib import Path
 from re import match as re_match
 from time import monotonic_ns
-from typing import Any, Callable, Type, overload
+from typing import Any, overload
 
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.exceptions import RequestValidationError as RequestValidationErrorRaw
@@ -155,7 +156,7 @@ class Mountaineer:
             self._view_root = ManagedViewPath.from_view_root(view_root)
         else:
             raise ValueError(
-                "You must provide either a config.package or a view_root to the Mountaineer"
+                "You must provide either a config.package or a view_root to the Mountaineer",
             )
 
         # Check our view directory is valid
@@ -180,7 +181,7 @@ class Mountaineer:
         )
 
         self.app.exception_handler(RequestValidationErrorRaw)(
-            self._parse_validation_exception
+            self._parse_validation_exception,
         )
         self.app.exception_handler(APIException)(self._handle_exception)
 
@@ -200,7 +201,7 @@ class Mountaineer:
         package_json_path = view_root / "package.json"
         if not package_json_path.exists():
             LOGGER.warning(
-                f"package.json not found at {package_json_path}. Please ensure your project has a valid package.json file."
+                f"package.json not found at {package_json_path}. Please ensure your project has a valid package.json file.",
             )
             return
 
@@ -222,12 +223,12 @@ class Mountaineer:
             major_version = int(version_match.group(1))
             if major_version < 19:
                 LOGGER.warning(
-                    f"React version {react_version} is not supported. This application requires React 19.0 or higher."
+                    f"React version {react_version} is not supported. This application requires React 19.0 or higher.",
                 )
         except JSONDecodeError:
             LOGGER.warning(f"Invalid JSON in {package_json_path}")
         except Exception as e:
-            LOGGER.warning(f"Error checking React version: {str(e)}")
+            LOGGER.warning(f"Error checking React version: {e!s}")
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         await self.app(scope, receive, send)
@@ -264,9 +265,7 @@ class Mountaineer:
 
         # If we just registered a layout controller, we need to add it to the graph
         if isinstance(controller, LayoutControllerBase):
-            self.path_to_layout[str(controller.full_view_path.absolute())] = (
-                controller_definition
-            )
+            self.path_to_layout[str(controller.full_view_path.absolute())] = controller_definition
 
         # We might have added a fresh root path to the graph with this addition, so we should
         # scan the file path for layout files that might wrap this controller
@@ -285,7 +284,7 @@ class Mountaineer:
                 break
 
         updated_controllers = self.graph.merge_hierarchy_signatures(
-            controller_definition
+            controller_definition,
         )
         for controller_definition in updated_controllers:
             self._remount_controller(controller_definition)
@@ -293,10 +292,7 @@ class Mountaineer:
     def _register_plugin(self, plugin: MountaineerPlugin):
         for controller in plugin.get_controllers():
             if isinstance(controller.view_path, str):
-                controller.view_path = (
-                    ManagedViewPath.from_view_root(plugin.view_root)
-                    / controller.view_path
-                )
+                controller.view_path = ManagedViewPath.from_view_root(plugin.view_root) / controller.view_path
 
             # This should find our precompiled static and ssr files
             controller._scripts_prefix = f"/static_plugins/{plugin.name}"
@@ -308,11 +304,11 @@ class Mountaineer:
             # at all times
             if not controller._ssr_path:
                 raise ValueError(
-                    f"Controller {controller} was not able to find SSR scripts for plugin {plugin.name}"
+                    f"Controller {controller} was not able to find SSR scripts for plugin {plugin.name}",
                 )
             if not controller._bundled_scripts:
                 raise ValueError(
-                    f"Controller {controller} was not able to find bundled scripts for plugin {plugin.name}"
+                    f"Controller {controller} was not able to find bundled scripts for plugin {plugin.name}",
                 )
 
             # Dev mode is disabled so the app is forced to load the full built javascript
@@ -329,13 +325,15 @@ class Mountaineer:
         )
 
     def _register_controller_common(
-        self, controller: ControllerBase, dev_enabled: bool = True
+        self,
+        controller: ControllerBase,
+        dev_enabled: bool = True,
     ):
         # Since the controller name is used to build dependent files, we ensure
         # that we only register one controller of a given name
         if self.graph.get_definitions_for_cls(controller.__class__):
             raise ValueError(
-                f"Controller with name {controller.__class__.__name__} already registered."
+                f"Controller with name {controller.__class__.__name__} already registered.",
             )
 
         # Register a stub for the new controller, which will be updated with its
@@ -364,7 +362,7 @@ class Mountaineer:
         # registered into the application
         if not hasattr(controller, "initialized"):
             raise ValueError(
-                f"You must call super().__init__() on {controller} before it can be registered."
+                f"You must call super().__init__() on {controller} before it can be registered.",
             )
 
         # We need to passthrough the API of the render function to the FastAPI router so it's called properly
@@ -374,22 +372,23 @@ class Mountaineer:
                 self._generate_controller_html,
                 dev_enabled=dev_enabled,
                 controller_definition=controller_definition,
-            )
+            ),
         )
 
         # Strip the return annotations from the function, since we just intend to return an HTML page
         # and not a JSON response
         if not hasattr(generate_controller_html, "__wrapped__"):
             raise ValueError(
-                "Unable to clear wrapped typehint, no wrapped function found."
+                "Unable to clear wrapped typehint, no wrapped function found.",
             )
 
         return_model = generate_controller_html.__wrapped__.__annotations__.get(
-            "return", MountaineerUnsetValue()
+            "return",
+            MountaineerUnsetValue(),
         )
         if isinstance(return_model, MountaineerUnsetValue):
             raise ValueError(
-                "Controller render() function must have a return type annotation"
+                "Controller render() function must have a return type annotation",
             )
 
         # Only the signature of the actual rendering function, not the original. We might
@@ -403,32 +402,26 @@ class Mountaineer:
             )
             parameters = list(render_signature.parameters.values())
             insert_at = next(
-                (
-                    index
-                    for index, param in enumerate(parameters)
-                    if param.kind == Parameter.VAR_KEYWORD
-                ),
+                (index for index, param in enumerate(parameters) if param.kind == Parameter.VAR_KEYWORD),
                 len(parameters),
             )
             parameters.insert(insert_at, request_param)
             render_signature = render_signature.replace(parameters=parameters)
         generate_controller_html.__signature__ = render_signature.replace(  # type: ignore
-            return_annotation=None
+            return_annotation=None,
         )
 
         # Validate the return model is actually a RenderBase or explicitly marked up as None
-        if not (
-            return_model is None
-            or (isclass(return_model) and issubclass(return_model, RenderBase))
-        ):
+        if not (return_model is None or (isclass(return_model) and issubclass(return_model, RenderBase))):
             raise ValueError(
-                "Controller render() return type annotation is not a RenderBase"
+                "Controller render() return type annotation is not a RenderBase",
             )
 
         # Attach a new metadata wrapper to the original function so we can easily
         # recover it when attached to the class
         render_metadata = init_function_metadata(
-            controller.render, FunctionActionType.RENDER
+            controller.render,
+            FunctionActionType.RENDER,
         )
         render_metadata.render_model = return_model
 
@@ -441,7 +434,7 @@ class Mountaineer:
         if isinstance(controller, LayoutControllerBase):
             if hasattr(controller, "url"):
                 raise ValueError(
-                    f"LayoutControllers are not directly mountable to the router. {controller} should not have a url specified."
+                    f"LayoutControllers are not directly mountable to the router. {controller} should not have a url specified.",
                 )
             view_router = None
         else:
@@ -449,14 +442,13 @@ class Mountaineer:
             view_router.get(controller.url)(generate_controller_html)
             self.app.include_router(view_router)
             render_metadata.register_controller_url(
-                controller.__class__, controller.url
+                controller.__class__,
+                controller.url,
             )
 
         # Create a wrapper router for each controller to hold the side-effects
         controller_api = APIRouter()
-        controller_url_prefix = (
-            f"{self.internal_api_prefix}/{underscore(controller.__class__.__name__)}"
-        )
+        controller_url_prefix = f"{self.internal_api_prefix}/{underscore(controller.__class__.__name__)}"
         for _, fn, metadata in controller._get_client_functions():
             if not metadata.get_is_raw_response():
                 # We need to delay adding the typehint for each function until we are here, adding the view. Since
@@ -464,7 +456,9 @@ class Mountaineer:
                 # context that the action function is being defined within. Here since we have a global view
                 # of the controller (render function + actions) this becomes trivial
                 return_model = fuse_metadata_to_response_typehint(
-                    metadata, controller, render_metadata.get_render_model()
+                    metadata,
+                    controller,
+                    render_metadata.get_render_model(),
                 )
 
                 # Only mount the first time we register the function, otherwise we risk overwriting
@@ -478,14 +472,15 @@ class Mountaineer:
                 # of superclass functions that are imported by multiple subclass controllers)
                 method_function: Callable = fn.__func__  # type: ignore
                 method_function.__signature__ = signature(method_function).replace(  # type: ignore
-                    return_annotation=return_model
+                    return_annotation=return_model,
                 )
 
             action_path = f"/{metadata.function_name}"
             controller_api.post(action_path)(fn)
             function_metadata = get_function_metadata(fn)
             function_metadata.register_controller_url(
-                controller.__class__, f"{controller_url_prefix}{action_path}"
+                controller.__class__,
+                f"{controller_url_prefix}{action_path}",
             )
 
         # Originally we tried implementing a sub-router for the internal API that was registered in the __init__
@@ -533,16 +528,15 @@ class Mountaineer:
         for node in direct_hierarchy:
             time = monotonic_ns()
             render_values = self._get_value_mask_for_signature(
-                signature(node.controller.render), kwargs
+                signature(node.controller.render),
+                kwargs,
             )
             server_data = node.controller.render(**render_values)
             if isawaitable(server_data):
                 server_data = await server_data
             if server_data is None:
                 server_data = RenderNull()
-            render_overhead_by_controller[node.controller.__class__.__name__] = (
-                monotonic_ns() - time
-            )
+            render_overhead_by_controller[node.controller.__class__.__name__] = monotonic_ns() - time
 
             render_output[node.controller.__class__.__name__] = server_data
 
@@ -555,7 +549,7 @@ class Mountaineer:
             return controller_output.metadata.explicit_response
 
         LOGGER.debug(
-            f"Controller {controller.__class__.__name__} data acquired in {(monotonic_ns() - start) / 1e9}"
+            f"Controller {controller.__class__.__name__} data acquired in {(monotonic_ns() - start) / 1e9}",
         )
         LOGGER.debug(
             f"Controller {controller.__class__.__name__} controller breakdown:\n"
@@ -563,8 +557,8 @@ class Mountaineer:
                 [
                     f"{controller_name}: {overhead / 1e9}"
                     for controller_name, overhead in render_overhead_by_controller.items()
-                ]
-            )
+                ],
+            ),
         )
 
         # If we're in development mode, we should recompile the script on page
@@ -604,15 +598,14 @@ class Mountaineer:
                 render_output,
                 inline_client_script=None,
                 external_client_imports=[
-                    f"{controller._scripts_prefix}/{script_name}"
-                    for script_name in controller._bundled_scripts
+                    f"{controller._scripts_prefix}/{script_name}" for script_name in controller._bundled_scripts
                 ],
                 root_path=root_path,
                 sourcemap=prod_cache.cached_server_sourcemap,
             )
 
         LOGGER.debug(
-            f"Controller {controller.__class__.__name__} load time took {(monotonic_ns() - start) / 1e9}"
+            f"Controller {controller.__class__.__name__} load time took {(monotonic_ns() - start) / 1e9}",
         )
         return html
 
@@ -664,22 +657,18 @@ class Mountaineer:
             if not metadata.ignore_global_metadata and self.global_metadata:
                 metadata = metadata.merge(self.global_metadata)
             header_str = "\n".join(
-                metadata.build_header(build_metadata=self.get_build_metadata())
+                metadata.build_header(build_metadata=self.get_build_metadata()),
+            )
+        elif self.global_metadata:
+            metadata = self.global_metadata
+            header_str = "\n".join(
+                metadata.build_header(build_metadata=self.get_build_metadata()),
             )
         else:
-            if self.global_metadata:
-                metadata = self.global_metadata
-                header_str = "\n".join(
-                    metadata.build_header(build_metadata=self.get_build_metadata())
-                )
-            else:
-                header_str = ""
+            header_str = ""
 
         # Client-side react scripts that will hydrate the server side contents on load
-        server_data_json = {
-            render_key: context.model_dump(mode="json")
-            for render_key, context in all_render.items()
-        }
+        server_data_json = {render_key: context.model_dump(mode="json") for render_key, context in all_render.items()}
 
         ssr_html = render_ssr(
             server_script,
@@ -699,7 +688,8 @@ class Mountaineer:
             # We need to escape these inline. Otherwise we will close the parent script tag
             # prematurely and break the page.
             inline_client_script = inline_client_script.replace(
-                "</script>", "<\\/script>"
+                "</script>",
+                "<\\/script>",
             )
 
             # When we're running in debug mode, we just import
@@ -725,12 +715,14 @@ class Mountaineer:
                 [
                     f"<script type='module' src='{root_path}{import_path}'></script>"
                     for import_path in external_client_imports
-                ]
+                ],
             )
         else:
             raise ValueError("Invalid client script import")
 
-        root_path_script = f'<script type="text/javascript">window.__MOUNTAINEER_ROOT_PATH = {json_dumps(root_path)};</script>'
+        root_path_script = (
+            f'<script type="text/javascript">window.__MOUNTAINEER_ROOT_PATH = {json_dumps(root_path)};</script>'
+        )
 
         page_contents = f"""
         <html>
@@ -751,7 +743,8 @@ class Mountaineer:
         return HTMLResponse(page_contents)
 
     def _collect_layouts_for_controller(
-        self, controller: ControllerBase
+        self,
+        controller: ControllerBase,
     ) -> list[ManagedViewPath]:
         """
         Recursively parse the parent paths to find the first layout (if any)
@@ -774,7 +767,7 @@ class Mountaineer:
             # We should never get to the OS root
             if str(current_path) == "/":
                 raise ValueError(
-                    f"View path ({full_view_path}) is not within the package root: {package_root}"
+                    f"View path ({full_view_path}) is not within the package root: {package_root}",
                 )
 
             layout_file = current_path / "layout.tsx"
@@ -790,7 +783,8 @@ class Mountaineer:
         return found_layouts
 
     def _get_layout_for_path(
-        self, layout_path: Path
+        self,
+        layout_path: Path,
     ) -> tuple[ControllerDefinition, bool]:
         """
         Gets an existing layout for a given path. If no layout exists, we will
@@ -848,7 +842,7 @@ class Mountaineer:
                     route_list.remove(route)
 
         target_controller.route.render_router.get(target_controller.controller.url)(
-            target_controller.route.view_route
+            target_controller.route.view_route,
         )
 
         self.app.include_router(target_controller.route.render_router)
@@ -885,12 +879,9 @@ class Mountaineer:
                         controller_definition.clear_cache(recursive=False)
                         cleared_controllers.append(controller_definition)
 
-            controller_names = [
-                controller.controller.__class__.__name__
-                for controller in cleared_controllers
-            ]
+            controller_names = [controller.controller.__class__.__name__ for controller in cleared_controllers]
             LOGGER.debug(
-                f"Invalidated all development caches for {len(cleared_controllers)} controllers due to file change: {path}"
+                f"Invalidated all development caches for {len(cleared_controllers)} controllers due to file change: {path}",
             )
             LOGGER.debug(f"Cleared caches for: {controller_names}")
         else:
@@ -903,7 +894,9 @@ class Mountaineer:
         )
 
     async def _parse_validation_exception(
-        self, request: Request, exc: RequestValidationErrorRaw
+        self,
+        request: Request,
+        exc: RequestValidationErrorRaw,
     ):
         raise RequestValidationError(
             errors=[
@@ -914,7 +907,7 @@ class Mountaineer:
                     value_input=error["input"],
                 )
                 for error in exc.errors()
-            ]
+            ],
         )
 
     def _get_value_mask_for_signature(
@@ -923,12 +916,8 @@ class Mountaineer:
         values: dict[str, Any],
     ):
         # Assume the values match the parameters specified in the signature
-        passthrough_names = {
-            parameter.name for parameter in signature.parameters.values()
-        }
-        return {
-            name: value for name, value in values.items() if name in passthrough_names
-        }
+        passthrough_names = {parameter.name for parameter in signature.parameters.values()}
+        return {name: value for name, value in values.items() if name in passthrough_names}
 
     def generate_openapi(self, routes: list[BaseRoute] | None = None):
         """
@@ -964,8 +953,7 @@ class Mountaineer:
                     continue
 
                 exceptions_by_url[url] = [
-                    self._format_exception_model(exception_model)
-                    for exception_model in exceptions_models
+                    self._format_exception_model(exception_model) for exception_model in exceptions_models
                 ]
 
         # Users are allowed to reference the same schema name multiple times so long
@@ -978,9 +966,7 @@ class Mountaineer:
                 schema_names_to_long[payload.schema_name].add(payload.schema_name_long)
 
         duplicate_schema_names = {
-            schema_name
-            for schema_name, schema_name_longs in schema_names_to_long.items()
-            if len(schema_name_longs) > 1
+            schema_name for schema_name, schema_name_longs in schema_names_to_long.items() if len(schema_name_longs) > 1
         }
 
         for url, exception_payloads in exceptions_by_url.items():
@@ -992,7 +978,7 @@ class Mountaineer:
                 # are global because they're placed in the global components section
                 if payload.status_code in existing_status_codes:
                     raise ValueError(
-                        f"Duplicate status code {payload.status_code} for {url}"
+                        f"Duplicate status code {payload.status_code} for {url}",
                     )
 
                 schema_name = (
@@ -1004,23 +990,20 @@ class Mountaineer:
                 other_definitions = {
                     definition_name: self._update_ref_path(definition)
                     for definition_name, definition in payload.schema_value.pop(
-                        "$defs", {}
+                        "$defs",
+                        {},
                     ).items()
                 }
                 openapi_base["components"]["schemas"].update(other_definitions)
-                openapi_base["components"]["schemas"][schema_name] = (
-                    self._update_ref_path(payload.schema_value)
-                )
+                openapi_base["components"]["schemas"][schema_name] = self._update_ref_path(payload.schema_value)
 
                 # All actions are "posts" by definition
-                openapi_base["paths"][url]["post"]["responses"][
-                    str(payload.status_code)
-                ] = {
+                openapi_base["paths"][url]["post"]["responses"][str(payload.status_code)] = {
                     "description": f"Custom Error: {payload.schema_name}",
                     "content": {
                         "application/json": {
-                            "schema": {"$ref": f"#/components/schemas/{schema_name}"}
-                        }
+                            "schema": {"$ref": f"#/components/schemas/{schema_name}"},
+                        },
                     },
                 }
 
@@ -1028,7 +1011,7 @@ class Mountaineer:
 
         return openapi_base
 
-    def _format_exception_model(self, model: Type[APIException]) -> ExceptionSchema:
+    def _format_exception_model(self, model: type[APIException]) -> ExceptionSchema:
         # By default all fields are optional. Since we are sending them
         # from the server we are guaranteed they will either be explicitly
         # provided or fallback to their defaults
@@ -1056,17 +1039,16 @@ class Mountaineer:
                     schema_name = value.split("/")[-1]
                     new_schema[key] = f"#/components/schemas/{schema_name}"
                     continue
-                elif key == "additionalProperties":
+                if key == "additionalProperties":
                     # If the value is "False", we need to remove the key
                     if value is False:
                         continue
 
                 new_schema[key] = self._update_ref_path(value)
             return new_schema
-        elif isinstance(schema, list):
+        if isinstance(schema, list):
             return [self._update_ref_path(value) for value in schema]
-        else:
-            return schema
+        return schema
 
     def get_build_metadata(self):
         """
@@ -1078,13 +1060,13 @@ class Mountaineer:
         if not self.development_enabled:
             # Determine if we've already cached the build
             if hasattr(self, "_build_metadata"):
-                return getattr(self, "_build_metadata")
+                return self._build_metadata
 
         metadata_path = self._view_root.get_managed_metadata_dir() / "metadata.json"
         if not metadata_path.exists():
             return None
         self._build_metadata = BuildMetadata.model_validate_json(
-            metadata_path.read_text()
+            metadata_path.read_text(),
         )
         return self._build_metadata
 

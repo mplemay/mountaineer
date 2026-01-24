@@ -1,6 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from inspect import Parameter, signature
-from typing import Callable, Type
 
 from fastapi import APIRouter
 
@@ -64,7 +64,7 @@ class ControllerDefinition:
     def get_url_for_metadata(self, metadata: FunctionMetadata):
         if not self.route:
             raise ValueError(
-                f"Controller {self.controller} has no route. This should never happen."
+                f"Controller {self.controller} has no route. This should never happen.",
             )
 
         return f"{self.route.url_prefix}/{metadata.function_name.strip('/')}"
@@ -81,7 +81,7 @@ class ControllerDefinition:
         layouts = self.get_parents()
         layouts.reverse()
         return [
-            [str(layout.controller.full_view_path.absolute()) for layout in layouts]
+            [str(layout.controller.full_view_path.absolute()) for layout in layouts],
         ]
 
     def resolve_cache(self):
@@ -94,11 +94,10 @@ class ControllerDefinition:
         if isinstance(self.cache_args, DevCacheConfig):
             self.cache = ControllerDevCache.resolve_dev_cache(self, self.cache_args)
             return self.cache
-        elif isinstance(self.cache_args, ProdCacheConfig):
+        if isinstance(self.cache_args, ProdCacheConfig):
             self.cache = ControllerProdCache.resolve_prod_cache(self, self.cache_args)
             return self.cache
-        else:
-            raise ValueError("Invalid cache args")
+        raise ValueError("Invalid cache args")
 
     def clear_cache(self, recursive: bool = True):
         self.cache = None
@@ -139,10 +138,7 @@ class AppGraph:
         # we created based on the disk hierarchy alone
         if isinstance(controller, LayoutControllerBase):
             for definition in self.controllers:
-                if (
-                    definition.controller.full_view_path.absolute()
-                    == controller.full_view_path.absolute()
-                ):
+                if definition.controller.full_view_path.absolute() == controller.full_view_path.absolute():
                     controller_definition = definition
                     break
 
@@ -167,7 +163,9 @@ class AppGraph:
         return controller_definition
 
     def link_controllers(
-        self, parent: ControllerDefinition, child: ControllerDefinition
+        self,
+        parent: ControllerDefinition,
+        child: ControllerDefinition,
     ):
         # This doesn't guarantee that the structure won't become a cyclic graph, but it's a good
         # and fast first-pass check that future graph traversal code won't loop indefinitely.
@@ -178,11 +176,12 @@ class AppGraph:
         child.parent = parent
 
         LOGGER.debug(
-            f"Will link {parent.controller.__class__.__name__} -> {child.controller.__class__.__name__}"
+            f"Will link {parent.controller.__class__.__name__} -> {child.controller.__class__.__name__}",
         )
 
     def get_definitions_for_cls(
-        self, cls: Type[ControllerBase]
+        self,
+        cls: type[ControllerBase],
     ) -> list[ControllerDefinition]:
         """
         Get all controller definitions for a given controller class. We use name here
@@ -235,14 +234,14 @@ class AppGraph:
                 self._merge_render_signatures(
                     controller_definition,
                     reference_controller=parent,
-                )
+                ),
             )
         for child in child_definitions:
             updated_definitions.append(
                 self._merge_render_signatures(
                     child,
                     reference_controller=controller_definition,
-                )
+                ),
             )
 
         # Remove duplicates by in-memory hash because the actual objects are not hashable
@@ -267,7 +266,7 @@ class AppGraph:
 
         """
         if not reference_controller.route or not target_controller.route:
-            return
+            return None
 
         reference_signature = signature(reference_controller.route.view_route)
         target_signature = signature(target_controller.route.view_route)
@@ -283,24 +282,22 @@ class AppGraph:
                 target_parameters.append(
                     parameter.replace(
                         kind=Parameter.KEYWORD_ONLY,
-                    )
+                    ),
                 )
             else:
                 # We only throw an error if the types are different. If they're the same we assume
                 # that the resolution is intended to be shared.
-                target_annotation_type = target_signature.parameters[
-                    parameter.name
-                ].annotation
+                target_annotation_type = target_signature.parameters[parameter.name].annotation
                 reference_annotation_type = parameter.annotation
 
                 if target_annotation_type != reference_annotation_type:
                     raise TypeError(
                         f"Duplicate parameter {parameter.name} in {target_controller.controller} and {reference_controller.controller}.\n"
-                        f"Conflicting types: {target_annotation_type} vs {reference_annotation_type}"
+                        f"Conflicting types: {target_annotation_type} vs {reference_annotation_type}",
                     )
 
         target_controller.route.view_route.__signature__ = target_signature.replace(  # type: ignore
-            parameters=target_parameters
+            parameters=target_parameters,
         )
 
         return target_controller

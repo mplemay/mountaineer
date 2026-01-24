@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Dict, List, Literal, Optional, Union
+from typing import Annotated, Any, Literal, Optional, Union
 
 import pytest
 
@@ -40,10 +40,7 @@ class TypeComparisonHelpers:
         Finds a matching type in candidates that is equivalent to the target.
         Handles unhashable types by doing direct comparisons.
         """
-        return any(
-            TypeComparisonHelpers.are_types_equivalent(target, candidate)
-            for candidate in candidates
-        )
+        return any(TypeComparisonHelpers.are_types_equivalent(target, candidate) for candidate in candidates)
 
     @staticmethod
     def are_or_types_equivalent(type1: Or, type2: Or) -> bool:
@@ -74,7 +71,8 @@ class TypeComparisonHelpers:
 
     @staticmethod
     def are_type_definitions_equivalent(
-        def1: TypeDefinition, def2: TypeDefinition
+        def1: TypeDefinition,
+        def2: TypeDefinition,
     ) -> bool:
         """
         Compares two TypeDefinition instances for equivalence by comparing their attributes.
@@ -82,22 +80,14 @@ class TypeComparisonHelpers:
         if type(def1) is not type(def2):
             return False
 
-        non_type_1 = [
-            child for child in def1.children if not isinstance(child, TypeDefinition)
-        ]
-        non_type_2 = [
-            child for child in def2.children if not isinstance(child, TypeDefinition)
-        ]
+        non_type_1 = [child for child in def1.children if not isinstance(child, TypeDefinition)]
+        non_type_2 = [child for child in def2.children if not isinstance(child, TypeDefinition)]
 
         if non_type_1 != non_type_2:
             return False
 
-        child_types_1 = [
-            child for child in def1.children if isinstance(child, TypeDefinition)
-        ]
-        child_types_2 = [
-            child for child in def2.children if isinstance(child, TypeDefinition)
-        ]
+        child_types_1 = [child for child in def1.children if isinstance(child, TypeDefinition)]
+        child_types_2 = [child for child in def2.children if isinstance(child, TypeDefinition)]
 
         if len(child_types_1) != len(child_types_2):
             return False
@@ -131,7 +121,7 @@ class TestUnionTypeDetection:
             (dict[str, int], False),
             (tuple[int, str], False),
             (set[float], False),
-            (List[int], False),
+            (list[int], False),
             (int, False),
             (Any, False),
         ],
@@ -204,7 +194,7 @@ class TestModernTypeSyntax:
                 Or(
                     TupleOf(Or(int, type(None)), str),
                     SetOf(bool),
-                )
+                ),
             ),
         )
 
@@ -231,8 +221,8 @@ class TestLiteralTypes:
             (Literal["a", "b"], LiteralOf("a", "b")),
             (Literal[1, 2, 3], LiteralOf(1, 2, 3)),
             (Literal[True, False], LiteralOf(True, False)),
-            (Literal[None], LiteralOf(None)),
-            (Literal["a", 1, True, None], LiteralOf("a", 1, True, None)),
+            (None, LiteralOf(None)),
+            ((Literal["a", 1, True] | None), LiteralOf("a", 1, True, None)),
             (list[Literal["a", "b"]], ListOf(LiteralOf("a", "b"))),
             (
                 dict[str, Literal[1, 2, 3]],
@@ -272,13 +262,13 @@ class TestAnnotatedTypes:
         [
             (Annotated[str, "metadata"], str),
             (Annotated[int, "metadata1", "metadata2"], int),
-            (Annotated[List[int], "metadata"], ListOf(int)),
+            (Annotated[list[int], "metadata"], ListOf(int)),
             (Annotated[str | int, "metadata"], Or(str, int)),
-            (Annotated[Dict[str, int], "metadata"], DictOf(str, int)),
+            (Annotated[dict[str, int], "metadata"], DictOf(str, int)),
             (Annotated[str, "metadata"], str),
             # For nested Annotated types, the inner type is wrapped in Or
-            (List[Annotated[str, "metadata"]], ListOf(Or(str))),
-            (Dict[str, Annotated[int, "metadata"]], DictOf(str, Or(int))),
+            (list[Annotated[str, "metadata"]], ListOf(Or(str))),
+            (dict[str, Annotated[int, "metadata"]], DictOf(str, Or(int))),
             (Annotated[str | None, "metadata"], Or(str, type(None))),
         ],
     )
@@ -295,9 +285,7 @@ class TestAnnotatedTypes:
     def test_nested_annotated_types(self, parser, type_compare):
         """Test nested Annotated types"""
         # Complex nested type with Annotated
-        complex_type = List[
-            Annotated[Dict[str, Annotated[int | str, "metadata"]], "outer"]
-        ]
+        complex_type = list[Annotated[dict[str, Annotated[int | str, "metadata"]], "outer"]]
         result = parser.parse_type(complex_type)
 
         # Expected structure after parsing

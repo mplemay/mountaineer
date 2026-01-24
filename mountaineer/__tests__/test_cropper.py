@@ -102,7 +102,9 @@ async def test_async_function():
         return ExampleResponse(a=a, b=b)
 
     optimized_func_async = crop_function_for_return_keys(
-        example_function_async, ["a"], locals()
+        example_function_async,
+        ["a"],
+        locals(),
     )
 
     start = monotonic_ns()

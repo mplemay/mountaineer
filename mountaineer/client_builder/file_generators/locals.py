@@ -61,7 +61,7 @@ class LocalLinkGenerator(LocalGeneratorBase):
         def _traverse_logic(item: FieldWrapper | EnumWrapper | TypeDefinition):
             if isinstance(item, EnumWrapper):
                 imports.append(
-                    f"import {{ {item.name.global_name} }} from '{controller_import_path}';"
+                    f"import {{ {item.name.global_name} }} from '{controller_import_path}';",
                 )
             elif isinstance(item, TypeDefinition):
                 yield from item.children
@@ -69,7 +69,8 @@ class LocalLinkGenerator(LocalGeneratorBase):
                 yield item.value
 
         ControllerWrapper._traverse_iterator(
-            _traverse_logic, controller.queries + controller.paths
+            _traverse_logic,
+            controller.queries + controller.paths,
         )
 
         yield CodeBlock(*imports)
@@ -92,14 +93,14 @@ class LocalLinkGenerator(LocalGeneratorBase):
             query_parameters[field.name] = TSLiteral(field.name)
             optional_param = "?" if not field.required else ""
             query_typehints[TSLiteral(field.name + optional_param)] = TSLiteral(
-                ControllerInterface._get_annotated_value(field.value)
+                ControllerInterface._get_annotated_value(field.value),
             )
 
         for field in controller.paths:
             path_parameters[field.name] = TSLiteral(field.name)
             optional_param = "?" if not field.required else ""
             path_typehints[TSLiteral(field.name + optional_param)] = TSLiteral(
-                ControllerInterface._get_annotated_value(field.value)
+                ControllerInterface._get_annotated_value(field.value),
             )
 
         # Combine all parameters for the function signature
@@ -140,24 +141,12 @@ class LocalLinkGenerator(LocalGeneratorBase):
         # Use 'string | number | boolean | null | undefined' for URL parameters since that's what we support
         # Also include array types for query parameters (e.g., ?filter=a&filter=b)
         url_param_type = "string | number | boolean | null | undefined"
-        url_param_type_with_array = (
-            f"{url_param_type} | Array<string | number | boolean>"
-        )
-        query_type = (
-            f"Record<string, {url_param_type_with_array}>"
-            if query_parameters
-            else "Record<string, never>"
-        )
-        path_type = (
-            f"Record<string, {url_param_type}>"
-            if path_parameters
-            else "Record<string, never>"
-        )
+        url_param_type_with_array = f"{url_param_type} | Array<string | number | boolean>"
+        query_type = f"Record<string, {url_param_type_with_array}>" if query_parameters else "Record<string, never>"
+        path_type = f"Record<string, {url_param_type}>" if path_parameters else "Record<string, never>"
 
         # Use string literal instead of template literal if there's no interpolation
-        url_assignment = (
-            f'const url = "{url}";' if "${" not in url else f"const url = `{url}`;"
-        )
+        url_assignment = f'const url = "{url}";' if "${" not in url else f"const url = `{url}`;"
 
         link_logic = [
             f"{url_assignment}\n",
@@ -194,7 +183,7 @@ class LocalActionGenerator(LocalGeneratorBase):
         action_js = self._generate_controller_actions(self.controller)
         dependencies = self._get_dependent_imports(self.controller)
         exception_imports, exception_definitions = self._generate_exceptions(
-            self.controller
+            self.controller,
         )
 
         # Generate imports
@@ -246,7 +235,8 @@ class LocalActionGenerator(LocalGeneratorBase):
         """Wrapper around the model to create a concrete Exception class"""
         controllers_import_path = self.get_global_import_path("controllers.ts")
         embedded_types = ControllerWrapper.get_all_embedded_types(
-            [parsed_controller], include_superclasses=True
+            [parsed_controller],
+            include_superclasses=True,
         )
 
         imports = [
@@ -294,28 +284,29 @@ class LocalModelGenerator(LocalGeneratorBase):
 
         controllers = ControllerWrapper.get_all_embedded_controllers([self.controller])
         embedded_types = ControllerWrapper.get_all_embedded_types(
-            [self.controller], include_superclasses=True
+            [self.controller],
+            include_superclasses=True,
         )
 
         yield CodeBlock(
             *[
                 f"export type {{ {controller.name.global_name} as {controller.name.local_name} }} from '{controller_import_path}';"
                 for controller in controllers
-            ]
+            ],
         )
 
         yield CodeBlock(
             *[
                 f"export type {{ {model.name.global_name} as {model.name.local_name} }} from '{controller_import_path}';"
                 for model in embedded_types.models
-            ]
+            ],
         )
 
         yield CodeBlock(
             *[
                 f"export {{ {enum.name.global_name} as {enum.name.local_name} }} from '{controller_import_path}';"
                 for enum in embedded_types.enums
-            ]
+            ],
         )
 
 
@@ -358,7 +349,7 @@ class LocalUseServerGenerator(LocalGeneratorBase):
 
         if controller.all_actions:
             imports.append(
-                f"import {{ {', '.join(action.name for action in controller.all_actions)} }} from './actions';"
+                f"import {{ {', '.join(action.name for action in controller.all_actions)} }} from './actions';",
             )
 
         yield CodeBlock(*imports)

@@ -151,16 +151,13 @@ def debug_log_artifact(artifact_prefix: str, extension: str, content: str):
     global RUNTIME_ARITFACT_TMP_DIR
 
     # Only log during highest level of verbosity
-    if (
-        VERBOSITY_MAPPING[environ.get("MOUNTAINEER_LOG_LEVEL", "WARNING")]
-        > logging.DEBUG
-    ):
-        return
+    if VERBOSITY_MAPPING[environ.get("MOUNTAINEER_LOG_LEVEL", "WARNING")] > logging.DEBUG:
+        return None
 
     if RUNTIME_ARITFACT_TMP_DIR is None:
         RUNTIME_ARITFACT_TMP_DIR = Path(mkdtemp())
         LOGGER.warning(
-            f"Created temporary directory for runtime artifacts: {RUNTIME_ARITFACT_TMP_DIR}"
+            f"Created temporary directory for runtime artifacts: {RUNTIME_ARITFACT_TMP_DIR}",
         )
 
     path = RUNTIME_ARITFACT_TMP_DIR / f"{artifact_prefix}-{time()}.{extension}"

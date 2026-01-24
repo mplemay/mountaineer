@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ class SimpleResponse(BaseModel):
 class ComplexResponse(BaseModel):
     data: dict[str, Any]
     status: bool
-    metadata: Optional[dict[str, str]] = None
+    metadata: dict[str, str] | None = None
 
 
 class FormData(BaseModel):
@@ -37,11 +37,13 @@ class FormData(BaseModel):
 class TestBasicInterfaceGeneration:
     def test_simple_controller_interface(self):
         health_check = create_action_wrapper(
-            "health_check", response_model=SimpleResponse
+            "health_check",
+            response_model=SimpleResponse,
         )
 
         controller = create_controller_wrapper(
-            "ApiBaseController", actions={"health_check": health_check}
+            "ApiBaseController",
+            actions={"health_check": health_check},
         )
 
         interface = ControllerInterface.from_controller(controller)
@@ -87,8 +89,9 @@ class TestInheritanceHandling:
             "ApiBaseController",
             actions={
                 "health_check": create_action_wrapper(
-                    "health_check", response_model=SimpleResponse
-                )
+                    "health_check",
+                    response_model=SimpleResponse,
+                ),
             },
         )
 
@@ -97,8 +100,9 @@ class TestInheritanceHandling:
             "ResourceController",
             actions={
                 "get_resource": create_action_wrapper(
-                    "get_resource", response_model=SimpleResponse
-                )
+                    "get_resource",
+                    response_model=SimpleResponse,
+                ),
             },
             superclasses=[base_controller],
         )
@@ -112,14 +116,16 @@ class TestInheritanceHandling:
         # Create the inheritance chain
         base_controller = create_controller_wrapper("ApiBaseController")
         resource_controller = create_controller_wrapper(
-            "ResourceController", superclasses=[base_controller]
+            "ResourceController",
+            superclasses=[base_controller],
         )
         extended_controller = create_controller_wrapper(
             "ExtendedController",
             actions={
                 "specialized_action": create_action_wrapper(
-                    "specialized_action", response_model=ComplexResponse
-                )
+                    "specialized_action",
+                    response_model=ComplexResponse,
+                ),
             },
             superclasses=[resource_controller],
         )
@@ -144,7 +150,8 @@ class TestParameterHandling:
         )
 
         controller = create_controller_wrapper(
-            "OptionalParamsController", actions={"optional_action": action}
+            "OptionalParamsController",
+            actions={"optional_action": action},
         )
 
         interface = ControllerInterface.from_controller(controller)
@@ -162,7 +169,8 @@ class TestParameterHandling:
         )
 
         controller = create_controller_wrapper(
-            "RequiredParamsController", actions={"required_action": action}
+            "RequiredParamsController",
+            actions={"required_action": action},
         )
 
         interface = ControllerInterface.from_controller(controller)

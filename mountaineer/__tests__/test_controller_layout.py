@@ -35,7 +35,7 @@ def test_layout_registration():
     to be used by client render controllers.
 
     """
-    app_controller = Mountaineer(view_root=Path(""))
+    app_controller = Mountaineer(view_root=Path())
     layout_controller = ExampleLayoutController()
 
     app_controller.register(layout_controller)

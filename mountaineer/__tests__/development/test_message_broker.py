@@ -66,7 +66,9 @@ async def test_auth_validation(
 
     # Create client with invalid auth
     invalid_config = BrokerServerConfig[MessageTypes](
-        host=server_broker.host, port=server_broker.port, auth_key="invalid_key"
+        host=server_broker.host,
+        port=server_broker.port,
+        auth_key="invalid_key",
     )
 
     async with AsyncMessageBroker.new_client(invalid_config) as invalid_client:
@@ -128,7 +130,7 @@ async def test_multiple_jobs(
 
     # Verify all responses
     results = await asyncio.gather(
-        *[server_broker.get_response(job_id) for job_id in job_ids]
+        *[server_broker.get_response(job_id) for job_id in job_ids],
     )
     assert results == ["response0", "response1", "response2"]
 
@@ -141,7 +143,7 @@ async def test_nonexistent_job():
             # Try to get response for non-existent job
             # This should create a future that waits for the response
             get_response_task = asyncio.create_task(
-                server_broker.get_response("nonexistent-job")
+                server_broker.get_response("nonexistent-job"),
             )
 
             # Send response for the job
@@ -155,26 +157,28 @@ async def test_nonexistent_job():
 @pytest.mark.asyncio
 async def test_concurrent_clients():
     """Test multiple clients can interact with the same server."""
-    async with AsyncMessageBroker.start_server() as (server_broker, config):
-        async with (
-            AsyncMessageBroker.new_client(config) as client1,
-            AsyncMessageBroker.new_client(config) as client2,
-        ):
-            # Client 1 handles job1
-            await server_broker.send_job("job1", "data1")
-            await client1.send_response("job1", "response1")
+    async with (
+        AsyncMessageBroker.start_server() as (server_broker, config),
+        AsyncMessageBroker.new_client(config) as client1,
+        AsyncMessageBroker.new_client(config) as client2,
+    ):
+        # Client 1 handles job1
+        await server_broker.send_job("job1", "data1")
+        await client1.send_response("job1", "response1")
 
-            # Client 2 handles job2
-            await server_broker.send_job("job2", "data2")
-            await client2.send_response("job2", "response2")
+        # Client 2 handles job2
+        await server_broker.send_job("job2", "data2")
+        await client2.send_response("job2", "response2")
 
-            # Verify responses
-            assert await server_broker.get_response("job1") == "response1"
-            assert await server_broker.get_response("job2") == "response2"
+        # Verify responses
+        assert await server_broker.get_response("job1") == "response1"
+        assert await server_broker.get_response("job2") == "response2"
 
 
 async def run_client_process(
-    config: BrokerServerConfig, job_id: str, response_data: Any
+    config: BrokerServerConfig,
+    job_id: str,
+    response_data: Any,
 ):
     """
     Async function to run inside a client process.
@@ -239,7 +243,8 @@ async def test_multiple_process_clients():
 
         for job_id, response in zip(job_ids, responses):
             process = multiprocessing.Process(
-                target=client_process_entrypoint, args=(config_dict, job_id, response)
+                target=client_process_entrypoint,
+                args=(config_dict, job_id, response),
             )
             process.start()
             processes.append(process)
@@ -251,7 +256,7 @@ async def test_multiple_process_clients():
 
         # Get all responses
         results = await asyncio.gather(
-            *[server_broker.get_response(job_id) for job_id in job_ids]
+            *[server_broker.get_response(job_id) for job_id in job_ids],
         )
         assert results == responses
 
@@ -278,7 +283,8 @@ async def test_process_reconnection():
 
         # First client process
         process1 = multiprocessing.Process(
-            target=client_process_entrypoint, args=(config_dict, "job1", "response1")
+            target=client_process_entrypoint,
+            args=(config_dict, "job1", "response1"),
         )
         process1.start()
 
@@ -291,7 +297,8 @@ async def test_process_reconnection():
 
         # Second client process
         process2 = multiprocessing.Process(
-            target=client_process_entrypoint, args=(config_dict, "job2", "response2")
+            target=client_process_entrypoint,
+            args=(config_dict, "job2", "response2"),
         )
         process2.start()
 
@@ -326,7 +333,8 @@ async def test_process_error_handling():
 
         # Start error process
         process = multiprocessing.Process(
-            target=error_client_entrypoint, args=(config_dict,)
+            target=error_client_entrypoint,
+            args=(config_dict,),
         )
         process.start()
         process.join()
@@ -375,25 +383,25 @@ async def test_get_job_process():
 @pytest.mark.asyncio
 async def test_multiple_waiting_clients():
     """Test multiple clients waiting for jobs."""
-    async with AsyncMessageBroker.start_server() as (server_broker, config):
-        async with (
-            AsyncMessageBroker.new_client(config) as client1,
-            AsyncMessageBroker.new_client(config) as client2,
-        ):
-            # Start both clients waiting for jobs
-            task1 = asyncio.create_task(client1.get_job())
-            task2 = asyncio.create_task(client2.get_job())
+    async with (
+        AsyncMessageBroker.start_server() as (server_broker, config),
+        AsyncMessageBroker.new_client(config) as client1,
+        AsyncMessageBroker.new_client(config) as client2,
+    ):
+        # Start both clients waiting for jobs
+        task1 = asyncio.create_task(client1.get_job())
+        task2 = asyncio.create_task(client2.get_job())
 
-            # Small delay to ensure both clients are waiting
-            await asyncio.sleep(0.1)
+        # Small delay to ensure both clients are waiting
+        await asyncio.sleep(0.1)
 
-            # Send two jobs
-            await server_broker.send_job("job1", {"task": "task1"})
-            await server_broker.send_job("job2", {"task": "task2"})
+        # Send two jobs
+        await server_broker.send_job("job1", {"task": "task1"})
+        await server_broker.send_job("job2", {"task": "task2"})
 
-            # Get results from both clients
-            results = await asyncio.gather(task1, task2)
+        # Get results from both clients
+        results = await asyncio.gather(task1, task2)
 
-            # Verify each job was received exactly once
-            job_ids = {result[0] for result in results}
-            assert job_ids == {"job1", "job2"}
+        # Verify each job was received exactly once
+        job_ids = {result[0] for result in results}
+        assert job_ids == {"job1", "job2"}

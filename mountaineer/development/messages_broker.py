@@ -98,8 +98,6 @@ class UnauthorizedResponse(BaseResponse):
 class BrokerAuthenticationError(Exception):
     """Raised when the broker authentication fails."""
 
-    pass
-
 
 class BrokerExecutionError(Exception):
     """Raised when the broker execution fails."""
@@ -110,22 +108,16 @@ class BrokerExecutionError(Exception):
         self.traceback = traceback
 
 
-CommandTypes = (
-    SendJobCommand
-    | SendResponseCommand
-    | GetResponseCommand
-    | GetJobCommand
-    | DrainQueueCommand
-)
+CommandTypes = SendJobCommand | SendResponseCommand | GetResponseCommand | GetJobCommand | DrainQueueCommand
 ResponseTypes = OKResponse | UnauthorizedResponse
 
 # Create type adapters for polymorphic validation
 command_type_adapter = TypeAdapter(  # type: ignore
-    Annotated[CommandTypes, Field(discriminator="item_type")]
+    Annotated[CommandTypes, Field(discriminator="item_type")],
 )
 
 response_type_adapter = TypeAdapter(  # type: ignore
-    Annotated[ResponseTypes, Field(discriminator="item_type")]
+    Annotated[ResponseTypes, Field(discriminator="item_type")],
 )
 
 
@@ -142,7 +134,11 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
     """
 
     def __init__(
-        self, *, host: str = "127.0.0.1", port: int = 0, auth_key: str | None = None
+        self,
+        *,
+        host: str = "127.0.0.1",
+        port: int = 0,
+        auth_key: str | None = None,
     ):
         """
         :param port: If set to 0, the server will choose a free port.
@@ -156,11 +152,10 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
         self.job_queue: list[str] = []  # FIFO queue of job_ids
         self.responses: dict[str, Any] = {}  # job_id -> response_data
         self.pending_futures: dict[
-            str, list[Future]
+            str,
+            list[Future],
         ] = {}  # job_id -> list of asyncio.Future waiting for a response
-        self.pending_job_futures: list[
-            Future
-        ] = []  # list of futures waiting for next job
+        self.pending_job_futures: list[Future] = []  # list of futures waiting for next job
 
         self.loop: asyncio.AbstractEventLoop | None = None
         self.server: asyncio.AbstractServer | None = None
@@ -243,7 +238,9 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
             self.loop.call_soon_threadsafe(self.loop.stop)
 
     async def handle_client(
-        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
     ):
         """
         Handle incoming client connections using a JSON-over-TCP protocol.
@@ -275,7 +272,7 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
                     if cmd_obj.auth_key != self.auth_key:
                         response = UnauthorizedResponse()
                         writer.write(
-                            (json.dumps(response.model_dump()) + "\n").encode()
+                            (json.dumps(response.model_dump()) + "\n").encode(),
                         )
                         await writer.drain()
                         continue
@@ -292,7 +289,7 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
                                     {
                                         "job_id": cmd_obj.job_id,
                                         "job_data": cmd_obj.job_data,
-                                    }
+                                    },
                                 )
                         response = OKResponse()
                     elif isinstance(cmd_obj, SendResponseCommand):
@@ -307,12 +304,12 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
                     elif isinstance(cmd_obj, GetResponseCommand):
                         if cmd_obj.job_id in self.responses:
                             response = OKResponse(
-                                response_data=self.responses[cmd_obj.job_id]
+                                response_data=self.responses[cmd_obj.job_id],
                             )
                         else:
                             fut = self.loop.create_future()
                             self.pending_futures.setdefault(cmd_obj.job_id, []).append(
-                                fut
+                                fut,
                             )
                             response_data = await fut
                             response = OKResponse(response_data=response_data)
@@ -324,7 +321,7 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
                                 response_data={
                                     "job_id": job_id,
                                     "job_data": self.jobs[job_id],
-                                }
+                                },
                             )
                         else:
                             # No jobs available, create a future to wait for one
@@ -335,7 +332,7 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
                                 response = OKResponse(response_data=job_info)
                             except asyncio.CancelledError:
                                 response = UnauthorizedResponse(
-                                    message="Operation cancelled"
+                                    message="Operation cancelled",
                                 )
                     elif isinstance(cmd_obj, DrainQueueCommand):
                         # Return all jobs in the queue at once
@@ -346,12 +343,12 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
                                 {
                                     "job_id": job_id,
                                     "job_data": self.jobs[job_id],
-                                }
+                                },
                             )
                         response = OKResponse(response_data=jobs)
                     else:
                         response = UnauthorizedResponse(
-                            message="Unhandled command type"
+                            message="Unhandled command type",
                         )
                 except Exception as e:
                     response = UnauthorizedResponse(message=str(e))
@@ -386,7 +383,9 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
         return response
 
     async def send_response(
-        self, job_id: str, response_data: TResponse
+        self,
+        job_id: str,
+        response_data: TResponse,
     ) -> BaseResponse:
         """
         Send a response for a job to the broker server.
@@ -433,7 +432,7 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
         if response.response_data is None:
             raise ValueError("No job data")
         return response.response_data["job_id"], pickle.loads(
-            b64decode(response.response_data["job_data"])
+            b64decode(response.response_data["job_data"]),
         )
 
     async def send_and_get_response(self, job_data: AppMessageTypes) -> Any:
@@ -466,13 +465,13 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
         if response.response_data is None:
             return []
 
-        return [
-            (job["job_id"], pickle.loads(b64decode(job["job_data"])))
-            for job in response.response_data
-        ]
+        return [(job["job_id"], pickle.loads(b64decode(job["job_data"]))) for job in response.response_data]
 
     async def _send_message(
-        self, host: str, port: int, message_obj: BaseCommand
+        self,
+        host: str,
+        port: int,
+        message_obj: BaseCommand,
     ) -> BaseResponse:
         """
         Helper function to send a command message and receive the response asynchronously.
@@ -489,7 +488,8 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
             LOGGER.debug(f"Received server response: {response_dict}")
 
             return cast(
-                BaseResponse, response_type_adapter.validate_python(response_dict)
+                "BaseResponse",
+                response_type_adapter.validate_python(response_dict),
             )
         finally:
             writer.close()
@@ -509,7 +509,9 @@ class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
             yield (
                 server,
                 BrokerServerConfig(
-                    host=server.host, port=server.port, auth_key=server.auth_key
+                    host=server.host,
+                    port=server.port,
+                    auth_key=server.auth_key,
                 ),
             )
         finally:

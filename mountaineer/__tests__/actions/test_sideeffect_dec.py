@@ -87,7 +87,7 @@ async def call_sideeffect_common(controller: ControllerCommon):
     # After our wrapper is called, our function is now async
     # Avoid the dependency resolution logic since that's tested separately
     with patch(
-        "mountaineer.actions.sideeffect_dec.get_render_parameters"
+        "mountaineer.actions.sideeffect_dec.get_render_parameters",
     ) as patched_get_render_params:
         patched_get_render_params.side_effect = mock_get_render_parameters
 
@@ -265,7 +265,7 @@ async def test_get_render_parameters(
                     # Its important the referer aligns with the controller url, since that is expected
                     # to be the original view page that is calling this sub-function
                     "referer": referer,
-                }
+                },
             ).raw,
             "http_version": "1.1",
             "scheme": "",
@@ -275,7 +275,7 @@ async def test_get_render_parameters(
             # to map the request to the correct endpoint
             "method": "POST",
             "url": "http://localhost/related_action_endpoint",
-        }
+        },
     )
 
     async with get_render_parameters(controller, fake_request) as resolved_dependencies:
@@ -324,7 +324,7 @@ def test_limit_codepath_experimental(
 
     controller_definition = app.graph.get_definitions_for_cls(controller.__class__)[0]
     sideeffect_url = controller_definition.get_url_for_metadata(
-        get_function_metadata(ExampleController.call_sideeffect)
+        get_function_metadata(ExampleController.call_sideeffect),
     )
 
     client = TestClient(app.app)
@@ -342,7 +342,7 @@ def test_limit_codepath_experimental(
     assert response.json() == {
         "sideeffect": {
             "value_a": "Hello 1229",
-        }
+        },
     }
 
     LOGGER.info(f"Use Experimental: {use_experimental}\nElapsed: {elapsed}")
@@ -390,7 +390,7 @@ async def test_layout_controller_request_support():
 
     controller_definition = app.graph.get_definitions_for_cls(controller.__class__)[0]
     sideeffect_url = controller_definition.get_url_for_metadata(
-        get_function_metadata(TestLayoutController.call_sideeffect)
+        get_function_metadata(TestLayoutController.call_sideeffect),
     )
 
     # Create a test client and make the request
@@ -479,17 +479,15 @@ async def test_controller_and_layout_request_handling():
 
     # Get the sideeffect URLs for both controllers
     standard_definition = app.graph.get_definitions_for_cls(
-        standard_controller.__class__
+        standard_controller.__class__,
     )[0]
-    layout_definition = app.graph.get_definitions_for_cls(layout_controller.__class__)[
-        0
-    ]
+    layout_definition = app.graph.get_definitions_for_cls(layout_controller.__class__)[0]
 
     standard_sideeffect_url = standard_definition.get_url_for_metadata(
-        get_function_metadata(StandardController.standard_sideeffect)
+        get_function_metadata(StandardController.standard_sideeffect),
     )
     layout_sideeffect_url = layout_definition.get_url_for_metadata(
-        get_function_metadata(LayoutController.layout_sideeffect)
+        get_function_metadata(LayoutController.layout_sideeffect),
     )
 
     # Create a test client and make requests to both controllers
@@ -518,7 +516,7 @@ async def test_controller_and_layout_request_handling():
 
     # Use a mock to provide the query parameters correctly
     with patch(
-        "mountaineer.actions.sideeffect_dec.get_render_parameters"
+        "mountaineer.actions.sideeffect_dec.get_render_parameters",
     ) as mock_get_params:
         # For standard controller
         @asynccontextmanager
@@ -531,13 +529,13 @@ async def test_controller_and_layout_request_handling():
                         "path": "/standard/param/",
                         "query_string": b"query_param=test-value",
                         "headers": Headers(
-                            {"cookie": "test-cookie=standard-cookie-value"}
+                            {"cookie": "test-cookie=standard-cookie-value"},
                         ).raw,
                         "method": "GET",
                         "scheme": "http",
                         "client": ("testclient", 50000),
                         "server": ("testserver", 80),
-                    }
+                    },
                 ),
                 "query_param": "test-value",
             }
@@ -552,13 +550,13 @@ async def test_controller_and_layout_request_handling():
                         "path": "/some-page/",
                         "query_string": b"query_param=layout-value",
                         "headers": Headers(
-                            {"cookie": "test-cookie=layout-cookie-value"}
+                            {"cookie": "test-cookie=layout-cookie-value"},
                         ).raw,
                         "method": "GET",
                         "scheme": "http",
                         "client": ("testclient", 50000),
                         "server": ("testserver", 80),
-                    }
+                    },
                 ),
             }
 
@@ -634,7 +632,7 @@ async def test_layout_controller_session_handling():
     # Get sideeffect URL
     controller_definition = app.graph.get_definitions_for_cls(controller.__class__)[0]
     sideeffect_url = controller_definition.get_url_for_metadata(
-        get_function_metadata(SessionLayoutController.session_sideeffect)
+        get_function_metadata(SessionLayoutController.session_sideeffect),
     )
 
     # Create a test client

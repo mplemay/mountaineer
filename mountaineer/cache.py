@@ -2,10 +2,11 @@ import asyncio
 import functools
 import weakref
 from collections import OrderedDict
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from hashlib import sha256
 from json import dumps as json_dumps
-from typing import Any, Callable, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 
@@ -27,7 +28,7 @@ class LRUCache:
     def put(self, key: str, value: Any, size_bytes: int):
         if self.max_size_bytes and size_bytes > self.max_size_bytes:
             LOGGER.warning(
-                f"Skipping cache for {key} as item exceeds the max size limit."
+                f"Skipping cache for {key} as item exceeds the max size limit.",
             )
             return
         if key in self.cache:
@@ -94,7 +95,7 @@ def extended_lru_cache(maxsize: int, max_size_mb: float | None = None):
 
             return result
 
-        setattr(wrapper, "_cache", cache)
+        wrapper._cache = cache
         return wrapper
 
     return decorator
@@ -126,7 +127,9 @@ class AsyncLoopObjectCache(Generic[T]):
         loop = asyncio.get_running_loop()
         self.loop_caches[id(loop)] = obj
         self.event_loop_refs[id(loop)] = weakref.finalize(
-            loop, self.cleanup_loop, id(loop)
+            loop,
+            self.cleanup_loop,
+            id(loop),
         )
 
     @asynccontextmanager

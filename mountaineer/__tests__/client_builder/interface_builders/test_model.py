@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Type
+from typing import Any
 
 import pytest
 from pydantic import BaseModel
@@ -44,7 +44,9 @@ class TestBasicInterfaceGeneration:
 
     def test_no_export(self):
         wrapper = create_model_wrapper(
-            BaseModel, "SimpleModel", [create_field_wrapper("field", str)]
+            BaseModel,
+            "SimpleModel",
+            [create_field_wrapper("field", str)],
         )
 
         interface = ModelInterface.from_model(wrapper)
@@ -65,10 +67,15 @@ class TestBasicInterfaceGeneration:
         ],
     )
     def test_field_type_conversion(
-        self, field_name: str, field_type: Type[Any], expected_ts: str
+        self,
+        field_name: str,
+        field_type: type[Any],
+        expected_ts: str,
     ):
         wrapper = create_model_wrapper(
-            BaseModel, "DynamicModel", [create_field_wrapper(field_name, field_type)]
+            BaseModel,
+            "DynamicModel",
+            [create_field_wrapper(field_name, field_type)],
         )
 
         interface = ModelInterface.from_model(wrapper)
@@ -105,11 +112,15 @@ class TestInheritanceHandling:
 
     def test_multiple_inheritance(self):
         base1_wrapper = create_model_wrapper(
-            BaseModel, "MultiInheritBase1", [create_field_wrapper("base1_field", str)]
+            BaseModel,
+            "MultiInheritBase1",
+            [create_field_wrapper("base1_field", str)],
         )
 
         base2_wrapper = create_model_wrapper(
-            BaseModel, "MultiInheritBase2", [create_field_wrapper("base2_field", int)]
+            BaseModel,
+            "MultiInheritBase2",
+            [create_field_wrapper("base2_field", int)],
         )
 
         child_wrapper = create_model_wrapper(

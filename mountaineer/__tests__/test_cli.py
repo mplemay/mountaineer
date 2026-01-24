@@ -29,7 +29,7 @@ def tmp_ci_webapp(tmp_path: Path):
     pyproject_path = mutable_package / "pyproject.toml"
     base_package_path = (get_fixture_path("") / "../../../").resolve()
 
-    with open(pyproject_path, "r") as file:
+    with open(pyproject_path) as file:
         content = toml.load(file)
 
     # Point to the absolute path of the local mountaineer core package, versus the
@@ -37,7 +37,7 @@ def tmp_ci_webapp(tmp_path: Path):
     # just replace the entire bundle.
     assert len(content["project"]["dependencies"]) == 1
     content["project"]["dependencies"] = [
-        f"mountaineer @ file://{str(base_package_path)}"
+        f"mountaineer @ file://{base_package_path!s}",
     ]
 
     with open(pyproject_path, "w") as file:
@@ -85,18 +85,16 @@ async def test_handle_runserver_with_user_modifications(tmp_ci_webapp: Path):
         except httpx.RequestError:
             pass
 
-    uv_env = {
-        key: value
-        for key, value in environ.items()
-        if not key.startswith("VIRTUAL_ENV")
-    }
+    uv_env = {key: value for key, value in environ.items() if not key.startswith("VIRTUAL_ENV")}
 
     # We need to poetry install the packages at the new path
     return_code = Popen(["uv", "sync"], cwd=tmp_ci_webapp, env=uv_env).wait()
     assert return_code == 0
 
     return_code = Popen(
-        ["npm", "install"], cwd=tmp_ci_webapp / "ci_webapp" / "views", env=uv_env
+        ["npm", "install"],
+        cwd=tmp_ci_webapp / "ci_webapp" / "views",
+        env=uv_env,
     ).wait()
     assert return_code == 0
 
@@ -119,7 +117,7 @@ async def test_handle_runserver_with_user_modifications(tmp_ci_webapp: Path):
         # After all these random server restarts make sure that the
         # server is still running
         print(  # noqa: T201
-            "Done with changes, checking that server will resolve if not immediately ready..."
+            "Done with changes, checking that server will resolve if not immediately ready...",
         )
         is_bound, status_code = await check_server_bound(port)
         assert is_bound, "Server is not bound to localhost:3000"

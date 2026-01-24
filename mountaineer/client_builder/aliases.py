@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Sequence, Type
+from collections.abc import Sequence
 
 from inflection import camelize
 from pydantic import BaseModel
@@ -50,32 +50,26 @@ class AliasManager:
         for parsed_group in parsed_groups:
             for parsed_wrapper in parsed_group:
                 parsed_wrapper.name.global_name = normalize_interface(
-                    parsed_wrapper.name.global_name
+                    parsed_wrapper.name.global_name,
                 )
                 reference_counts.update([parsed_wrapper.name.global_name])
 
         # Any reference counts that have more than one reference need to be uniquified
-        duplicate_names = {
-            name for name, count in reference_counts.items() if count > 1
-        }
+        duplicate_names = {name for name, count in reference_counts.items() if count > 1}
 
-        converted_models: dict[Type[BaseModel], str] = {}
+        converted_models: dict[type[BaseModel], str] = {}
 
         # Models must be updated before the self references
         for parsed_group in parsed_groups:
             for parsed_wrapper in parsed_group:
                 if parsed_wrapper.name.global_name in duplicate_names:
                     prefix = self._typescript_prefix_from_module(
-                        parsed_wrapper.module_name
+                        parsed_wrapper.module_name,
                     )
-                    parsed_wrapper.name.global_name = (
-                        f"{prefix}_{parsed_wrapper.name.global_name}"
-                    )
+                    parsed_wrapper.name.global_name = f"{prefix}_{parsed_wrapper.name.global_name}"
 
                     if isinstance(parsed_wrapper, ModelWrapper):
-                        converted_models[parsed_wrapper.model] = (
-                            parsed_wrapper.name.global_name
-                        )
+                        converted_models[parsed_wrapper.model] = parsed_wrapper.name.global_name
 
         # Only once we update the models should we update the self references to the
         # new values - otherwise the lookup map will be empty
@@ -96,7 +90,8 @@ class AliasManager:
             # the models.ts file that's tied to each controller
             controllers = ControllerWrapper.get_all_embedded_controllers([controller])
             embedded_types = ControllerWrapper.get_all_embedded_types(
-                [controller], include_superclasses=True
+                [controller],
+                include_superclasses=True,
             )
 
             reference_counter: Counter[str] = Counter()
@@ -111,23 +106,19 @@ class AliasManager:
             for parsed_group in parsed_groups:
                 for parsed_wrapper in parsed_group:
                     parsed_wrapper.name.local_name = normalize_interface(
-                        parsed_wrapper.name.local_name
+                        parsed_wrapper.name.local_name,
                     )
                     reference_counter.update([parsed_wrapper.name.local_name])
 
-            duplicate_names = {
-                name for name, count in reference_counter.items() if count > 1
-            }
+            duplicate_names = {name for name, count in reference_counter.items() if count > 1}
 
             for parsed_group in parsed_groups:
                 for parsed_wrapper in parsed_group:
                     if parsed_wrapper.name.local_name in duplicate_names:
                         prefix = self._typescript_prefix_from_module(
-                            parsed_wrapper.module_name
+                            parsed_wrapper.module_name,
                         )
-                        parsed_wrapper.name.local_name = (
-                            f"{prefix}_{parsed_wrapper.name.local_name}"
-                        )
+                        parsed_wrapper.name.local_name = f"{prefix}_{parsed_wrapper.name.local_name}"
 
     def _typescript_prefix_from_module(self, module: str):
         module_parts = module.split(".")

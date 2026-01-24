@@ -29,7 +29,9 @@ class TSLiteral(str):
 
 
 def python_payload_to_typescript(
-    payload: Any, dict_equality: str = ":", current_indent: int = 0
+    payload: Any,
+    dict_equality: str = ":",
+    current_indent: int = 0,
 ) -> str:
     """
     Take an element with python tokens that should be outputted to
@@ -52,7 +54,8 @@ def python_payload_to_typescript(
 
             key = python_payload_to_typescript(key)
             value = python_payload_to_typescript(
-                value, current_indent=current_indent + 2
+                value,
+                current_indent=current_indent + 2,
             )
             children_lines.append(f"{inner_indent_str}{key}{dict_equality} {value}")
 
@@ -62,28 +65,27 @@ def python_payload_to_typescript(
                 "{",
                 children_str,
                 f"{indent_str}}}",
-            ]
+            ],
         )
-    elif isinstance(payload, list):
+    if isinstance(payload, list):
         children_lines = [python_payload_to_typescript(child) for child in payload]
         children_str = ",\n".join(
-            [f"{inner_indent_str}{child}" for child in children_lines]
+            [f"{inner_indent_str}{child}" for child in children_lines],
         )
         return f"[\n{children_str}\n{indent_str}]"
-    elif isinstance(payload, TSLiteral):
+    if isinstance(payload, TSLiteral):
         return payload
-    elif isinstance(payload, str):
+    if isinstance(payload, str):
         return f"'{payload}'"
-    elif isinstance(payload, bool):
+    if isinstance(payload, bool):
         return str(payload).lower()
-    elif isinstance(payload, (int, float)):
+    if isinstance(payload, (int, float)):
         return str(payload)
-    elif payload is None:
+    if payload is None:
         return "null"
-    else:
-        raise ValueError(
-            f"Unknown payload type {type(payload)} for Typescript conversion."
-        )
+    raise ValueError(
+        f"Unknown payload type {type(payload)} for Typescript conversion.",
+    )
 
 
 def normalize_interface(title: str):

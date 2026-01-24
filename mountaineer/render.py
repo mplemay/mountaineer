@@ -1,13 +1,13 @@
+from collections.abc import Mapping
 from hashlib import sha256
 from json import dumps as json_dumps
-from typing import TYPE_CHECKING, Any, Mapping, Type, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, dataclass_transform
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from fastapi import Response
 from pydantic import BaseModel, model_validator
 from pydantic._internal._model_construction import ModelMetaclass
 from pydantic.fields import Field, FieldInfo
-from typing_extensions import dataclass_transform
 
 from mountaineer.client_compiler.build_metadata import BuildMetadata
 
@@ -15,7 +15,7 @@ T = TypeVar("T")
 
 
 class FieldClassDefinition(BaseModel):
-    root_model: Type[BaseModel]
+    root_model: type[BaseModel]
     key: str
     field_definition: FieldInfo
 
@@ -196,7 +196,7 @@ class LinkAttribute(HashableAttribute, BaseModel):
                 parsed_url.params,
                 new_query,
                 parsed_url.fragment,
-            )
+            ),
         )
 
 
@@ -253,7 +253,7 @@ class Metadata(BaseModel):
         ],
         links=[
             LinkAttribute(...),
-        ]
+        ],
     )
     ```
 
@@ -310,7 +310,7 @@ class Metadata(BaseModel):
             for key, value in payload.items():
                 if value is None:
                     continue
-                elif isinstance(value, bool):
+                if isinstance(value, bool):
                     # Boolean attributes can just be represented by just their key
                     if value:
                         attributes.append(key)

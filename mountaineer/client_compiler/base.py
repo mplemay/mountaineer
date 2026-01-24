@@ -38,7 +38,9 @@ class APIBuilderBase(ABC):
         self.metadata = metadata
 
     def register_controller(
-        self, controller: ControllerBase, view_path: ManagedViewPath
+        self,
+        controller: ControllerBase,
+        view_path: ManagedViewPath,
     ):
         self.controllers.append((controller, view_path))
 
@@ -58,7 +60,6 @@ class APIBuilderBase(ABC):
         Builds the dirty files.
 
         """
-        pass
 
     def managed_views_from_paths(self, paths: list[Path]) -> list[ManagedViewPath]:
         """
@@ -72,13 +73,9 @@ class APIBuilderBase(ABC):
         # Index all of the unique view roots to track the DAG hierarchies
         # Only include controllers that have build enabled (exclude plugins)
         build_enabled_controllers = [
-            (controller, view_path)
-            for controller, view_path in self.controllers
-            if controller._build_enabled
+            (controller, view_path) for controller, view_path in self.controllers if controller._build_enabled
         ]
-        unique_roots = {
-            view_path.get_root_link() for _, view_path in build_enabled_controllers
-        }
+        unique_roots = {view_path.get_root_link() for _, view_path in build_enabled_controllers}
 
         # Convert all of the dirty files into managed paths
         converted_paths: list[ManagedViewPath] = []
@@ -95,7 +92,7 @@ class APIBuilderBase(ABC):
 
             if not found_root:
                 LOGGER.debug(
-                    f"File {path} is not relative to any build-enabled view root ({unique_roots})"
+                    f"File {path} is not relative to any build-enabled view root ({unique_roots})",
                 )
 
         return converted_paths

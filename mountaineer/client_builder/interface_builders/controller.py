@@ -42,7 +42,7 @@ class ControllerInterface(InterfaceBase):
 
             if not action_def.response_type:
                 raise ValueError(
-                    f"Action {action_def.name} is missing an auto-detected response type"
+                    f"Action {action_def.name} is missing an auto-detected response type",
                 )
 
             action_signature = f"(params{optional_params}: {action_def.typehints}) => {action_def.response_type}"

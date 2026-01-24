@@ -99,7 +99,7 @@ def test_debug_log_artifact(log_level: str, should_create_file: bool):
         files = list(tmp_path.glob(f"{test_prefix}-*.{test_ext}"))
 
         assert len(files) == 1
-        with open(files[0], "r") as f:
+        with open(files[0]) as f:
             assert f.read() == test_content
     else:
         assert path is None

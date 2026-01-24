@@ -2,7 +2,6 @@ import asyncio
 import socket
 from threading import Thread
 from time import time
-from typing import Optional
 
 from fastapi import FastAPI
 from uvicorn import Config
@@ -28,7 +27,7 @@ class UvicornThread(Thread):
         self.log_level = log_level
         self.name = name
         self.emoticon = emoticon
-        self.server: Optional[Server] = None
+        self.server: Server | None = None
         self.use_logs = use_logs
 
     def run(self) -> None:
@@ -56,9 +55,7 @@ class UvicornThread(Thread):
         did_start = False
         start = time()
         while time() - start < timeout:
-            is_mounted = (
-                self.server and self.server.started and not self._is_port_free()
-            )
+            is_mounted = self.server and self.server.started and not self._is_port_free()
             if is_mounted:
                 did_start = True
                 break
@@ -67,7 +64,7 @@ class UvicornThread(Thread):
 
         if not did_start:
             raise TimeoutError(
-                f"Server did not start in {timeout}s (checked {self.host}:{self.port})"
+                f"Server did not start in {timeout}s (checked {self.host}:{self.port})",
             )
 
     async def astop(self, timeout: int = 1) -> None:
@@ -111,6 +108,6 @@ class UvicornThread(Thread):
                 s.bind((self.host, self.port))
                 # If we get here, binding succeeded, port is free
                 return True
-        except (socket.error, OSError):
+        except OSError:
             # Port is still in use
             return False

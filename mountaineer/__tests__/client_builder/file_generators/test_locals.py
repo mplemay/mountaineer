@@ -1,6 +1,6 @@
 from enum import Enum
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 
 import pytest
 from fastapi import File
@@ -44,13 +44,13 @@ class ExampleRequestModel(BaseModel):
 
 
 class ExampleResponseModel(BaseModel):
-    results: List[str]
+    results: list[str]
     total: int
 
 
 class ExampleRenderModel(RenderBase):
     title: str
-    items: List[ExampleBaseModel]
+    items: list[ExampleBaseModel]
 
 
 # Test Controllers
@@ -58,7 +58,6 @@ class ExampleBaseController(ControllerBase):
     @passthrough
     def base_action(self) -> ExampleResponseModel:  # type: ignore
         """Base action that returns a response model"""
-        pass
 
 
 class ExampleController(ExampleBaseController):
@@ -72,22 +71,18 @@ class ExampleController(ExampleBaseController):
         enum_param: ExampleStatus = ExampleStatus.ACTIVE,
     ) -> ExampleRenderModel:  # type: ignore
         """Main render method"""
-        pass
 
     @passthrough
     def get_data(self) -> ExampleBaseModel:  # type: ignore
         """Get basic data"""
-        pass
 
     @sideeffect
     def update_data(self, data: ExampleRequestModel) -> ExampleResponseModel:  # type: ignore
         """Update data with side effects"""
-        pass
 
     @sideeffect
     async def upload_file(self, file: bytes = File(...)) -> ExampleResponseModel:  # type: ignore
         """File upload endpoint"""
-        pass
 
 
 @pytest.fixture
@@ -156,7 +151,8 @@ class TestLocalLinkGenerator:
         assert "enum_param" in content
 
     def test_get_link_implementation_with_parameters(
-        self, generator: LocalLinkGenerator
+        self,
+        generator: LocalLinkGenerator,
     ) -> None:
         impl = generator._get_link_implementation(generator.controller)
         assert "path_param" in impl
@@ -223,7 +219,7 @@ class TestLocalModelGenerator:
         )
 
     def test_script_generation(self, generator: LocalModelGenerator) -> None:
-        result: List[Any] = list(generator.script())
+        result: list[Any] = list(generator.script())
         assert len(result) > 0
         content: str = "\n".join(block.content for block in result)
 
@@ -251,9 +247,10 @@ class TestLocalUseServerGenerator:
         )
 
     def test_script_generation_with_render(
-        self, generator: LocalUseServerGenerator
+        self,
+        generator: LocalUseServerGenerator,
     ) -> None:
-        result: List[Any] = list(generator.script())
+        result: list[Any] = list(generator.script())
         content: str = "\n".join(block.content for block in result)
         assert "useServer" in content
         assert "ServerState" in content
@@ -276,14 +273,16 @@ class TestLocalIndexGenerator:
         )
 
     def test_script_generation(
-        self, generator: LocalIndexGenerator, managed_path: ManagedViewPath
+        self,
+        generator: LocalIndexGenerator,
+        managed_path: ManagedViewPath,
     ) -> None:
         (managed_path.parent / "actions.ts").write_text(
-            "export const action = () => {}"
+            "export const action = () => {}",
         )
         (managed_path.parent / "models.ts").write_text("export type Model = {}")
 
-        result: List[Any] = list(generator.script())
+        result: list[Any] = list(generator.script())
         assert len(result) > 0
         content: str = "\n".join(block.content for block in result)
         assert "export * from './actions'" in content

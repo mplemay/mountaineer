@@ -46,7 +46,7 @@ class ClientCompiler:
             limit_paths = list(self._get_static_files())
             limit_paths += [
                 self.view_root.get_controller_view_path(
-                    controller_definition.controller
+                    controller_definition.controller,
                 )
                 for controller_definition in self.app.graph.controllers
             ]
@@ -94,7 +94,7 @@ class ClientCompiler:
         # should get the md5 hash of the content for our archive
         metadata = self._build_static_metadata()
         (self.view_root.get_managed_metadata_dir() / "metadata.json").write_text(
-            metadata.model_dump_json()
+            metadata.model_dump_json(),
         )
 
     def _init_builders(self):
@@ -112,7 +112,7 @@ class ClientCompiler:
                 builder.register_controller(
                     controller_definition.controller,
                     self.view_root.get_controller_view_path(
-                        controller_definition.controller
+                        controller_definition.controller,
                     ),
                 )
 
@@ -123,10 +123,7 @@ class ClientCompiler:
             for dir_path, _, filenames in view_root.walk():
                 for filename in filenames:
                     if any(
-                        [
-                            directory in dir_path.parts
-                            for directory in ignore_directories
-                        ]
+                        [directory in dir_path.parts for directory in ignore_directories],
                     ):
                         continue
                     yield dir_path / filename
@@ -203,7 +200,7 @@ class ClientCompiler:
                 static_path = base_path / file
                 file_contents = static_path.read_bytes()
                 static_artifact_shas[str(static_path.relative_to(static_dir))] = md5(
-                    file_contents
+                    file_contents,
                 ).hexdigest()
 
         return BuildMetadata(static_artifact_shas=static_artifact_shas)

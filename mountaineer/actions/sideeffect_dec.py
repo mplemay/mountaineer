@@ -1,14 +1,12 @@
+from collections.abc import Callable, Coroutine
 from contextlib import asynccontextmanager
 from functools import partial, wraps
 from inspect import Parameter, isawaitable, signature
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
     Concatenate,
-    Coroutine,
     ParamSpec,
-    Type,
     TypeVar,
     overload,
 )
@@ -47,8 +45,8 @@ C = TypeVar("C")
 def sideeffect(
     *,
     reload: tuple[Any, ...] | None = None,
-    response_model: Type[BaseModel] | None = None,  # deprecated
-    exception_models: list[Type[APIException]] | None = None,
+    response_model: type[BaseModel] | None = None,  # deprecated
+    exception_models: list[type[APIException]] | None = None,
     experimental_render_reload: bool | None = None,
 ) -> Callable[
     [Callable[Concatenate[C, P], R | Coroutine[Any, Any, R]]],
@@ -57,7 +55,6 @@ def sideeffect(
     """
     @sideeffect decorator with options.
     """
-    ...
 
 
 @overload
@@ -67,7 +64,6 @@ def sideeffect(
     """
     Simple @sideeffect, will use default options.
     """
-    ...
 
 
 def sideeffect(*args, **kwargs):  # type: ignore
@@ -86,9 +82,11 @@ def sideeffect(*args, **kwargs):  # type: ignore
     # In-memory counter for this example
     counter = {"count": 0}
 
+
     class ControllerRender(RenderBase):
         count: int
         api_status: str
+
 
     class MyController(ControllerBase):
         async def render(self) -> ControllerRender:
@@ -97,15 +95,11 @@ def sideeffect(*args, **kwargs):  # type: ignore
                 response = await client.get("https://api.example.com/status")
                 api_status = response.json().get("status", "unknown")
 
-            return ControllerRender(
-                count=counter["count"],
-                api_status=api_status
-            )
+            return ControllerRender(count=counter["count"], api_status=api_status)
 
         @sideeffect
         async def increment_count(self) -> None:
             counter["count"] += 1
-
     ```
 
     :param exception_models: List of APIException subclasses that this function is known
@@ -140,18 +134,19 @@ def sideeffect(*args, **kwargs):  # type: ignore
 
     def decorator_with_args(
         reload: tuple[FieldClassDefinition, ...] | None = None,
-        response_model: Type[BaseModel] | None = None,
-        exception_models: list[Type[APIException]] | None = None,
+        response_model: type[BaseModel] | None = None,
+        exception_models: list[type[APIException]] | None = None,
         experimental_render_reload: bool = False,
     ):
         def wrapper(func: Callable):
             passthrough_model, response_type = extract_response_model_from_signature(
-                func, response_model
+                func,
+                response_model,
             )
 
             if response_type == ResponseModelType.ITERATOR_RESPONSE:
                 raise ValueError(
-                    "Sideeffect functions cannot return an iterator response. Use a normal response model instead."
+                    "Sideeffect functions cannot return an iterator response. Use a normal response model instead.",
                 )
 
             original_sig = signature(func)
@@ -172,7 +167,8 @@ def sideeffect(*args, **kwargs):  # type: ignore
                     if experimental_render_reload and reload:
                         render_fn = partial(
                             crop_function_for_return_keys(
-                                self.render, keys=[field.key for field in reload]
+                                self.render,
+                                keys=[field.key for field in reload],
                             ),
                             self,
                         )
@@ -183,14 +179,14 @@ def sideeffect(*args, **kwargs):  # type: ignore
                 # This shouldn't occur - but is necessary for typehinting
                 if not render_fn:
                     raise ValueError(
-                        "Unable to compute a valid render function for sideeffect"
+                        "Unable to compute a valid render function for sideeffect",
                     )
 
                 # Check if the original function expects a 'request' parameter
                 request = func_kwargs.pop("request")
                 if not request:
                     raise ValueError(
-                        "Sideeffect function must have a 'request' parameter"
+                        "Sideeffect function must have a 'request' parameter",
                     )
 
                 if function_needs_request:
@@ -217,7 +213,7 @@ def sideeffect(*args, **kwargs):  # type: ignore
                         "passthrough": passthrough_values,
                     }
                     return format_final_action_response(  # type: ignore[arg-type]  # TypedDict payload not accepted by mypy for dict param
-                        final_payload
+                        final_payload,
                     )
 
             # Update the signature of 'inner' to include 'request: Request'
@@ -228,7 +224,9 @@ def sideeffect(*args, **kwargs):  # type: ignore
             parameters = list(sig.parameters.values())
             if "request" not in sig.parameters:
                 request_param = Parameter(
-                    "request", Parameter.POSITIONAL_OR_KEYWORD, annotation=Request
+                    "request",
+                    Parameter.POSITIONAL_OR_KEYWORD,
+                    annotation=Request,
                 )
                 parameters.insert(1, request_param)  # Insert after 'self'
             new_sig = sig.replace(parameters=parameters)
@@ -249,9 +247,8 @@ def sideeffect(*args, **kwargs):  # type: ignore
         # It's used as @sideeffect without arguments
         func = args[0]
         return decorator_with_args()(func)
-    else:
-        # It's used as @sideeffect(xyz=2) with arguments
-        return decorator_with_args(**kwargs)
+    # It's used as @sideeffect(xyz=2) with arguments
+    return decorator_with_args(**kwargs)
 
 
 @asynccontextmanager
@@ -287,7 +284,7 @@ async def get_render_parameters(
             "scheme": request.scope["scheme"],
             "client": request.scope["client"],
             "server": request.scope["server"],
-        }
+        },
     )
 
     if (session := request.scope.get("session", None)) is not None:
@@ -296,7 +293,7 @@ async def get_render_parameters(
     if not controller._definition:
         raise RuntimeError(
             "Controller definition is not set. This might indicate you're calling a"
-            " sideeffect from outside of a Mountaineer context."
+            " sideeffect from outside of a Mountaineer context.",
         )
 
     # Follow starlette's original logic to resolve routes, since this provides us the necessary
@@ -306,14 +303,13 @@ async def get_render_parameters(
     # https://github.com/encode/starlette/blob/5c43dde0ec0917673bb280bcd7ab0c37b78061b7/starlette/routing.py#L544
     for route in (
         controller._definition.route.render_router.routes
-        if controller._definition.route
-        and controller._definition.route.render_router is not None
+        if controller._definition.route and controller._definition.route.render_router is not None
         else []
     ):
         match, child_scope = route.matches(view_request.scope)
         if match != Match.FULL:
             raise RuntimeError(
-                f"Route {route} did not match ({match}) {view_request.scope}"
+                f"Route {route} did not match ({match}) {view_request.scope}",
             )
         view_request.scope = {
             # Make sure we're populating the path params with some values
@@ -326,15 +322,11 @@ async def get_render_parameters(
     try:
         async with get_function_dependencies(
             callable=controller.render,
-            url=(
-                controller.url
-                if not isinstance(controller, LayoutControllerBase)
-                else None
-            ),
+            url=(controller.url if not isinstance(controller, LayoutControllerBase) else None),
             request=view_request,
         ) as values:
             yield values
     except RuntimeError as e:
         raise RuntimeError(
-            f"Error occurred while resolving dependencies for render(): {controller}: {e}"
+            f"Error occurred while resolving dependencies for render(): {controller}: {e}",
         ) from e

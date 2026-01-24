@@ -46,17 +46,19 @@ class GlobalControllerGenerator(FileGeneratorBase):
         # Recursively traverse our controller definitions, which themselves point to other
         # in-memory objects that should be converted like models and enums
         controllers = ControllerWrapper.get_all_embedded_controllers(
-            self.controller_wrappers
+            self.controller_wrappers,
         )
         embedded_types = ControllerWrapper.get_all_embedded_types(
-            controllers, include_superclasses=True
+            controllers,
+            include_superclasses=True,
         )
 
         # Resolve the MRO ordering for all the interfaces, since they'll be defined
         # in one file
         controller_sorted = self._build_controller_graph(controllers)
         model_enum_sorted = self._build_model_enum_graph(
-            embedded_types.models, embedded_types.enums
+            embedded_types.models,
+            embedded_types.enums,
         )
 
         yield CodeBlock(
@@ -96,7 +98,9 @@ class GlobalControllerGenerator(FileGeneratorBase):
             yield CodeBlock(ControllerInterface.from_controller(controller).to_js())
 
     def _build_model_enum_graph(
-        self, models: list[ModelWrapper], enums: list[EnumWrapper]
+        self,
+        models: list[ModelWrapper],
+        enums: list[EnumWrapper],
     ):
         """Build dependency graph for models and enums"""
         # Build id-based graph
@@ -126,7 +130,8 @@ class GlobalControllerGenerator(FileGeneratorBase):
         return [id_to_obj[node_id] for node_id in sorted_ids]
 
     def _build_controller_graph(
-        self, controllers: list[ControllerWrapper]
+        self,
+        controllers: list[ControllerWrapper],
     ) -> list[ControllerWrapper]:
         """Build dependency graph for controllers"""
         # Build id-based graph
@@ -140,9 +145,7 @@ class GlobalControllerGenerator(FileGeneratorBase):
 
         # Add controller superclass dependencies
         for controller in controllers:
-            graph[id(controller)].update(
-                id(superclass) for superclass in controller.superclasses
-            )
+            graph[id(controller)].update(id(superclass) for superclass in controller.superclasses)
 
         # Convert graph to use actual objects for TopologicalSorter
         sorted_ids = TopologicalSorter(graph).static_order()
@@ -170,13 +173,14 @@ class GlobalLinkGenerator(FileGeneratorBase):
 
             controller_dir = parsed_controller.view_path.get_managed_code_dir()
             controller_implementation_path = generate_relative_import(
-                self.managed_path, controller_dir / "links.ts"
+                self.managed_path,
+                controller_dir / "links.ts",
             )
 
             # Add import and setter for this controller
             local_name = f"{parsed_controller.wrapper.name.global_name}GetLinks"
             imports.append(
-                f"import {{ getLink as {local_name} }} from '{controller_implementation_path}';"
+                f"import {{ getLink as {local_name} }} from '{controller_implementation_path}';",
             )
             link_setters[
                 # @pierce: 12-11-2024: Mirror the lowercase camelcase convention of previous versions
@@ -184,7 +188,7 @@ class GlobalLinkGenerator(FileGeneratorBase):
                     camelize(
                         parsed_controller.wrapper.controller.__name__,
                         uppercase_first_letter=False,
-                    )
+                    ),
                 )
             ] = TSLiteral(local_name)
 

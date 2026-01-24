@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Generic, Optional, Type, TypeVar, cast
+from typing import Generic, Optional, TypeVar, cast
 
 import pytest
 from pydantic import BaseModel
@@ -28,7 +28,9 @@ class TestAliasManager:
         return AliasManager()
 
     def test_basic_name_normalization(
-        self, parser: ControllerParser, alias_manager: AliasManager
+        self,
+        parser: ControllerParser,
+        alias_manager: AliasManager,
     ) -> None:
         class TestModel(BaseModel):
             field: str
@@ -48,7 +50,9 @@ class TestAliasManager:
         assert wrapper.name.raw_name == "TestModel"
 
     def test_global_model_conflict_resolution(
-        self, parser: ControllerParser, alias_manager: AliasManager
+        self,
+        parser: ControllerParser,
+        alias_manager: AliasManager,
     ) -> None:
         class User(BaseModel):
             name: str
@@ -86,7 +90,9 @@ class TestAliasManager:
         assert wrapper2.name.global_name == "AuthModels_User"
 
     def test_cross_type_conflict_resolution(
-        self, parser: ControllerParser, alias_manager: AliasManager
+        self,
+        parser: ControllerParser,
+        alias_manager: AliasManager,
     ) -> None:
         class Status1(BaseModel):
             code: int
@@ -108,7 +114,9 @@ class TestAliasManager:
         )
 
         enum_wrapper: EnumWrapper = EnumWrapper(
-            name=WrapperName("Status"), module_name="enums.status", enum=Status2
+            name=WrapperName("Status"),
+            module_name="enums.status",
+            enum=Status2,
         )
 
         parser.parsed_models[Status1] = model_wrapper
@@ -120,7 +128,9 @@ class TestAliasManager:
         assert enum_wrapper.name.global_name == "EnumsStatus_Status"
 
     def test_self_reference_updating(
-        self, parser: ControllerParser, alias_manager: AliasManager
+        self,
+        parser: ControllerParser,
+        alias_manager: AliasManager,
     ) -> None:
         class Node(BaseModel):
             value: str
@@ -128,7 +138,7 @@ class TestAliasManager:
 
         class Node2(BaseModel):
             value: str
-            parent: Optional[Node] = None
+            parent: Node | None = None
 
         wrapper: ModelWrapper = ModelWrapper(
             name=WrapperName("Node"),
@@ -151,7 +161,9 @@ class TestAliasManager:
         assert parser.parsed_self_references[0].name == "TreeModels_Node"
 
     def test_local_name_resolution(
-        self, parser: ControllerParser, alias_manager: AliasManager
+        self,
+        parser: ControllerParser,
+        alias_manager: AliasManager,
     ) -> None:
         class StatusEnum(Enum):
             ACTIVE = "active"
@@ -186,7 +198,9 @@ class TestAliasManager:
         )
 
         enum_wrapper: EnumWrapper = EnumWrapper(
-            name=WrapperName("StatusEnum"), module_name="enums", enum=StatusEnum
+            name=WrapperName("StatusEnum"),
+            module_name="enums",
+            enum=StatusEnum,
         )
 
         parser.parsed_controllers[TestController] = controller_wrapper
@@ -199,13 +213,15 @@ class TestAliasManager:
         assert enum_wrapper.name.local_name == "StatusEnum"
 
     def test_generic_model_naming(
-        self, parser: ControllerParser, alias_manager: AliasManager
+        self,
+        parser: ControllerParser,
+        alias_manager: AliasManager,
     ) -> None:
         class Container(BaseModel, Generic[T]):
             value: T
 
-        string_generic = cast(Type[BaseModel], Container[str])
-        int_generic = cast(Type[BaseModel], Container[int])
+        string_generic = cast("type[BaseModel]", Container[str])
+        int_generic = cast("type[BaseModel]", Container[int])
 
         wrappers = {
             cls: ModelWrapper(
@@ -284,7 +300,10 @@ class TestAliasManager:
         ],
     )
     def test_typescript_prefix_from_module(
-        self, alias_manager: AliasManager, module_path: str, expected_prefix: str
+        self,
+        alias_manager: AliasManager,
+        module_path: str,
+        expected_prefix: str,
     ) -> None:
         """Test the module prefix formatting for various module path patterns"""
         result: str = alias_manager._typescript_prefix_from_module(module_path)

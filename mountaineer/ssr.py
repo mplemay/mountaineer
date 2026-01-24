@@ -89,7 +89,7 @@ def extract_code_context(script: str, line_number: int, context_lines: int = 3) 
     # Validate line number bounds
     if line_number < 1 or line_number > total_lines:
         raise ValueError(
-            f"Line number {line_number} is out of bounds (script has {total_lines} lines)"
+            f"Line number {line_number} is out of bounds (script has {total_lines} lines)",
         )
 
     # Convert to 0-indexed and ensure bounds
@@ -112,9 +112,7 @@ def extract_code_context(script: str, line_number: int, context_lines: int = 3) 
 
     # Add a header showing the location if we're deep in a large file
     if line_number > 50:
-        header = (
-            f"Context around line {line_number} (script has {total_lines} total lines):"
-        )
+        header = f"Context around line {line_number} (script has {total_lines} total lines):"
         return header + "\n" + "\n".join(context_lines_list)
 
     return "\n".join(context_lines_list)
@@ -168,11 +166,13 @@ def fix_exception_lines(*, exception: str, injected_script: str):
             logging.debug(f"Correcting line {line_number} -> {corrected_line}")
         else:
             logging.warning(
-                f"Line number {line_number} would become {corrected_line} after correction, skipping"
+                f"Line number {line_number} would become {corrected_line} after correction, skipping",
             )
 
     sorted_replacements = sorted(
-        text_replacements.items(), key=lambda x: x[0][0], reverse=True
+        text_replacements.items(),
+        key=lambda x: x[0][0],
+        reverse=True,
     )
 
     for (start, end), replacement in sorted_replacements:
@@ -207,7 +207,7 @@ def find_tsconfig(paths: list[list[str]]) -> str | None:
 
     if not tsconfig_paths:
         logging.warning(
-            f"No tsconfig.json found in any parent directory of the provided paths: {paths}"
+            f"No tsconfig.json found in any parent directory of the provided paths: {paths}",
         )
         return None
 
@@ -219,7 +219,7 @@ def find_tsconfig(paths: list[list[str]]) -> str | None:
 def render_ssr(
     script: str,
     render_data: dict[str, Any],
-    hard_timeout: int | float | None = None,
+    hard_timeout: float | None = None,
     sourcemap: str | None = None,
 ) -> str:
     """
@@ -251,14 +251,16 @@ def render_ssr(
     try:
         # Convert to milliseconds for the rust worker
         render_result = mountaineer_rs.render_ssr(
-            full_script, int(hard_timeout * 1000) if hard_timeout else 0
+            full_script,
+            int(hard_timeout * 1000) if hard_timeout else 0,
         )
     except ConnectionAbortedError:
         raise TimeoutError("SSR render was interrupted after hard timeout")
     except ValueError as e:
         original_stack = str(e)
         js_stack = fix_exception_lines(
-            exception=original_stack, injected_script=injected_script
+            exception=original_stack,
+            injected_script=injected_script,
         )
 
         # Prepare enhanced error context
@@ -280,28 +282,28 @@ def render_ssr(
         try:
             # Extract context using original line numbers (before fix_exception_lines)
             original_error_locations = extract_error_locations_from_stack(
-                original_stack
+                original_stack,
             )
             corrected_error_locations = extract_error_locations_from_stack(js_stack)
 
             context_extraction_attempts.append(
-                f"Found {len(original_error_locations)} error location(s) in stack trace"
+                f"Found {len(original_error_locations)} error location(s) in stack trace",
             )
 
             # Log debug information to help diagnose issues
             if not original_error_locations:
                 logging.warning(
-                    f"No error locations found in original stack: {original_stack}"
+                    f"No error locations found in original stack: {original_stack}",
                 )
                 context_extraction_attempts.append(
-                    "Failed to parse error locations from stack trace"
+                    "Failed to parse error locations from stack trace",
                 )
             if not corrected_error_locations:
                 logging.warning(
-                    f"No error locations found in corrected stack: {js_stack}"
+                    f"No error locations found in corrected stack: {js_stack}",
                 )
                 context_extraction_attempts.append(
-                    "Failed to parse error locations from corrected stack trace"
+                    "Failed to parse error locations from corrected stack trace",
                 )
 
             for (orig_file, orig_line, orig_col), (
@@ -318,17 +320,17 @@ def render_ssr(
                         context = extract_code_context(full_script, orig_line)
                         code_context[location_key] = context
                         logging.debug(
-                            f"Successfully extracted context for {location_key}"
+                            f"Successfully extracted context for {location_key}",
                         )
                         context_extraction_attempts.append(
-                            f"Successfully extracted context for {location_key}"
+                            f"Successfully extracted context for {location_key}",
                         )
                     except Exception as ctx_err:
                         logging.warning(
-                            f"Failed to extract context for line {orig_line}: {ctx_err}"
+                            f"Failed to extract context for line {orig_line}: {ctx_err}",
                         )
                         context_extraction_attempts.append(
-                            f"Failed to extract context for line {orig_line}: {str(ctx_err)}"
+                            f"Failed to extract context for line {orig_line}: {ctx_err!s}",
                         )
 
                     # Limit context to prevent overwhelming output
@@ -336,24 +338,25 @@ def render_ssr(
                         break
                 else:
                     context_extraction_attempts.append(
-                        f"Skipped context extraction for {orig_file} (not anonymous)"
+                        f"Skipped context extraction for {orig_file} (not anonymous)",
                     )
 
             if not code_context:
                 logging.warning(
-                    "No code context could be extracted from error locations"
+                    "No code context could be extracted from error locations",
                 )
                 context_extraction_attempts.append(
-                    "No code context could be extracted from any error location"
+                    "No code context could be extracted from any error location",
                 )
 
         except Exception as context_error:
             # Log but don't fail on context extraction errors
             logging.warning(
-                f"Failed to extract code context: {context_error}", exc_info=True
+                f"Failed to extract code context: {context_error}",
+                exc_info=True,
             )
             context_extraction_attempts.append(
-                f"Context extraction failed with exception: {str(context_error)}"
+                f"Context extraction failed with exception: {context_error!s}",
             )
 
         # Add fallback information if no context was extracted
@@ -370,8 +373,8 @@ def render_ssr(
                         "This may happen with very large scripts, unusual stack trace formats,",
                         "or when error locations point outside the script boundaries.",
                         "The basic stack trace above should still help identify the issue.",
-                    ]
-                )
+                    ],
+                ),
             }
             code_context.update(fallback_info)
 
@@ -383,4 +386,4 @@ def render_ssr(
             script_content=full_script if len(code_context) > 0 else None,
         )
 
-    return cast(str, render_result)
+    return cast("str", render_result)

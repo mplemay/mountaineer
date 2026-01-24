@@ -25,9 +25,7 @@ async def test_parse_source_map_parse(
     end_timing()
     assert parser.source_map
 
-    source_filenames = {
-        Path(source_path).name for source_path in parser.source_map.sources
-    }
+    source_filenames = {Path(source_path).name for source_path in parser.source_map.sources}
     assert source_filenames == {
         "react.development.js",
         "index.js",
@@ -54,7 +52,10 @@ def test_map_exception():
     """
 
     def make_map_metadata(
-        line_number: int, column_number: int, source_line: int, source_column: int
+        line_number: int,
+        column_number: int,
+        source_line: int,
+        source_column: int,
     ) -> mountaineer_rs.MapMetadata:
         """
         Workaround to deal with rust's MapMetadata constructor

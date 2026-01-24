@@ -1,7 +1,8 @@
+from collections.abc import AsyncIterator
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import AsyncIterator, Generic, Optional, TypeVar
+from typing import Generic, Optional, TypeVar
 
 import pytest
 from fastapi import File, Form, UploadFile
@@ -135,7 +136,9 @@ class ExampleController(ControllerBase, BaseExampleController):
 
     @sideeffect
     def update_form(  # type: ignore
-        self, name: str = Form(...), size: int = Form(...)
+        self,
+        name: str = Form(...),
+        size: int = Form(...),
     ) -> FileUploadResponse:  # type: ignore
         pass
 
@@ -155,7 +158,9 @@ class SpecialTypesController(ControllerBase):
     @passthrough
     async def stream_action(self) -> AsyncIterator[ExampleModelBase]:
         yield ExampleModelBase(
-            string_field="test", int_field=1, enum_field=ExampleEnum.A
+            string_field="test",
+            int_field=1,
+            enum_field=ExampleEnum.A,
         )
 
 
@@ -225,14 +230,10 @@ class TestControllerParser:
 
         # Verify different action types
         assert {
-            a.name
-            for a in wrapper.actions.values()
-            if a.action_type == FunctionActionType.PASSTHROUGH
+            a.name for a in wrapper.actions.values() if a.action_type == FunctionActionType.PASSTHROUGH
         } == known_passthrough
         assert {
-            a.name
-            for a in wrapper.actions.values()
-            if a.action_type == FunctionActionType.SIDEEFFECT
+            a.name for a in wrapper.actions.values() if a.action_type == FunctionActionType.SIDEEFFECT
         } == known_sideeffect
 
     def test_parse_render_method(self, parser: ControllerParser):
@@ -312,12 +313,8 @@ class TestControllerParser:
         assert a_response
         assert b_response
 
-        response_a_sideeffect = next(
-            field for field in a_response.value_models if field.name == "sideeffect"
-        )
-        response_b_sideeffect = next(
-            field for field in b_response.value_models if field.name == "sideeffect"
-        )
+        response_a_sideeffect = next(field for field in a_response.value_models if field.name == "sideeffect")
+        response_b_sideeffect = next(field for field in b_response.value_models if field.name == "sideeffect")
 
         assert isinstance(response_a_sideeffect.value, ModelWrapper)
         assert isinstance(response_b_sideeffect.value, ModelWrapper)
@@ -357,9 +354,7 @@ class TestGenericHandling:
     def test_multi_generic(self, parser: ControllerParser):
         wrapper = parser._parse_model(MultiGenericTestModel[str, int])
         assert len(wrapper.value_models) == 1
-        assert any(
-            f.name == "second_value" and f.value is int for f in wrapper.value_models
-        )
+        assert any(f.name == "second_value" and f.value is int for f in wrapper.value_models)
 
     def test_nested_generic_resolution(self, parser: ControllerParser):
         wrapper = parser._parse_model(NestedGenericTestModel[str])
@@ -406,7 +401,8 @@ class TestControllerWrapperFeatures:
     ):
         wrapper = parser.parse_controller(ExampleController)
         embedded = ControllerWrapper.get_all_embedded_types(
-            [wrapper], include_superclasses=include_superclasses
+            [wrapper],
+            include_superclasses=include_superclasses,
         )
 
         model_names = {m.model.__name__ for m in embedded.models}
@@ -597,7 +593,7 @@ class TestActionWrapper:
         self,
         params: list[FieldWrapper],
         headers: list[FieldWrapper],
-        request_body: Optional[ModelWrapper],
+        request_body: ModelWrapper | None,
         expected_has_required: bool,
     ):
         action = ActionWrapper(
@@ -609,8 +605,9 @@ class TestActionWrapper:
             request_body=request_body,
             response_bodies={
                 ControllerBase: create_model_wrapper(
-                    StandardResponse, "StandardResponse"
-                )
+                    StandardResponse,
+                    "StandardResponse",
+                ),
             },
             exceptions=[],
             is_raw_response=False,

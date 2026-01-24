@@ -136,4 +136,3 @@ define lint-rust
 	$(call run-clippy,$(1))
 	@echo "=== All Rust linters completed successfully for $(1) ==="
 endef
-

@@ -39,7 +39,8 @@ def test_third_failed_str_enum():
 
 def test_third_failed_str_enum_encoding_issue():
     with pytest.raises(
-        TypeError, match="encoding must be a string, not %r" % (sys.getdefaultencoding,)
+        TypeError,
+        match="encoding must be a string, not %r" % (sys.getdefaultencoding,),
     ):
 
         class FourthFailedStrEnum(StrEnum):

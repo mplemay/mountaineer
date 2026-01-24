@@ -1,8 +1,8 @@
+from collections.abc import Callable
 from inspect import signature
 
 import pytest
 from fastapi import Depends, Request
-from typing_extensions import Callable
 
 from mountaineer.dependencies.base import (
     DependenciesBase,

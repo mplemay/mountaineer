@@ -18,7 +18,8 @@ class ExecutionTooLong(Exception):
 
 
 def benchmark_function(
-    max_time_seconds: int | float, time_budget_seconds: int | float = 5
+    max_time_seconds: float,
+    time_budget_seconds: float = 5,
 ):
     """
     Wrap test functions in a timer that will enforce that the core logic completes
@@ -37,11 +38,7 @@ def benchmark_function(
         # We want to remove our custom functions from the signature, since pytest will natively
         # try to inject fixtures in this place
         orig_sig = signature(test_func)
-        new_params = [
-            p
-            for name, p in orig_sig.parameters.items()
-            if name not in {"start_timing", "end_timing"}
-        ]
+        new_params = [p for name, p in orig_sig.parameters.items() if name not in {"start_timing", "end_timing"}]
         new_sig = orig_sig.replace(parameters=new_params)
 
         # Make sure that our function is a coroutine (if it is we assume user has decorated it with
@@ -49,7 +46,7 @@ def benchmark_function(
         # to run it
         if not iscoroutinefunction(test_func):
             raise Exception(
-                f"Test function {test_func.__name__} is not a coroutine function. Please decorate it with pytest.mark.asyncio"
+                f"Test function {test_func.__name__} is not a coroutine function. Please decorate it with pytest.mark.asyncio",
             )
 
         async def single_time_test(fn, *args, **kwargs):
@@ -68,7 +65,10 @@ def benchmark_function(
                 end = monotonic_ns()
 
             result = test_func(
-                *args, **kwargs, start_timing=start_timing, end_timing=end_timing
+                *args,
+                **kwargs,
+                start_timing=start_timing,
+                end_timing=end_timing,
             )
             if isawaitable(result):
                 result = await result
@@ -88,12 +88,11 @@ def benchmark_function(
                 global_start = monotonic_ns()
 
                 # Run at least one test, but keep running until we hit our time budget
-                while (
-                    monotonic_ns() - global_start < time_budget_seconds * 1e9
-                    or len(results) == 0
-                ):
+                while monotonic_ns() - global_start < time_budget_seconds * 1e9 or len(results) == 0:
                     start, end, result = await single_time_test(
-                        test_func, *args, **kwargs
+                        test_func,
+                        *args,
+                        **kwargs,
                     )
 
                     if start is None:
@@ -104,17 +103,15 @@ def benchmark_function(
                     timed_durations.append((start, end))
                     results.append(result)
 
-                average_duration = sum(
-                    (end - start) for start, end in timed_durations
-                ) / len(timed_durations)
+                average_duration = sum((end - start) for start, end in timed_durations) / len(timed_durations)
 
                 LOGGER.info(
-                    f"Collected {len(results)} timed durations in {(monotonic_ns() - global_start) / 1e9}"
+                    f"Collected {len(results)} timed durations in {(monotonic_ns() - global_start) / 1e9}",
                 )
                 LOGGER.info(f"Test function took average: {average_duration / 1e9}")
 
                 if average_duration / 1e9 > max_time_seconds:
-                    raise ExecutionTooLong()
+                    raise ExecutionTooLong
 
                 return results[0]
 
@@ -141,13 +138,16 @@ def benchmark_function(
                     output_filename = file.name
 
                 result = test_func(
-                    *args, **kwargs, start_timing=start_timing, end_timing=end_timing
+                    *args,
+                    **kwargs,
+                    start_timing=start_timing,
+                    end_timing=end_timing,
                 )
                 if isawaitable(result):
                     await result
 
                 pytest.fail(
-                    f"Test function failed in {average_duration / 1e9}s and profiles generated; Pyinstrument: {output_filename}"
+                    f"Test function failed in {average_duration / 1e9}s and profiles generated; Pyinstrument: {output_filename}",
                 )
 
         wrapper.__signature__ = new_sig  # type: ignore

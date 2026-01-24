@@ -49,7 +49,7 @@ class TestCodeBlock:
                 multi
                 line
                 string'''
-            """
+            """,
                 ).strip(),
                 "def example():\n    x = '''\n    multi\n    line\n    string'''",
             ),
@@ -71,9 +71,7 @@ class TestCodeBlock:
             second
                 third"""
         input_str = f"    function({var})"
-        expected = (
-            "    function(first\n                second\n                    third)"
-        )
+        expected = "    function(first\n                second\n                    third)"
         assert CodeBlock.indent(input_str) == expected
 
     def test_whitespace_preservation(self):

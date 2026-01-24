@@ -1,14 +1,12 @@
 from abc import ABC
+from collections.abc import Callable, Coroutine, Iterable
 from hashlib import md5
 from inspect import getmembers, isfunction, ismethod
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Callable,
-    Coroutine,
     Generic,
-    Iterable,
     Optional,
     ParamSpec,
 )
@@ -46,8 +44,10 @@ class ControllerBase(ABC, Generic[RenderInput]):
     ```python {{sticky: True}}
     from mountaineer import ControllerBase, RenderBase
 
+
     class MyControllerRender(RenderBase):
         value: int
+
 
     class MyController(ControllerBase):
         url = "/my-page"
@@ -67,7 +67,6 @@ class ControllerBase(ABC, Generic[RenderInput]):
 
     export default MyPage;
     ```
-
     """
 
     url: str
@@ -138,7 +137,9 @@ class ControllerBase(ABC, Generic[RenderInput]):
     """
 
     def __init__(
-        self, slow_ssr_threshold: float = 0.1, hard_ssr_timeout: float | None = 10.0
+        self,
+        slow_ssr_threshold: float = 0.1,
+        hard_ssr_timeout: float | None = 10.0,
     ):
         """
         Clients can override this `__init__` function so long as they call `super().__init__()` at
@@ -166,7 +167,9 @@ class ControllerBase(ABC, Generic[RenderInput]):
         self._ssr_path: Path | None = None
 
     def render(
-        self, *args: RenderInput.args, **kwargs: RenderInput.kwargs
+        self,
+        *args: RenderInput.args,
+        **kwargs: RenderInput.kwargs,
     ) -> RenderBase | None | Coroutine[Any, Any, RenderBase | None]:
         """
         Render provides the raw data payload that will be sent to the frontend on initial
@@ -179,6 +182,7 @@ class ControllerBase(ABC, Generic[RenderInput]):
         ```python
         class MyServerData(RenderBase):
             pass
+
 
         class MyController:
             def render(self) -> MyServerData:
@@ -206,13 +210,11 @@ class ControllerBase(ABC, Generic[RenderInput]):
                 query_param: str,
                 path_param: int,
                 dependency: MyDependency = Depends(MyDependency),
-            ) -> MyServerData:
-                ...
+            ) -> MyServerData: ...
         ```
 
         :return: A RenderBase instance or None
         """
-        pass
 
     def _get_client_functions(self) -> Iterable[tuple[str, Callable, FunctionMetadata]]:
         """
@@ -246,9 +248,7 @@ class ControllerBase(ABC, Generic[RenderInput]):
         if ssr_path.exists():
             self._ssr_path = ssr_path
             ssr_map_path = ssr_path.with_suffix(".js.map")
-            self.source_map = (
-                SourceMapParser(ssr_map_path) if ssr_map_path.exists() else None
-            )
+            self.source_map = SourceMapParser(ssr_map_path) if ssr_map_path.exists() else None
         else:
             LOGGER.debug(f"SSR path not found for {self.script_name} {ssr_path}")
             found_dependencies = False
@@ -269,17 +269,16 @@ class ControllerBase(ABC, Generic[RenderInput]):
     def full_view_path(self) -> ManagedViewPath:
         if isinstance(self.view_path, ManagedViewPath):
             return self.view_path
-        elif isinstance(self.view_path, str):
+        if isinstance(self.view_path, str):
             if self._view_base_path is None:
                 raise ValueError(
-                    f"Unable to resolve view path because of unset view_base_path: {self.view_path}"
+                    f"Unable to resolve view path because of unset view_base_path: {self.view_path}",
                 )
 
             return ManagedViewPath.from_view_root(  # type: ignore
-                self._view_base_path
+                self._view_base_path,
             ) / self.view_path.lstrip("/")
-        else:
-            return ManagedViewPath(str(self.view_path))
+        return ManagedViewPath(str(self.view_path))
 
     @property
     def script_name(self):

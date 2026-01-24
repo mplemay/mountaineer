@@ -1,9 +1,9 @@
 from contextlib import contextmanager
+from typing import dataclass_transform
 
 from pydantic._internal._model_construction import ModelMetaclass
 from pydantic.fields import Field
 from pydantic_settings import BaseSettings
-from typing_extensions import dataclass_transform
 
 
 class ConfigMeta(ModelMetaclass):
@@ -55,7 +55,7 @@ def register_config(config: ConfigBase):
     """
     global APP_CONFIG
 
-    if APP_CONFIG is not None and APP_CONFIG != config:
+    if APP_CONFIG is not None and config != APP_CONFIG:
         raise ValueError("Config already registered")
 
     APP_CONFIG = config
@@ -80,7 +80,7 @@ def get_config() -> ConfigBase:
         raise ValueError(
             "Configuration not registered. Either:\n"
             "1. Call register_config() with your BaseSettings class\n"
-            "2. Make sure your BaseSettings is imported so the ConfigMeta can auto-register"
+            "2. Make sure your BaseSettings is imported so the ConfigMeta can auto-register",
         )
 
     return APP_CONFIG

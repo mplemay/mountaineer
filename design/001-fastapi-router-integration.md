@@ -262,7 +262,8 @@ Tests should be organized by module/file and cover unit tests, integration tests
 
 **Mountaineer sub-app tests:**
 
-- Mount at root: create `FastAPI()` and `Mountaineer(view_root=...)`, register a controller, then `app.mount("/", app=mountaineer)`
+- Mount at root: create `FastAPI()` and `Mountaineer(view_root=...)`, register a controller, then
+  `app.mount("/", app=mountaineer)`
 - Verify the view route is reachable via `TestClient(app)`
 - Verify action routes are reachable via `TestClient(app)`
 - Ensure `Mountaineer.__call__` delegates to the internal app

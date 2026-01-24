@@ -1,6 +1,6 @@
+from collections.abc import Sequence
 from enum import Enum
 from pathlib import Path
-from typing import List, Sequence
 
 import pytest
 
@@ -103,27 +103,31 @@ class TestGlobalControllerGenerator:
     def generator(
         self,
         managed_path: ManagedViewPath,
-        controller_wrappers: List[ControllerWrapper],
+        controller_wrappers: list[ControllerWrapper],
     ) -> GlobalControllerGenerator:
         return GlobalControllerGenerator(
-            managed_path=managed_path, controller_wrappers=controller_wrappers
+            managed_path=managed_path,
+            controller_wrappers=controller_wrappers,
         )
 
     def test_model_enum_graph_resolution(
-        self, generator: GlobalControllerGenerator
+        self,
+        generator: GlobalControllerGenerator,
     ) -> None:
         """Test that models and enums are sorted correctly"""
         # Get embedded types
         controllers = ControllerWrapper.get_all_embedded_controllers(
-            generator.controller_wrappers
+            generator.controller_wrappers,
         )
         embedded = ControllerWrapper.get_all_embedded_types(
-            controllers, include_superclasses=True
+            controllers,
+            include_superclasses=True,
         )
 
         # Sort them
         sorted_items = generator._build_model_enum_graph(
-            embedded.models, embedded.enums
+            embedded.models,
+            embedded.enums,
         )
 
         # Hierarchy is:
@@ -143,11 +147,12 @@ class TestGlobalControllerGenerator:
         assert main_model_idx < dependent_model_idx
 
     def test_controller_graph_resolution(
-        self, generator: GlobalControllerGenerator
+        self,
+        generator: GlobalControllerGenerator,
     ) -> None:
         """Test that controllers are sorted correctly"""
         controllers = ControllerWrapper.get_all_embedded_controllers(
-            generator.controller_wrappers
+            generator.controller_wrappers,
         )
         sorted_controllers = generator._build_controller_graph(controllers)
 
@@ -183,16 +188,16 @@ class TestGlobalControllerGenerator:
         sorted_items: Sequence[ModelWrapper | EnumWrapper | ControllerWrapper],
         raw_name: str,
     ):
-        return next(
-            i for i, item in enumerate(sorted_items) if item.name.raw_name == raw_name
-        )
+        return next(i for i, item in enumerate(sorted_items) if item.name.raw_name == raw_name)
 
 
 class TestGlobalLinkGenerator:
     @pytest.fixture
     def parsed_controllers(
-        self, controller_parser: ControllerParser, managed_path: ManagedViewPath
-    ) -> List[ParsedController]:
+        self,
+        controller_parser: ControllerParser,
+        managed_path: ManagedViewPath,
+    ) -> list[ParsedController]:
         (managed_path / "child").mkdir()
         (managed_path / "layout").mkdir()
 
@@ -211,10 +216,13 @@ class TestGlobalLinkGenerator:
 
     @pytest.fixture
     def generator(
-        self, managed_path: ManagedViewPath, parsed_controllers: List[ParsedController]
+        self,
+        managed_path: ManagedViewPath,
+        parsed_controllers: list[ParsedController],
     ) -> GlobalLinkGenerator:
         return GlobalLinkGenerator(
-            managed_path=managed_path, parsed_controllers=parsed_controllers
+            managed_path=managed_path,
+            parsed_controllers=parsed_controllers,
         )
 
     def test_script_generation(self, generator: GlobalLinkGenerator) -> None:

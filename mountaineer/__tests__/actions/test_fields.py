@@ -1,4 +1,5 @@
-from typing import AsyncIterator, Iterator, Optional
+from collections.abc import AsyncIterator, Iterator
+from typing import Optional
 
 import pytest
 from fastapi.responses import JSONResponse
@@ -123,7 +124,9 @@ def test_fuse_metadata_to_response_typehint(
 ):
     sample_controller = ExampleController()
     result_model = fuse_metadata_to_response_typehint(
-        metadata, sample_controller, render_model
+        metadata,
+        sample_controller,
+        render_model,
     )
 
     # Verify model name
@@ -225,18 +228,24 @@ def test_fuse_metadata_to_response_typehint_unique_models():
 
     # Create two metadata instances with the same function name but different controllers
     metadata_a = FunctionMetadata(
-        function_name="get_user", action_type=FunctionActionType.RENDER
+        function_name="get_user",
+        action_type=FunctionActionType.RENDER,
     )
     metadata_b = FunctionMetadata(
-        function_name="get_user", action_type=FunctionActionType.RENDER
+        function_name="get_user",
+        action_type=FunctionActionType.RENDER,
     )
 
     # Generate response models for each controller/render pair
     response_a = fuse_metadata_to_response_typehint(
-        metadata_a, MockControllerA(), RenderA
+        metadata_a,
+        MockControllerA(),
+        RenderA,
     )
     response_b = fuse_metadata_to_response_typehint(
-        metadata_b, MockControllerB(), RenderB
+        metadata_b,
+        MockControllerB(),
+        RenderB,
     )
 
     # Verify the models have different modules and inherited the ones

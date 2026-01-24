@@ -44,9 +44,7 @@ class SourceMapParser:
         self._common_prefix_cache: dict[frozenset[str], str | None] = {}
 
         # { (line, column) : MapMetadata }
-        self.parsed_mappings: (
-            dict[tuple[int, int], mountaineer_rs.MapMetadata] | None
-        ) = None
+        self.parsed_mappings: dict[tuple[int, int], mountaineer_rs.MapMetadata] | None = None
 
     def find_common_prefix(self, paths: list[str]) -> str | None:
         """
@@ -61,9 +59,7 @@ class SourceMapParser:
             return self._common_prefix_cache[paths_set]
 
         # Filter out anonymous paths and empty paths
-        valid_paths = [
-            p for p in paths if p and not p.startswith("<") and not p.endswith(">")
-        ]
+        valid_paths = [p for p in paths if p and not p.startswith("<") and not p.endswith(">")]
 
         if not valid_paths:
             result = None
@@ -94,12 +90,12 @@ class SourceMapParser:
         start_parse = monotonic_ns()
         self.source_map = SourceMapSchema.model_validate_json(text)
         LOGGER.debug(
-            f"Parsed source map in {(monotonic_ns() - start_parse) / 1e9:.2f}s"
+            f"Parsed source map in {(monotonic_ns() - start_parse) / 1e9:.2f}s",
         )
 
         start_parse = monotonic_ns()
         self.parsed_mappings = mountaineer_rs.parse_source_map_mappings(
-            self.source_map.mappings
+            self.source_map.mappings,
         )
         LOGGER.debug(f"Parsed mappings in {(monotonic_ns() - start_parse) / 1e9:.2f}s")
 
@@ -132,10 +128,12 @@ class SourceMapParser:
 
         # First pass: collect all relevant source indices
         for match in re_finditer(
-            r"\(([<>A-Za-z0-9/_.()]+?):(\d+?):(\d+?)\)", exception
+            r"\(([<>A-Za-z0-9/_.()]+?):(\d+?):(\d+?)\)",
+            exception,
         ):
             original_match = self.get_original_location(
-                int(match.group(2)), int(match.group(3))
+                int(match.group(2)),
+                int(match.group(3)),
             )
             if original_match and original_match.source_index is not None:
                 source = self.source_map.sources[original_match.source_index]
@@ -146,16 +144,19 @@ class SourceMapParser:
 
         # Second pass: build replacements
         for match in re_finditer(
-            r"\(([<>A-Za-z0-9/_.()]+?):(\d+?):(\d+?)\)", exception
+            r"\(([<>A-Za-z0-9/_.()]+?):(\d+?):(\d+?)\)",
+            exception,
         ):
             original_match = self.get_original_location(
-                int(match.group(2)), int(match.group(3))
+                int(match.group(2)),
+                int(match.group(3)),
             )
 
             if original_match and original_match.source_index is not None:
                 source = self.source_map.sources[original_match.source_index]
                 text_replacements[match.span(1)] = self._convert_relative_path(
-                    source, common_prefix
+                    source,
+                    common_prefix,
                 )
                 text_replacements[match.span(2)] = str(original_match.source_line)
                 text_replacements[match.span(3)] = str(original_match.source_column)
@@ -163,7 +164,9 @@ class SourceMapParser:
         # Sort in reverse order based on their start index to ensure that modifying parts of the string
         # doesn't affect the positions of parts that haven't been modified yet
         sorted_replacements = sorted(
-            text_replacements.items(), key=lambda x: x[0][0], reverse=True
+            text_replacements.items(),
+            key=lambda x: x[0][0],
+            reverse=True,
         )
 
         for (start, end), replacement in sorted_replacements:

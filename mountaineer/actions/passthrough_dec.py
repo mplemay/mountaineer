@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 from inspect import (
     isasyncgen,
@@ -9,13 +10,9 @@ from json import dumps as json_dumps
 from typing import (
     TYPE_CHECKING,
     Any,
-    AsyncIterator,
-    Callable,
     Concatenate,
-    Coroutine,
     Literal,
     ParamSpec,
-    Type,
     TypeVar,
     overload,
 )
@@ -50,8 +47,8 @@ RawResponseR = TypeVar("RawResponseR", bound=Response)
 @overload
 def passthrough(  # type: ignore
     *,
-    response_model: Type[BaseModel] | None = None,  # Deprecated
-    exception_models: list[Type[APIException]] | None = None,
+    response_model: type[BaseModel] | None = None,  # Deprecated
+    exception_models: list[type[APIException]] | None = None,
 ) -> Callable[
     [Callable[Concatenate[C, P], R | Coroutine[Any, Any, R]]],
     SideeffectWrappedCallable[C, P, R],
@@ -123,13 +120,14 @@ def passthrough(*args, **kwargs):  # type: ignore
     """
 
     def decorator_with_args(
-        response_model: Type[BaseModel] | None,
-        exception_models: list[Type[APIException]] | None,
+        response_model: type[BaseModel] | None,
+        exception_models: list[type[APIException]] | None,
         raw_response: bool | None,
     ):
         def wrapper(func: Callable):
             passthrough_model, response_type = extract_response_model_from_signature(
-                func, response_model
+                func,
+                response_model,
             )
 
             # Ensure our function is valid as early as possible
@@ -137,17 +135,14 @@ def passthrough(*args, **kwargs):  # type: ignore
             # functions to be async
             if isgeneratorfunction(func):
                 raise ValueError(
-                    f"Only async generators are supported: Define {func} as `async def`"
+                    f"Only async generators are supported: Define {func} as `async def`",
                 )
 
             # The user has defined a generator but not a response_model
             # The frontend builder needs a response model to be able to determine the type
-            if (
-                isasyncgenfunction(func)
-                and response_type != ResponseModelType.ITERATOR_RESPONSE
-            ):
+            if isasyncgenfunction(func) and response_type != ResponseModelType.ITERATOR_RESPONSE:
                 raise ValueError(
-                    f"Async generator {func} must have a response_model of type AsyncIterator[BaseModel]"
+                    f"Async generator {func} must have a response_model of type AsyncIterator[BaseModel]",
                 )
 
             @wraps(func)
@@ -166,18 +161,14 @@ def passthrough(*args, **kwargs):  # type: ignore
                     "passthrough": response,
                 }
                 return format_final_action_response(  # type: ignore[arg-type]  # TypedDict payload not accepted by mypy for dict param
-                    final_payload
+                    final_payload,
                 )
 
             metadata = init_function_metadata(inner, FunctionActionType.PASSTHROUGH)
             metadata.passthrough_model = passthrough_model
             metadata.exception_models += exception_models or []
             metadata.is_raw_response = raw_response or False
-            metadata.media_type = (
-                STREAM_EVENT_TYPE
-                if response_type == ResponseModelType.ITERATOR_RESPONSE
-                else None
-            )
+            metadata.media_type = STREAM_EVENT_TYPE if response_type == ResponseModelType.ITERATOR_RESPONSE else None
 
             inner.original = create_original_fn(func)  # type: ignore
             return inner
@@ -188,13 +179,12 @@ def passthrough(*args, **kwargs):  # type: ignore
         # It's used as @sideeffect without arguments
         func = args[0]
         return decorator_with_args(None, None, None)(func)
-    else:
-        # It's used as @passthrough(xyz=2) with arguments
-        return decorator_with_args(
-            response_model=kwargs.get("response_model"),
-            exception_models=kwargs.get("exception_models"),
-            raw_response=kwargs.get("raw_response"),
-        )
+    # It's used as @passthrough(xyz=2) with arguments
+    return decorator_with_args(
+        response_model=kwargs.get("response_model"),
+        exception_models=kwargs.get("exception_models"),
+        raw_response=kwargs.get("raw_response"),
+    )
 
 
 def wrap_passthrough_generator(generator: AsyncIterator[BaseModel]):

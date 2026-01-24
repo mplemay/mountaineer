@@ -1,8 +1,9 @@
 import warnings
+from collections.abc import Callable
 from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from inspect import signature
-from typing import Any, Callable
+from typing import Any
 
 from fastapi import Request, params as fastapi_params
 from fastapi.dependencies.utils import get_dependant, solve_dependencies
@@ -39,7 +40,7 @@ class DependenciesBaseMeta(type):
         for attr_name, attr_value in namespace.items():
             if isinstance(attr_value, staticmethod):
                 raise TypeError(
-                    f"Static methods are not allowed in dependency wrapper '{name}'. Found static method: '{attr_name}'."
+                    f"Static methods are not allowed in dependency wrapper '{name}'. Found static method: '{attr_name}'.",
                 )
         return super().__new__(cls, name, bases, namespace, **kwargs)
 
@@ -97,7 +98,7 @@ async def get_function_dependencies(
                     # FastAPI 0.118+ scope requirements
                     "fastapi_inner_astack": async_exit_stack,
                     "fastapi_function_astack": async_exit_stack,
-                }
+                },
             )
         else:
             # Inject into existing request scope if not present
@@ -111,19 +112,17 @@ async def get_function_dependencies(
             dependant=dependant,
             async_exit_stack=async_exit_stack,
             dependency_overrides_provider=(
-                DependencyOverrideProvider(dependency_overrides=dependency_overrides)
-                if dependency_overrides
-                else None
+                DependencyOverrideProvider(dependency_overrides=dependency_overrides) if dependency_overrides else None
             ),
             embed_body_fields=False,
         )
         if payload.background_tasks:
             raise RuntimeError(
-                "Background tasks are not supported when calling a static function, due to undesirable side-effects."
+                "Background tasks are not supported when calling a static function, due to undesirable side-effects.",
             )
         if payload.errors:
             raise RuntimeError(
-                f"Errors encountered while resolving dependencies: {payload.errors}"
+                f"Errors encountered while resolving dependencies: {payload.errors}",
             )
 
         yield payload.values
@@ -140,9 +139,7 @@ def isolate_dependency_only_function(original_fn: Callable):
     parameters = sig.parameters
 
     dependency_params = {
-        name: param
-        for name, param in parameters.items()
-        if isinstance(param.default, fastapi_params.Depends)
+        name: param for name, param in parameters.items() if isinstance(param.default, fastapi_params.Depends)
     }
 
     # Construct a new function dynamically accepting only the dependencies

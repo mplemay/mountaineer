@@ -21,7 +21,4 @@ def test_build_static_metadata(tmpdir: Path):
     metadata = compiler._build_static_metadata()
     assert "test_css.css" in metadata.static_artifact_shas
     assert "nested/test_nested.css" in metadata.static_artifact_shas
-    assert (
-        metadata.static_artifact_shas["test_css.css"]
-        == metadata.static_artifact_shas["nested/test_nested.css"]
-    )
+    assert metadata.static_artifact_shas["test_css.css"] == metadata.static_artifact_shas["nested/test_nested.css"]

@@ -26,7 +26,10 @@ def run_command(command: str, cwd: str) -> tuple[str, str]:
 
         if process.returncode != 0:
             raise subprocess.CalledProcessError(
-                process.returncode, command, stdout, stderr
+                process.returncode,
+                command,
+                stdout,
+                stderr,
             )
 
         return stdout, stderr

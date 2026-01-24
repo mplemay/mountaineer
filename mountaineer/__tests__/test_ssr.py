@@ -54,7 +54,8 @@ def test_ssr_timeout():
         render_ssr(
             script=js_contents,
             render_data=FakeWaitDurationModel(
-                delay_loops=5, random_id=uuid4()
+                delay_loops=5,
+                random_id=uuid4(),
             ).model_dump(mode="json"),
             hard_timeout=0.5,
         )

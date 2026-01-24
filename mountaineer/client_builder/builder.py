@@ -80,7 +80,7 @@ class APIBuilder:
         for controller_def in self.app.graph.controllers:
             if controller_def.route is None:
                 LOGGER.warning(
-                    f"Controller {controller_def.controller.__class__.__name__} has no route"
+                    f"Controller {controller_def.controller.__class__.__name__} has no route",
                 )
                 continue
 
@@ -99,7 +99,7 @@ class APIBuilder:
                     view_path=view_path,
                     url_prefix=controller_def.route.url_prefix,
                     is_layout=isinstance(controller, LayoutControllerBase),
-                )
+                ),
             )
 
         return parser, parsed_controllers
@@ -112,9 +112,7 @@ class APIBuilder:
         global_root = self.view_root.get_managed_code_dir()
 
         global_controller_generator = GlobalControllerGenerator(
-            controller_wrappers=[
-                controller.wrapper for controller in parsed_controllers
-            ],
+            controller_wrappers=[controller.wrapper for controller in parsed_controllers],
             managed_path=global_root / "controllers.ts",
         )
         global_link_generator = GlobalLinkGenerator(

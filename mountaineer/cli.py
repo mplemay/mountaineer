@@ -1,9 +1,10 @@
 import traceback
+from collections.abc import Callable, Coroutine
 from contextlib import contextmanager
 from multiprocessing import get_start_method, set_start_method
 from os import getenv
 from time import time
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 from firehot import isolate_imports
 from inflection import underscore
@@ -93,10 +94,7 @@ async def handle_watch(
                         elif event.path.suffix == ".py":
                             file_changes_state.pending_python.add(event.path)
 
-                    if not first_run and not (
-                        file_changes_state.pending_js
-                        or file_changes_state.pending_python
-                    ):
+                    if not first_run and not (file_changes_state.pending_js or file_changes_state.pending_python):
                         return
 
                     try:
@@ -167,7 +165,8 @@ async def handle_runserver(
     rich_traceback_install()
 
     watcher_webservice = WatcherWebservice(
-        webservice_host=hotreload_host or host, webservice_port=hotreload_port
+        webservice_host=hotreload_host or host,
+        webservice_port=hotreload_port,
     )
     await watcher_webservice.start()
 
@@ -204,10 +203,7 @@ async def handle_runserver(
                         elif event.path.suffix == ".py":
                             file_changes_state.pending_python.add(event.path)
 
-                    if not first_run and not (
-                        file_changes_state.pending_js
-                        or file_changes_state.pending_python
-                    ):
+                    if not first_run and not (file_changes_state.pending_js or file_changes_state.pending_python):
                         return
 
                     try:
@@ -335,7 +331,7 @@ async def handle_build(
         raise ValueError(
             f"Mismatch between number of controllers and number of entrypoints in the client bundle\n"
             f"Controllers: {len(build_controllers)}\n"
-            f"Entrypoints: {len(client_bundle_result['entrypoints'])}"
+            f"Entrypoints: {len(client_bundle_result['entrypoints'])}",
         )
 
     # Try to parse the format (entrypoint{}.js or entrypoint{}.js.map)
@@ -414,7 +410,7 @@ def build_common_watchdog(
         # Found mountaineer core and mountaineer external dependencies
         dependent_packages = find_packages_with_prefix("mountaineer")
         LOGGER.debug(
-            f"Subscribing to changes in local mountaineer packages: {dependent_packages}"
+            f"Subscribing to changes in local mountaineer packages: {dependent_packages}",
         )
 
     return PackageWatchdog(
@@ -424,7 +420,7 @@ def build_common_watchdog(
             CallbackDefinition(
                 CallbackType.CREATED | CallbackType.MODIFIED,
                 callback,
-            )
+            ),
         ],
         # We want to generate a build on the first load
         run_on_bootup=True,
@@ -441,11 +437,7 @@ def get_mountaineer_isolated_env(package: str):
 
     """
     ignored_modules_raw = getenv("MOUNTAINEER_IGNORE_HOTRELOAD", "")
-    ignored_modules = (
-        [mod.strip() for mod in ignored_modules_raw.split(",")]
-        if ignored_modules_raw
-        else None
-    )
+    ignored_modules = [mod.strip() for mod in ignored_modules_raw.split(",")] if ignored_modules_raw else None
 
     with isolate_imports(package, ignored_modules=ignored_modules) as environment:
         yield environment

@@ -1,5 +1,4 @@
 from enum import Enum, auto
-from typing import Union
 
 import pytest
 
@@ -91,7 +90,7 @@ class TestEnumFormatting:
             (None, "null"),
         ],
     )
-    def test_value_formatting(self, value: str, expected: Union[str, int, bool, None]):
+    def test_value_formatting(self, value: str, expected: str | int | bool | None):
         class ValueEnum(Enum):
             TEST = value
 

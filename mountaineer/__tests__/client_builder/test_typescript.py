@@ -42,7 +42,9 @@ def test_tsliteral_combine(input_a: str, input_b: str, expected_literal: TSLiter
 )
 def test_python_payload_to_typescript_primitives(payload: Any, expected_str: str):
     assert re_sub(r"\s+", "", python_payload_to_typescript(payload)) == re_sub(
-        r"\s+", "", expected_str
+        r"\s+",
+        "",
+        expected_str,
     )
 
 
@@ -52,7 +54,7 @@ def test_python_payload_to_typescript_primitives(payload: Any, expected_str: str
         (
             {"a": {"b": "b", "c": 1, "d": TSLiteral("someVariable")}},
             ("{\n  'a': {\n    'b': 'b',\n    'c': 1,\n    'd': someVariable\n  }\n}"),
-        )
+        ),
     ],
 )
 def test_python_payload_to_typescript_nested(payload: Any, expected_str: str):
@@ -80,7 +82,8 @@ def test_python_payload_to_typescript_nested(payload: Any, expected_str: str):
     ],
 )
 def test_collapse_repeated_literals(
-    original_payload: dict[str, str | TSLiteral], expected_str: str
+    original_payload: dict[str, str | TSLiteral],
+    expected_str: str,
 ):
     """
     If the key of our dictionary is a literal, and it's the same value as the key,
@@ -88,5 +91,7 @@ def test_collapse_repeated_literals(
 
     """
     assert re_sub(r"\s+", "", python_payload_to_typescript(original_payload)) == re_sub(
-        r"\s+", "", expected_str
+        r"\s+",
+        "",
+        expected_str,
     )

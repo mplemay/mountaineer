@@ -82,7 +82,8 @@ sequenceDiagram
 
 #### Key Components
 
-- **SideeffectResponseBase** (`mountaineer/actions/fields.py:SideeffectResponseBase`) - TypedDict used for action payloads
+- **SideeffectResponseBase** (`mountaineer/actions/fields.py:SideeffectResponseBase`) - TypedDict used for action
+  payloads
 - **sideeffect decorator** (`mountaineer/actions/sideeffect_dec.py:sideeffect`) - Builds sideeffect payloads
 - **passthrough decorator** (`mountaineer/actions/passthrough_dec.py:passthrough`) - Builds passthrough payloads
 - **format_final_action_response** (`mountaineer/actions/fields.py`) - Serializes action responses
@@ -323,8 +324,8 @@ requires-python = ">=3.11,<3.15"
   - Update or add tests in `mountaineer/__tests__/actions/` to ensure sideeffect/passthrough payloads serialize with the
     TypedDict-based payload model (no 3.10 fallback paths).
 - **Integration tests**
-  - Run existing integration tests (`@pytest.mark.integration_tests`) across Python 3.11-3.14 in CI to validate end-to-end
-    behavior.
+  - Run existing integration tests (`@pytest.mark.integration_tests`) across Python 3.11-3.14 in CI to validate
+    end-to-end behavior.
   - Execute `make test-lib-integrations` in CI matrix to ensure the fixture webapp aligns with new requirements.
 - **Version matrix coverage**
   - Ensure CI `test`, `lint`, and `lib-integration-test` jobs cover 3.11-3.14.
@@ -337,7 +338,8 @@ requires-python = ">=3.11,<3.15"
 1. **Metadata and docs updates** (version range)
    - `pyproject.toml`, `.github/pyproject.toml`, `benchmarking/pyproject.toml`, docs, fixtures
 2. **Compatibility layer updates** (runtime typing)
-   - `mountaineer/compat.py`, `mountaineer/actions/fields.py`, `mountaineer/actions/sideeffect_dec.py`, `mountaineer/actions/passthrough_dec.py`
+   - `mountaineer/compat.py`, `mountaineer/actions/fields.py`, `mountaineer/actions/sideeffect_dec.py`,
+     `mountaineer/actions/passthrough_dec.py`
 3. **CI/build matrix updates**
    - `.github/workflows/test.yml` and any related scripts
 4. **Lockfile refresh**

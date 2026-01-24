@@ -1,4 +1,4 @@
-from typing import Any, Type, cast, get_type_hints
+from typing import Any, cast, get_type_hints
 
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, create_model
@@ -53,7 +53,7 @@ class InternalModelMeta(type):
             # for their exception class
             cls.__name__,
             __base__=APIExceptionInternalModelBase,
-            **cast(Any, fields),
+            **cast("Any", fields),
         )
         cls.InternalModel.__module__ = cls.__module__
 
@@ -62,21 +62,16 @@ class InternalModelMeta(type):
 
         if isinstance(default_value, MountaineerUnsetValue):
             return Field()
-        else:
-            return Field(default_factory=lambda: default_value)
+        return Field(default_factory=lambda: default_value)
 
     def __call__(cls, *args, **kwargs):
         # Override the __call__ method to instantiate models like Pydantic does
         # Use the internal model for validation and instantiation
         internal_model = cls.InternalModel(**kwargs)
         instance = super().__call__(
-            **{
-                key: value
-                for key, value in internal_model.model_dump().items()
-                if key in HTTPExceptionKeys
-            }
+            **{key: value for key, value in internal_model.model_dump().items() if key in HTTPExceptionKeys},
         )
-        setattr(instance, "internal_model", internal_model)
+        instance.internal_model = internal_model
         return instance
 
 
@@ -92,6 +87,7 @@ class APIException(HTTPException, metaclass=InternalModelMeta):
         detail: str = "The post was not found"
         post_id: int
         is_deleted: bool
+
 
     class MyController(ControllerBase):
         @passthrough
@@ -110,7 +106,7 @@ class APIException(HTTPException, metaclass=InternalModelMeta):
 
     # Set by the metaclass to provide internal validation for runtime values assigned
     # to our marked up typehints
-    InternalModel: Type[APIExceptionInternalModelBase]
+    InternalModel: type[APIExceptionInternalModelBase]
 
     # Set on the instance of the exception with the user values, these are
     # used to pass to the client caller

@@ -9,8 +9,6 @@ TResponse = TypeVar("TResponse")
 class IsolatedMessageBase(Generic[TResponse]):
     """Base class for all messages passed between main process and isolated app context"""
 
-    pass
-
 
 @dataclass
 class ErrorResponse:
@@ -24,14 +22,10 @@ class ErrorResponse:
 class SuccessResponse:
     """Generic success response"""
 
-    pass
-
 
 @dataclass
 class BootupMessage(IsolatedMessageBase[SuccessResponse | ErrorResponse]):
     """Message to bootup the isolated app context"""
-
-    pass
 
 
 @dataclass
@@ -54,9 +48,5 @@ class BuildJsMessage(IsolatedMessageBase[SuccessResponse | ErrorResponse]):
 class BuildUseServerMessage(IsolatedMessageBase[SuccessResponse | ErrorResponse]):
     """Message to build the useServer support files"""
 
-    pass
 
-
-MessageTypes = (
-    BootupMessage | StartServerMessage | BuildJsMessage | BuildUseServerMessage
-)
+MessageTypes = BootupMessage | StartServerMessage | BuildJsMessage | BuildUseServerMessage

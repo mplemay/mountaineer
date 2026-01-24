@@ -68,7 +68,8 @@ class TestBasicGeneration:
                     ListOf(create_model_wrapper(ValidationError, "ValidationError")),
                 ),
                 create_field_wrapper(
-                    "details", create_model_wrapper(ErrorDetail, "ErrorDetail")
+                    "details",
+                    create_model_wrapper(ErrorDetail, "ErrorDetail"),
                 ),
             ],
         )

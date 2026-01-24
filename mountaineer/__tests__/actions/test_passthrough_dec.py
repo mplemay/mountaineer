@@ -1,7 +1,8 @@
+from collections.abc import AsyncIterator, Iterator
 from inspect import getsource
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, AsyncIterator, Iterator, cast
+from typing import Any, cast
 
 import mypy.api
 import pytest
@@ -104,7 +105,7 @@ async def test_can_call_passthrough():
     expected_response = {
         "passthrough": ExamplePassthroughModel(
             status="success",
-        )
+        ),
     }
 
     assert return_value_sync == expected_response
@@ -125,10 +126,12 @@ async def test_can_call_passthrough_original():
     """
     controller = ExampleController()
     assert await ExampleController.call_passthrough.original(
-        controller, dict()
+        controller,
+        dict(),
     ) == ExamplePassthroughModel(status="success")
     assert await ExampleController.call_passthrough_async.original(
-        controller, dict()
+        controller,
+        dict(),
     ) == ExamplePassthroughModel(status="success")
 
 
@@ -184,13 +187,13 @@ async def test_can_call_iterable():
     app.register(controller)
 
     # Ensure we return a valid StreamingResponse when called directly from the code
-    return_value_sync = cast(Any, await controller.get_data())
+    return_value_sync = cast("Any", await controller.get_data())
     assert isinstance(return_value_sync, StreamingResponse)
 
     # StreamingResponses are intended to be read by an ASGI server, so we'll use the TestClient to simulate one instead of calling directly
     controller_definition = app.graph.get_definitions_for_cls(controller.__class__)[0]
     passthrough_url = controller_definition.get_url_for_metadata(
-        get_function_metadata(controller.get_data)
+        get_function_metadata(controller.get_data),
     )
 
     client = TestClient(app.app)
@@ -228,10 +231,10 @@ def test_passthrough_route_via_subapp_mount():
     host_app.mount(path="/sub", app=mountaineer, name="website")
 
     controller_definition = mountaineer.graph.get_definitions_for_cls(
-        cls=SubappController
+        cls=SubappController,
     )[0]
     passthrough_url = controller_definition.get_url_for_metadata(
-        metadata=get_function_metadata(fn=SubappController.ping)
+        metadata=get_function_metadata(fn=SubappController.ping),
     )
 
     with TestClient(app=host_app) as client:
@@ -269,7 +272,7 @@ async def test_raw_response():
     client = TestClient(app.app)
     response = client.post(
         controller_definition.get_url_for_metadata(
-            get_function_metadata(controller.call_passthrough)
+            get_function_metadata(controller.call_passthrough),
         ),
         json={},
     )
@@ -324,10 +327,10 @@ def test_passthrough_typechecking(
     """
 
     def run_function():
-        from typing import AsyncIterator  # noqa: F401
+        from collections.abc import AsyncIterator  # noqa: F401
 
         from fastapi.responses import HTMLResponse, JSONResponse  # noqa: F401
-        from pydantic import BaseModel  # noqa: F401
+        from pydantic import BaseModel
 
         from mountaineer import ControllerBase, passthrough  # noqa: F401
 

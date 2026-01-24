@@ -41,18 +41,12 @@ class PostCSSBundler(APIBuilderBase):
             # However, we should only track files that belong to build-enabled controllers
             # to avoid warnings about plugin files that have _build_enabled = False
             build_enabled_controllers = [
-                (controller, view_path)
-                for controller, view_path in self.controllers
-                if controller._build_enabled
+                (controller, view_path) for controller, view_path in self.controllers if controller._build_enabled
             ]
-            unique_roots = {
-                view_path.get_root_link() for _, view_path in build_enabled_controllers
-            }
+            unique_roots = {view_path.get_root_link() for _, view_path in build_enabled_controllers}
 
             # Check if this file belongs to any build-enabled view root
-            file_belongs_to_build_enabled_root = any(
-                file_path.is_relative_to(root) for root in unique_roots
-            )
+            file_belongs_to_build_enabled_root = any(file_path.is_relative_to(root) for root in unique_roots)
 
             if file_belongs_to_build_enabled_root:
                 super().mark_file_dirty(file_path)
@@ -72,23 +66,18 @@ class PostCSSBundler(APIBuilderBase):
         dirty_managed = self.managed_views_from_paths(list(self.dirty_files))
         dirty_roots = {path.get_root_link() for path in dirty_managed}
 
-        dirty_stylesheets = {
-            stylesheet
-            for stylesheet in known_css_files
-            if stylesheet.get_root_link() in dirty_roots
-        }
+        dirty_stylesheets = {stylesheet for stylesheet in known_css_files if stylesheet.get_root_link() in dirty_roots}
         LOGGER.debug(
-            f"Potentially dirty stylesheets detected {dirty_stylesheets} of {known_css_files}"
+            f"Potentially dirty stylesheets detected {dirty_stylesheets} of {known_css_files}",
         )
 
         # We only need to process the known css files
         for file_path in dirty_stylesheets:
             root_path = self.metadata.package_root_link
             built_css = await self.process_css(file_path)
-            (
-                root_path.get_managed_static_dir(tmp_build=True)
-                / self.get_style_output_name(file_path)
-            ).write_text(built_css)
+            (root_path.get_managed_static_dir(tmp_build=True) / self.get_style_output_name(file_path)).write_text(
+                built_css,
+            )
 
     async def process_css(self, css_path: ManagedViewPath) -> str:
         """
@@ -98,12 +87,12 @@ class PostCSSBundler(APIBuilderBase):
             raise ValueError("No metadata provided to build")
 
         is_installed, cli_path = self.postcss_is_installed(
-            self.metadata.package_root_link
+            self.metadata.package_root_link,
         )
         if not is_installed:
-            raise EnvironmentError(
+            raise OSError(
                 f"postcss-cli is not installed in the specified view_root_path ({self.metadata.package_root_link}). Install it with:\n"
-                "$ npm install -D postcss postcss-cli"
+                "$ npm install -D postcss postcss-cli",
             )
 
         with TemporaryDirectory() as temp_dir_name:
@@ -129,7 +118,7 @@ class PostCSSBundler(APIBuilderBase):
                     **environ,
                     # We expect the main package root will be the one with node modules installed
                     "NODE_PATH": str(
-                        self.metadata.package_root_link.absolute() / "node_modules"
+                        self.metadata.package_root_link.absolute() / "node_modules",
                     ),
                 },
             )
@@ -159,7 +148,7 @@ class PostCSSBundler(APIBuilderBase):
         # Convert the parent portions of the path to make sure our final output
         # filename is unique
         unique_path = "_".join(
-            [*relative_path.parent.parts, original_stylesheet_path.name]
+            [*relative_path.parent.parts, original_stylesheet_path.name],
         )
         return str(Path(unique_path).with_suffix(".css"))
 

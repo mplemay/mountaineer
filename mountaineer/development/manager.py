@@ -58,7 +58,7 @@ async def run_isolated(
 
     try:
         async with AsyncMessageBroker.new_client(
-            isolated_context.message_config
+            isolated_context.message_config,
         ) as broker:
             await app_context.run_async(broker)
     except Exception as e:
@@ -103,14 +103,14 @@ async def restart_backend(
                 host=isolated_context.webserver_config.host,
                 port=isolated_context.webserver_config.port,
                 live_reload_port=isolated_context.webserver_config.live_reload_port,
-            )
+            ),
         )
 
     CONSOLE.print("[bold yellow]⚙️  Building useServer components...[/bold yellow]")
     await broker.send_and_get_response(BuildUseServerMessage())
     build_time = time() - start
     CONSOLE.print(
-        f"[bold green]✨ Backend build complete in {build_time:.2f}s![/bold green]"
+        f"[bold green]✨ Backend build complete in {build_time:.2f}s![/bold green]",
     )
 
 
@@ -121,10 +121,10 @@ async def rebuild_frontend(broker: AsyncMessageBroker, state: FileChangesState):
     await broker.send_and_get_response(
         # None will rebuild everything - we want this in cases where we are called
         # without a list provided
-        BuildJsMessage(updated_js=list(state.pending_js) if state.pending_js else None)
+        BuildJsMessage(updated_js=list(state.pending_js) if state.pending_js else None),
     )
 
     build_time = time() - start
     CONSOLE.print(
-        f"[bold green]✨ Frontend build complete in {build_time:.2f}s![/bold green]"
+        f"[bold green]✨ Frontend build complete in {build_time:.2f}s![/bold green]",
     )

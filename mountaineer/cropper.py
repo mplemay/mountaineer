@@ -6,9 +6,10 @@ of logic that's required to produce the output value.
 
 import ast
 import inspect
+from collections.abc import Callable
 from copy import copy
 from textwrap import dedent
-from typing import Any, Callable
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -53,20 +54,19 @@ class SyntheticVarInserter(ast.NodeTransformer):
                 key_str = key.value if isinstance(key, ast.Constant) else None
                 if key_str and isinstance(key_str, str):
                     assign, synthetic_var_name = self.create_synthetic_assign(
-                        key_str, value
+                        key_str,
+                        value,
                     )
                     new_stmts.append(assign)
                     node.value.values[i] = ast.Name(
-                        id=synthetic_var_name, ctx=ast.Load()
+                        id=synthetic_var_name,
+                        ctx=ast.Load(),
                     )
 
         elif (
             isinstance(node.value, ast.Call)
             and isinstance(node.value.func, ast.Name)
-            and (
-                node.value.func.id == "dict"
-                or node.value.func.id in self.known_pydantic_models
-            )
+            and (node.value.func.id == "dict" or node.value.func.id in self.known_pydantic_models)
         ):
             # Handle Pydantic model returns
             # Handle dict() function returns
@@ -74,16 +74,18 @@ class SyntheticVarInserter(ast.NodeTransformer):
                 key_str = keyword.arg
                 if key_str:
                     assign, synthetic_var_name = self.create_synthetic_assign(
-                        key_str, keyword.value
+                        key_str,
+                        keyword.value,
                     )
                     new_stmts.append(assign)
                     node.value.keywords[i].value = ast.Name(
-                        id=synthetic_var_name, ctx=ast.Load()
+                        id=synthetic_var_name,
+                        ctx=ast.Load(),
                     )
 
         else:
             raise FunctionCropException(
-                "Unknown return type, can't auto-crop function logic."
+                "Unknown return type, can't auto-crop function logic.",
             )
 
         return new_stmts + [node] if new_stmts else node
@@ -94,7 +96,8 @@ class SyntheticVarInserter(ast.NodeTransformer):
         """
         synthetic_var_name = var_to_synthetic_var(key)
         return ast.Assign(
-            targets=[ast.Name(id=synthetic_var_name, ctx=ast.Store())], value=value
+            targets=[ast.Name(id=synthetic_var_name, ctx=ast.Store())],
+            value=value,
         ), synthetic_var_name
 
 
@@ -174,15 +177,11 @@ class ASTReducer(ast.NodeTransformer):
 
     def is_needed(self, stmt: ast.stmt):
         if isinstance(stmt, ast.Assign):
-            return any(
-                target.id in self.needed_vars
-                for target in stmt.targets
-                if isinstance(target, ast.Name)
-            )
-        elif isinstance(stmt, ast.Expr):
+            return any(target.id in self.needed_vars for target in stmt.targets if isinstance(target, ast.Name))
+        if isinstance(stmt, ast.Expr):
             # For now assume that we need all expressions
             return True
-        elif isinstance(stmt, ast.If):
+        if isinstance(stmt, ast.If):
             # Check if the If statement contains needed variables in its body or orelse
             return any(self.is_needed(sub_stmt) for sub_stmt in stmt.body + stmt.orelse)
         return False
@@ -242,7 +241,9 @@ def reduce_function_to_keys(
 
 
 def crop_function_for_return_keys(
-    func: Callable, keys: list[str], locals: dict[str, Any] | None = None
+    func: Callable,
+    keys: list[str],
+    locals: dict[str, Any] | None = None,
 ):
     """
     Performs static analysis on the given function. Expects this function to either return
@@ -286,7 +287,10 @@ def crop_function_for_return_keys(
 
     # Reduce the function based on the dependency graph
     optimized_tree = reduce_function_to_keys(
-        tree, creator.graph, keys, known_pydantic_models
+        tree,
+        creator.graph,
+        keys,
+        known_pydantic_models,
     )
 
     # Fix line numbers and compile

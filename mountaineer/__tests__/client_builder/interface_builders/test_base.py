@@ -2,15 +2,8 @@ from datetime import date, datetime, time
 from enum import Enum
 from typing import (
     Any,
-    Dict,
-    List,
     Literal,
-    Optional,
-    Set,
-    Tuple,
-    Type,
     TypeVar,
-    Union,
     cast,
 )
 from uuid import UUID
@@ -53,15 +46,15 @@ class SimpleModel(BaseModel):
 class NestedModel(BaseModel):
     status: Status
     data: SimpleModel
-    optional: Optional[SimpleModel]
+    optional: SimpleModel | None
 
 
 class ComplexTypes(BaseModel):
-    list_field: List[str]
-    dict_field: Dict[str, int]
-    set_field: Set[float]
-    tuple_field: Tuple[str, int]
-    union_field: Union[str, int]
+    list_field: list[str]
+    dict_field: dict[str, int]
+    set_field: set[float]
+    tuple_field: tuple[str, int]
+    union_field: str | int
     literal_field: Literal["a", "b", "c"]
 
 
@@ -74,7 +67,7 @@ class TypeConverter(InterfaceBase):
 
     @classmethod
     def convert(cls, value: Any) -> str:
-        return cast(str, cls._get_annotated_value(value))
+        return cast("str", cls._get_annotated_value(value))
 
 
 # Test Fixtures
@@ -124,7 +117,7 @@ class TestPrimitiveTypeMapping:
             (Any, "any"),
         ],
     )
-    def test_primitive_type_mapping(self, py_type: Type[Any], ts_type: str) -> None:
+    def test_primitive_type_mapping(self, py_type: type[Any], ts_type: str) -> None:
         result: str = TypeConverter.convert(py_type)
         assert result == ts_type
 
@@ -188,7 +181,9 @@ class TestComplexTypeHandling:
         ],
     )
     def test_nested_complex_types(
-        self, type_def: TypeDefinition, expected: str
+        self,
+        type_def: TypeDefinition,
+        expected: str,
     ) -> None:
         result: str = TypeConverter.convert(type_def)
         assert result == expected
@@ -217,18 +212,20 @@ class TestComplexScenarios:
     def test_deeply_nested_structure(self) -> None:
         # Create a deeply nested structure
         deep_type = ListOf(
-            DictOf(str, Or(ListOf(TupleOf(str, int)), DictOf(str, SetOf(float))))
+            DictOf(str, Or(ListOf(TupleOf(str, int)), DictOf(str, SetOf(float)))),
         )
         result = TypeConverter.convert(deep_type)
         expected = "Array<Record<string, Array<[string,number]> | Record<string, Set<number>>>>"
         assert result == expected
 
     def test_mixed_model_and_primitive_types(
-        self, model_wrapper: ModelWrapper, enum_wrapper: EnumWrapper
+        self,
+        model_wrapper: ModelWrapper,
+        enum_wrapper: EnumWrapper,
     ) -> None:
         type_def = Or(model_wrapper, ListOf(enum_wrapper), DictOf(str, int))
         result: str = TypeConverter.convert(type_def)
-        assert "SimpleModel | Array<Status> | Record<string, number>" == result
+        assert result == "SimpleModel | Array<Status> | Record<string, number>"
 
     def test_complex_union_types(self) -> None:
         # Test union with various nested types
@@ -261,7 +258,9 @@ class TestComplexScenarios:
         ],
     )
     def test_complex_literal_combinations(
-        self, type_def: TypeDefinition, expected: str
+        self,
+        type_def: TypeDefinition,
+        expected: str,
     ) -> None:
         result: str = TypeConverter.convert(type_def)
         assert result == expected

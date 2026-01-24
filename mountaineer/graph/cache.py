@@ -48,7 +48,7 @@ class ControllerDevCache(ControllerCacheBase):
         tsconfig_path = find_tsconfig(view_paths)
 
         LOGGER.debug(
-            f"Compiling server-side bundle for {definition.controller.__class__.__name__}: {view_paths}"
+            f"Compiling server-side bundle for {definition.controller.__class__.__name__}: {view_paths}",
         )
         (
             script_payloads,
@@ -62,11 +62,11 @@ class ControllerDevCache(ControllerCacheBase):
             True,
             tsconfig_path,
         )
-        cached_server_script = cast(str, script_payloads[0])
-        cached_server_sourcemap = cast(str | None, sourcemap_payloads[0])
+        cached_server_script = cast("str", script_payloads[0])
+        cached_server_sourcemap = cast("str | None", sourcemap_payloads[0])
 
         LOGGER.debug(
-            f"Compiling client-side bundle for {definition.controller.__class__.__name__}: {view_paths}"
+            f"Compiling client-side bundle for {definition.controller.__class__.__name__}: {view_paths}",
         )
         script_payloads, _ = mountaineer_rs.compile_independent_bundles(
             view_paths,
@@ -77,8 +77,8 @@ class ControllerDevCache(ControllerCacheBase):
             False,
             tsconfig_path,
         )
-        cached_client_script = cast(str, script_payloads[0])
-        cached_client_sourcemap = cast(str | None, sourcemap_payloads[0])
+        cached_client_script = cast("str", script_payloads[0])
+        cached_client_sourcemap = cast("str | None", sourcemap_payloads[0])
 
         return ControllerDevCache(
             cached_server_script=cached_server_script,
@@ -92,23 +92,25 @@ class ControllerDevCache(ControllerCacheBase):
 class ControllerProdCache(ControllerCacheBase):
     @classmethod
     def resolve_prod_cache(
-        cls, definition: "ControllerDefinition", config: ProdCacheConfig
+        cls,
+        definition: "ControllerDefinition",
+        config: ProdCacheConfig,
     ) -> "ControllerProdCache":
         if not definition.controller._ssr_path:
             raise ValueError(
-                f"Controller {definition.controller} was not able to find its server-side script on disk. Make sure to run your `build` CLI before starting your webapp."
+                f"Controller {definition.controller} was not able to find its server-side script on disk. Make sure to run your `build` CLI before starting your webapp.",
             )
 
         if not definition.controller._ssr_path.exists():
             raise ValueError(
-                f"Controller {definition.controller} was not able to find its server-side script on disk. Make sure to run your `build` CLI before starting your webapp."
+                f"Controller {definition.controller} was not able to find its server-side script on disk. Make sure to run your `build` CLI before starting your webapp.",
             )
 
         if not definition.controller._bundled_scripts:
             raise ValueError(
-                f"Controller {definition.controller} was not able to find its scripts on disk. Make sure to run your `build` CLI before starting your webapp."
+                f"Controller {definition.controller} was not able to find its scripts on disk. Make sure to run your `build` CLI before starting your webapp.",
             )
 
         return ControllerProdCache(
-            cached_server_script=definition.controller._ssr_path.read_text()
+            cached_server_script=definition.controller._ssr_path.read_text(),
         )

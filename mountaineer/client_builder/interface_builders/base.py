@@ -34,21 +34,18 @@ class InterfaceBase:
     @classmethod
     def _get_annotated_value(cls, value):
         """Convert a field type to TypeScript type."""
-        if isinstance(value, ModelWrapper):
+        if isinstance(value, ModelWrapper) or isinstance(value, EnumWrapper):
             return value.name.global_name
-        elif isinstance(value, EnumWrapper):
-            return value.name.global_name
-        else:
-            complex_value = cls._handle_complex_type(value, requires_complex=True)
-            if complex_value:
-                return complex_value
-            if isinstance(value, SelfReference):
-                return value.name
-            primitive_value = cls._map_primitive_type_to_typescript(value)
-            if primitive_value:
-                return primitive_value
-            LOGGER.warning(f"Unable to map value, falling back to generic: {value}")
-            return "any"
+        complex_value = cls._handle_complex_type(value, requires_complex=True)
+        if complex_value:
+            return complex_value
+        if isinstance(value, SelfReference):
+            return value.name
+        primitive_value = cls._map_primitive_type_to_typescript(value)
+        if primitive_value:
+            return primitive_value
+        LOGGER.warning(f"Unable to map value, falling back to generic: {value}")
+        return "any"
 
     @classmethod
     def _map_primitive_type_to_typescript(cls, py_type: type) -> str | None:
@@ -72,7 +69,9 @@ class InterfaceBase:
 
     @classmethod
     def _handle_complex_type(
-        cls, type_hint: Any, requires_complex: bool = False
+        cls,
+        type_hint: Any,
+        requires_complex: bool = False,
     ) -> str | None:
         """Handle complex type hints like list[str], dict[str, int], etc."""
         if not isinstance(type_hint, TypeDefinition):

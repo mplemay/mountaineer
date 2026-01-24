@@ -56,17 +56,13 @@ def test_ignore_path(
 )
 def test_merge_paths(paths: list[str], expected_paths: list[str]):
     handler = PackageWatchdog("mountaineer", [])
-    assert set(handler.merge_paths(paths)) == {
-        str(Path(path).absolute()) for path in expected_paths
-    }
+    assert set(handler.merge_paths(paths)) == {str(Path(path).absolute()) for path in expected_paths}
 
 
 def test_change_mapping():
     watcher = FileWatcher([])
     assert watcher._map_change_to_callback_type(Change.added) == CallbackType.CREATED
-    assert (
-        watcher._map_change_to_callback_type(Change.modified) == CallbackType.MODIFIED
-    )
+    assert watcher._map_change_to_callback_type(Change.modified) == CallbackType.MODIFIED
     assert watcher._map_change_to_callback_type(Change.deleted) == CallbackType.DELETED
 
 
@@ -92,11 +88,9 @@ async def test_file_notification(tmp_path: Path):
     watcher = FileWatcher(
         callbacks=[
             CallbackDefinition(
-                action=CallbackType.CREATED
-                | CallbackType.MODIFIED
-                | CallbackType.DELETED,
+                action=CallbackType.CREATED | CallbackType.MODIFIED | CallbackType.DELETED,
                 callback=receive_callback,
-            )
+            ),
         ],
     )
 

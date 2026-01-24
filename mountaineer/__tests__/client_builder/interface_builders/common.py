@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Type
 
 from pydantic import BaseModel
 
@@ -19,7 +18,7 @@ from mountaineer.exceptions import APIException
 
 
 def create_model_wrapper(
-    model: Type[BaseModel],
+    model: type[BaseModel],
     name: str,
     fields: list[FieldWrapper] | None = None,
     superclasses: list[ModelWrapper] | None = None,
@@ -46,7 +45,7 @@ def create_field_wrapper(
 
 # Helper function to create exception wrappers
 def create_exception_wrapper(
-    exception: Type[APIException],
+    exception: type[APIException],
     name: str,
     status_code: int,
     value_models: list[FieldWrapper] | None = None,
@@ -64,15 +63,11 @@ def create_exception_wrapper(
 def create_action_wrapper(
     name: str,
     params: list[FieldWrapper] | None = None,
-    response_model: Type[BaseModel] | None = None,
+    response_model: type[BaseModel] | None = None,
     request_body: ModelWrapper | None = None,
     action_type: FunctionActionType = FunctionActionType.PASSTHROUGH,
 ) -> ActionWrapper:
-    response_wrapper = (
-        create_model_wrapper(response_model, response_model.__name__)
-        if response_model
-        else None
-    )
+    response_wrapper = create_model_wrapper(response_model, response_model.__name__) if response_model else None
     return ActionWrapper(
         name=name,
         module_name="test_module",
@@ -108,7 +103,7 @@ def create_controller_wrapper(
     )
 
 
-def create_enum_wrapper(enum_class: Type[Enum]) -> EnumWrapper:
+def create_enum_wrapper(enum_class: type[Enum]) -> EnumWrapper:
     """Helper function to create enum wrappers"""
     wrapper_name = WrapperName(enum_class.__name__)
     return EnumWrapper(name=wrapper_name, module_name="test_module", enum=enum_class)

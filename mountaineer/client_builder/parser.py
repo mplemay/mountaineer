@@ -1,13 +1,10 @@
+from collections.abc import Callable, Generator
 from copy import copy
 from dataclasses import dataclass
 from enum import Enum
 from inspect import isclass
 from typing import (
     Any,
-    Callable,
-    Generator,
-    Optional,
-    Type,
     TypeVar,
     Union,
 )
@@ -79,7 +76,7 @@ class ModelWrapper(CoreWrapper):
 @dataclass
 class ExceptionWrapper(CoreWrapper):
     status_code: int
-    exception: Type[APIException]
+    exception: type[APIException]
     value_models: list[FieldWrapper]
 
 
@@ -96,8 +93,8 @@ class ActionWrapper:
 
     params: list[FieldWrapper]
     headers: list[FieldWrapper]
-    request_body: Optional[ModelWrapper]
-    response_bodies: dict[Type[ControllerBase], ModelWrapper | None]
+    request_body: ModelWrapper | None
+    response_bodies: dict[type[ControllerBase], ModelWrapper | None]
     exceptions: list[ExceptionWrapper]
 
     is_raw_response: bool
@@ -105,16 +102,12 @@ class ActionWrapper:
 
     # Actions can be mounted to multiple controllers through inheritance
     # This will store a mapping of each controller to the url that the action is mounted to
-    controller_to_url: dict[Type[ControllerBase], str]
+    controller_to_url: dict[type[ControllerBase], str]
 
     def has_required_params(self):
         return (
             (any([param.required for param in self.params]) if self.params else False)
-            or (
-                any([header.required for header in self.headers])
-                if self.headers
-                else False
-            )
+            or (any([header.required for header in self.headers]) if self.headers else False)
             or self.request_body is not None
         )
 
@@ -128,11 +121,12 @@ class ControllerWrapper(CoreWrapper):
     # Render entrypoint
     queries: list[FieldWrapper]
     paths: list[FieldWrapper]
-    render: Optional[ModelWrapper]
+    render: ModelWrapper | None
 
     # Actions
     actions: dict[
-        str, ActionWrapper
+        str,
+        ActionWrapper,
     ]  # {url: action} directly implemented for this controller
 
     @property
@@ -161,7 +155,9 @@ class ControllerWrapper(CoreWrapper):
 
     @classmethod
     def get_all_embedded_types(
-        cls, controllers: list["ControllerWrapper"], include_superclasses: bool = False
+        cls,
+        controllers: list["ControllerWrapper"],
+        include_superclasses: bool = False,
     ) -> "EmbeddedTypeContainer":
         """
         For all the models and enums that are embedded in this controller (actions+render), return them in a flat list.
@@ -176,12 +172,7 @@ class ControllerWrapper(CoreWrapper):
         exceptions: list[ExceptionWrapper] = []
 
         def _traverse_logic(
-            item: ControllerWrapper
-            | ModelWrapper
-            | ExceptionWrapper
-            | ActionWrapper
-            | EnumWrapper
-            | TypeDefinition,
+            item: ControllerWrapper | ModelWrapper | ExceptionWrapper | ActionWrapper | EnumWrapper | TypeDefinition,
         ):
             nonlocal models, enums
 
@@ -227,7 +218,8 @@ class ControllerWrapper(CoreWrapper):
 
     @classmethod
     def get_all_embedded_controllers(
-        cls, controllers: list["ControllerWrapper"]
+        cls,
+        controllers: list["ControllerWrapper"],
     ) -> list["ControllerWrapper"]:
         """
         Gets all unique superclasses of the given set of controllers.
@@ -259,6 +251,8 @@ class ControllerWrapper(CoreWrapper):
 
         ```
         models = []
+
+
         def logic(item):
             if isinstance(item, ControllerWrapper):
                 if item.render:
@@ -267,7 +261,6 @@ class ControllerWrapper(CoreWrapper):
                     yield superclass
             elif isinstance(item, ModelWrapper):
                 models.append(item)
-
         ```
 
         """
@@ -284,7 +277,7 @@ class ControllerWrapper(CoreWrapper):
 @dataclass
 class SelfReference:
     name: str
-    model: Type[BaseModel]
+    model: type[BaseModel]
 
 
 @dataclass
@@ -303,11 +296,11 @@ class ControllerParser:
     """
 
     def __init__(self):
-        self.parsed_models: dict[Type[BaseModel], ModelWrapper] = {}
-        self.parsed_enums: dict[Type[Enum], EnumWrapper] = {}
-        self.parsed_controllers: dict[Type[ControllerBase], ControllerWrapper] = {}
+        self.parsed_models: dict[type[BaseModel], ModelWrapper] = {}
+        self.parsed_enums: dict[type[Enum], EnumWrapper] = {}
+        self.parsed_controllers: dict[type[ControllerBase], ControllerWrapper] = {}
         self.parsed_self_references: list[SelfReference] = []
-        self.parsed_exceptions: dict[Type[APIException], ExceptionWrapper] = {}
+        self.parsed_exceptions: dict[type[APIException], ExceptionWrapper] = {}
 
         self.type_parser = TypeParser()
 
@@ -321,15 +314,14 @@ class ControllerParser:
         controller_classes = self._get_valid_parent_classes(
             controller,
             base_require_predicate=lambda base: (
-                issubclass(base, ControllerBase)
-                or len(list(get_client_functions_cls(base))) > 0
+                issubclass(base, ControllerBase) or len(list(get_client_functions_cls(base))) > 0
             ),
             base_exclude_classes=(ControllerBase, LayoutControllerBase),
         )
 
         # Get render model from the concrete controller
         render, render_path, render_query, entrypoint_url = self._parse_render(
-            controller
+            controller,
         )
         actions = self._parse_actions(controller)
 
@@ -353,7 +345,9 @@ class ControllerParser:
         return wrapper
 
     def _parse_model(
-        self, model: type[BaseModel], skip_object_ids: tuple | None = None
+        self,
+        model: type[BaseModel],
+        skip_object_ids: tuple | None = None,
     ) -> ModelWrapper:
         """Parse a Pydantic model into ModelWrapper, handling inheritance"""
         # Return cached if already parsed
@@ -362,7 +356,9 @@ class ControllerParser:
 
         # Get all valid superclasses in MRO order, excluding BaseModel and above
         model_classes = self._get_valid_parent_classes(
-            model, base_require=BaseModel, base_exclude_classes=(BaseModel, RenderBase)
+            model,
+            base_require=BaseModel,
+            base_exclude_classes=(BaseModel, RenderBase),
         )
 
         # Parse direct superclasses (excluding the model itself)
@@ -398,7 +394,7 @@ class ControllerParser:
         self,
         name: str,
         field_info: FieldInfo,
-        self_model: Type[BaseModel] | None = None,
+        self_model: type[BaseModel] | None = None,
     ) -> FieldWrapper:
         # Create a basic conversion of the types, in case they're wrapped
         # by complex types like List, Dict, etc.
@@ -409,29 +405,28 @@ class ControllerParser:
         def update_children(type_definition: TypeDefinition | type):
             if isinstance(type_definition, TypeDefinition):
                 type_definition.update_children(
-                    [update_children(child) for child in type_definition.children]
+                    [update_children(child) for child in type_definition.children],
                 )
                 return type_definition
-            else:
-                # Special case to avoid infinite recursion
-                if self_model and type_definition == self_model:
-                    reference = SelfReference(
-                        name=self_model.__name__, model=self_model
-                    )
-                    self.parsed_self_references.append(reference)
-                    return reference
+            # Special case to avoid infinite recursion
+            if self_model and type_definition == self_model:
+                reference = SelfReference(
+                    name=self_model.__name__,
+                    model=self_model,
+                )
+                self.parsed_self_references.append(reference)
+                return reference
 
-                # Determine if they qualify for conversion. The vast majority of values
-                # passed in here will be classes, since they represent the typehinted annotations
-                # of models. But there are some situations (like TypeVars used in generics) where
-                # they will fail a subclass check.
-                if isclass(type_definition) and issubclass(type_definition, BaseModel):
-                    return self._parse_model(type_definition)
-                elif isclass(type_definition) and issubclass(type_definition, Enum):
-                    return self._parse_enum(type_definition)
-                else:
-                    # No need to parse further
-                    return type_definition
+            # Determine if they qualify for conversion. The vast majority of values
+            # passed in here will be classes, since they represent the typehinted annotations
+            # of models. But there are some situations (like TypeVars used in generics) where
+            # they will fail a subclass check.
+            if isclass(type_definition) and issubclass(type_definition, BaseModel):
+                return self._parse_model(type_definition)
+            if isclass(type_definition) and issubclass(type_definition, Enum):
+                return self._parse_enum(type_definition)
+            # No need to parse further
+            return type_definition
 
         root_definition = update_children(root_definition)
 
@@ -455,7 +450,8 @@ class ControllerParser:
         return wrapper
 
     def _parse_render(
-        self, controller: type[ControllerBase]
+        self,
+        controller: type[ControllerBase],
     ) -> tuple[
         ModelWrapper | None,
         list[FieldWrapper] | None,
@@ -486,7 +482,9 @@ class ControllerParser:
         # that just inherit the ControllerBase's ABC generic signature
         model_schema = self._parse_model(return_model)
         path_params, query_params = self._parse_params(
-            class_fn_as_method(render), "render", entrypoint_url or "/render"
+            class_fn_as_method(render),
+            "render",
+            entrypoint_url or "/render",
         )
 
         return model_schema, path_params, query_params, entrypoint_url
@@ -500,7 +498,7 @@ class ControllerParser:
         Handles both regular Pydantic models and generic model instances.
 
         """
-        generic_origin: Type[BaseModel] | None = None
+        generic_origin: type[BaseModel] | None = None
         generic_args: tuple[Any, ...] | None = None
 
         # For generic models, we need to synthesize annotations from the generic metadata
@@ -528,18 +526,17 @@ class ControllerParser:
                     if field_name in parent_owned_fields
                 },
             )
-        else:
-            # Regular model - use original logic
-            include_fields = {
-                field_name: (field_info.annotation, field_info)
-                for field_name, field_info in model.model_fields.items()
-                if field_name in model.__dict__.get("__annotations__", {})
-            }
-            return create_model(  # type: ignore
-                model.__name__,
-                __config__=model.model_config,
-                **include_fields,  # type: ignore
-            )
+        # Regular model - use original logic
+        include_fields = {
+            field_name: (field_info.annotation, field_info)
+            for field_name, field_info in model.model_fields.items()
+            if field_name in model.__dict__.get("__annotations__", {})
+        }
+        return create_model(  # type: ignore
+            model.__name__,
+            __config__=model.model_config,
+            **include_fields,  # type: ignore
+        )
 
     def _create_temp_route(self, func: Callable, name: str, url: str) -> APIRoute:
         """Create a temporary FastAPI route using the actual function"""
@@ -555,11 +552,7 @@ class ControllerParser:
             response_model=None,
         )
 
-        route = next(
-            route
-            for route in router.routes
-            if isinstance(route, APIRoute) and route.path == f"/{url}"
-        )
+        route = next(route for route in router.routes if isinstance(route, APIRoute) and route.path == f"/{url}")
 
         return route
 
@@ -599,8 +592,11 @@ class ControllerParser:
         return headers
 
     def _parse_request_body(
-        self, func: Callable, name: str, url: str
-    ) -> Optional[ModelWrapper]:
+        self,
+        func: Callable,
+        name: str,
+        url: str,
+    ) -> ModelWrapper | None:
         """Parse request body using FastAPI's dependency system"""
         route = self._create_temp_route(func, name, url)
 
@@ -621,7 +617,7 @@ class ControllerParser:
                 return self._parse_model(field_type)
 
             # Handle File uploads, subclass of Form
-            elif isinstance(field_info, File):
+            if isinstance(field_info, File):
                 has_files = True
                 body_fields[body_param.name] = field_info
 
@@ -656,9 +652,7 @@ class ControllerParser:
     def _parse_response_bodies(self, metadata: FunctionMetadata):
         """Parse response model from metadata"""
         return {
-            controller: self._parse_model(model)
-            if issubclass(model, BaseModel)
-            else None
+            controller: self._parse_model(model) if issubclass(model, BaseModel) else None
             for controller, model in metadata.return_models.items()
         }
 
@@ -672,7 +666,9 @@ class ControllerParser:
             synthetic_action_url = f"/{name}"
 
             path_params, query_params = self._parse_params(
-                func, name, synthetic_action_url
+                func,
+                name,
+                synthetic_action_url,
             )
             action = ActionWrapper(
                 name=name,
@@ -683,10 +679,7 @@ class ControllerParser:
                 response_bodies=self._parse_response_bodies(metadata),
                 is_raw_response=metadata.is_raw_response,
                 is_streaming_response=metadata.media_type == STREAM_EVENT_TYPE,
-                exceptions=[
-                    self._parse_exception(exception)
-                    for exception in metadata.exception_models
-                ],
+                exceptions=[self._parse_exception(exception) for exception in metadata.exception_models],
                 action_type=metadata.action_type,
                 controller_to_url=metadata.controller_mounts,
             )
@@ -694,13 +687,12 @@ class ControllerParser:
 
         return actions
 
-    def _parse_exception(self, exception: Type[APIException]):
+    def _parse_exception(self, exception: type[APIException]):
         if exception in self.parsed_exceptions:
             return self.parsed_exceptions[exception]
 
         value_models = [
-            self._parse_field(name, field_info)
-            for name, field_info in exception.InternalModel.model_fields.items()
+            self._parse_field(name, field_info) for name, field_info in exception.InternalModel.model_fields.items()
         ]
 
         # Unlike standard Models, which are used 1:1 to validate client bodies where some

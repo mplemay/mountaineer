@@ -3,11 +3,7 @@ from types import UnionType
 from typing import (
     Annotated,
     Any,
-    Dict,
-    List,
     Literal,
-    Set,
-    Tuple,
     Union,
     get_args,
     get_origin,
@@ -142,7 +138,7 @@ class LiteralOf(TypeDefinition):
         self._validate_primitive_values(self.values)
 
     @staticmethod
-    def _validate_primitive_values(values: List[Any]) -> None:
+    def _validate_primitive_values(values: list[Any]) -> None:
         """
         Ensures all values are primitive types (str, int, float, bool, None).
         Raises TypeError for non-primitive values.
@@ -152,7 +148,7 @@ class LiteralOf(TypeDefinition):
             if not isinstance(value, (str, int, float, bool)) and value is not None:
                 raise TypeError(
                     f"Literal values must be primitive types (str, int, float, bool, None). "
-                    f"Got {type(value)} for value: {value}"
+                    f"Got {type(value)} for value: {value}",
                 )
 
     @property
@@ -213,16 +209,16 @@ class TypeParser:
 
         args = tuple(self.parse_type(arg) for arg in args)
 
-        if origin_type in (list, List):
+        if origin_type in (list, list):
             return ListOf(type=args[0])
 
-        if origin_type in (dict, Dict):
+        if origin_type in (dict, dict):
             return DictOf(key=args[0], value=args[1])
 
-        if origin_type in (tuple, Tuple):
+        if origin_type in (tuple, tuple):
             return TupleOf(*args)
 
-        if origin_type in (set, Set):
+        if origin_type in (set, set):
             return SetOf(args[0])
 
         if origin_type is Literal:
@@ -234,13 +230,13 @@ class TypeParser:
     def _parse_basic_type(self, field_type: Any) -> Any:
         """Parse basic types without args"""
         if isinstance(field_type, type):
-            if issubclass(field_type, (list, List)):
+            if issubclass(field_type, (list, list)):
                 return ListOf(Any)
-            elif issubclass(field_type, (dict, Dict)):
+            if issubclass(field_type, (dict, dict)):
                 return DictOf(key=Any, value=Any)
-            elif issubclass(field_type, (tuple, Tuple)):  # type: ignore
+            if issubclass(field_type, (tuple, tuple)):  # type: ignore
                 return TupleOf(Any)
-            elif issubclass(field_type, (set, Set)):
+            if issubclass(field_type, (set, set)):
                 return SetOf(Any)
 
         return field_type

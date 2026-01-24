@@ -53,7 +53,7 @@ from mountaineer.render import (
                         maximum_scale=2,
                         user_scalable=False,
                     ),
-                ]
+                ],
             ),
             [
                 '<meta name="theme-color" content="#000000" />',
@@ -105,8 +105,8 @@ def test_build_header(metadata: Metadata, expected_tags: list[str]):
                         rel="stylesheet",
                         href="/static/css/style.css",
                         add_static_sha=True,
-                    )
-                ]
+                    ),
+                ],
             ),
             BuildMetadata(static_artifact_shas={"css/style.css": "abc123"}),
             ['<link rel="stylesheet" href="/static/css/style.css?sha=abc123" />'],
@@ -125,13 +125,13 @@ def test_build_header(metadata: Metadata, expected_tags: list[str]):
                         href="/static/css/other.css",
                         add_static_sha=True,
                     ),
-                ]
+                ],
             ),
             BuildMetadata(
                 static_artifact_shas={
                     "css/style.css": "abc123",
                     "css/other.css": "def456",
-                }
+                },
             ),
             [
                 '<link rel="stylesheet" href="/static/css/style.css?sha=abc123" />',
@@ -146,8 +146,8 @@ def test_build_header(metadata: Metadata, expected_tags: list[str]):
                         rel="stylesheet",
                         href="/static/css/nonexistent.css",
                         add_static_sha=True,
-                    )
-                ]
+                    ),
+                ],
             ),
             BuildMetadata(static_artifact_shas={"css/style.css": "abc123"}),
             ['<link rel="stylesheet" href="/static/css/nonexistent.css" />'],
@@ -162,9 +162,11 @@ def test_build_header(metadata: Metadata, expected_tags: list[str]):
                         add_static_sha=True,
                     ),
                     LinkAttribute(
-                        rel="stylesheet", href="/css/external.css", add_static_sha=True
+                        rel="stylesheet",
+                        href="/css/external.css",
+                        add_static_sha=True,
                     ),
-                ]
+                ],
             ),
             BuildMetadata(static_artifact_shas={"css/style.css": "abc123"}),
             [
@@ -180,8 +182,8 @@ def test_build_header(metadata: Metadata, expected_tags: list[str]):
                         rel="stylesheet",
                         href="/static/css/style.css",
                         add_static_sha=False,
-                    )
-                ]
+                    ),
+                ],
             ),
             BuildMetadata(static_artifact_shas={"css/style.css": "abc123"}),
             ['<link rel="stylesheet" href="/static/css/style.css" />'],
@@ -194,8 +196,8 @@ def test_build_header(metadata: Metadata, expected_tags: list[str]):
                         rel="stylesheet",
                         href="/static/css/style.css",
                         add_static_sha=True,
-                    )
-                ]
+                    ),
+                ],
             ),
             None,
             ['<link rel="stylesheet" href="/static/css/style.css" />'],
@@ -208,8 +210,8 @@ def test_build_header(metadata: Metadata, expected_tags: list[str]):
                         rel="stylesheet",
                         href="/static/css/style.css?v=1.0",
                         add_static_sha=True,
-                    )
-                ]
+                    ),
+                ],
             ),
             BuildMetadata(static_artifact_shas={"css/style.css": "abc123"}),
             ['<link rel="stylesheet" href="/static/css/style.css?v=1.0&sha=abc123" />'],
@@ -226,18 +228,20 @@ def test_build_header(metadata: Metadata, expected_tags: list[str]):
                             "media": "screen",
                             "crossorigin": "anonymous",
                         },
-                    )
-                ]
+                    ),
+                ],
             ),
             BuildMetadata(static_artifact_shas={"css/style.css": "abc123"}),
             [
-                '<link rel="stylesheet" href="/static/css/style.css?sha=abc123" media="screen" crossorigin="anonymous" />'
+                '<link rel="stylesheet" href="/static/css/style.css?sha=abc123" media="screen" crossorigin="anonymous" />',
             ],
         ),
     ],
 )
 def test_build_header_with_sha(
-    metadata: Metadata, build_metadata: BuildMetadata | None, expected_tags: list[str]
+    metadata: Metadata,
+    build_metadata: BuildMetadata | None,
+    expected_tags: list[str],
 ):
     """
     Test the SHA addition logic for static files in the build_header method.
@@ -252,18 +256,18 @@ COMPLEX_METADATA = Metadata(
         LinkAttribute(
             rel="stylesheet",
             href="/stylesheet1.css",
-        )
+        ),
     ],
     metas=[
         MetaAttribute(
             name="theme-color",
             content="#000000",
-        )
+        ),
     ],
     scripts=[
         ScriptAttribute(
             src="/script1.js",
-        )
+        ),
     ],
 )
 
@@ -289,16 +293,16 @@ COMPLEX_METADATA = Metadata(
                         LinkAttribute(
                             rel="stylesheet",
                             href="/stylesheet1.css",
-                        )
-                    ]
+                        ),
+                    ],
                 ),
                 Metadata(
                     links=[
                         LinkAttribute(
                             rel="stylesheet",
                             href="/stylesheet2.css",
-                        )
-                    ]
+                        ),
+                    ],
                 ),
             ],
             Metadata(
@@ -311,7 +315,7 @@ COMPLEX_METADATA = Metadata(
                         rel="stylesheet",
                         href="/stylesheet2.css",
                     ),
-                ]
+                ],
             ),
         ),
         # The first specified header should win.

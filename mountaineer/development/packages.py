@@ -9,11 +9,7 @@ def find_packages_with_prefix(prefix: str):
     Find and return a list of all installed package names that start with the given prefix.
 
     """
-    return [
-        dist.metadata["Name"]
-        for dist in distributions()
-        if dist.metadata["Name"].startswith(prefix)
-    ]
+    return [dist.metadata["Name"] for dist in distributions() if dist.metadata["Name"].startswith(prefix)]
 
 
 def package_path_to_module(package: str, file_path_raw: Path) -> str:
@@ -38,7 +34,7 @@ def package_path_to_module(package: str, file_path_raw: Path) -> str:
     # Check if the file is within the package
     if not file_path.startswith(package_root):
         raise ValueError(
-            f"The file {file_path} is not in the package {package} ({package_root})"
+            f"The file {file_path} is not in the package {package} ({package_root})",
         )
 
     # Remove the package root and the file extension

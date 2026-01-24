@@ -19,4 +19,3 @@ class CodeBlock:
         ie. CodeBlock.indent(f"  my_var = {my_var}\n")
 
         """
-        pass

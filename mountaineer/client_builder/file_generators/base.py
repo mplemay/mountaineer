@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
+from collections.abc import Generator
 from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
-from typing import Generator
 
 from mountaineer.client_builder.parser import ControllerWrapper
 from mountaineer.paths import ManagedViewPath

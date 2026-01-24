@@ -60,7 +60,7 @@ class IsolatedAppContext:
         self.webservice_thread: UvicornThread | None = None
 
         self.mountaineer: Mountaineer | None = None
-        self.exception_controller: "ExceptionController | None" = None
+        self.exception_controller: ExceptionController | None = None
         self.use_dev_exceptions = use_dev_exceptions
 
         self.js_compiler: APIBuilder | None = None
@@ -117,7 +117,7 @@ class IsolatedAppContext:
                     else:
                         LOGGER.error(f"Invalid message type: {type(message)} {message}")
                         raise ValueError(
-                            f"Invalid message type: {type(message)} {message}"
+                            f"Invalid message type: {type(message)} {message}",
                         )
                     LOGGER.debug(f"Will write response: {response}")
                     await broker.send_response(message_id, response)
@@ -129,7 +129,8 @@ class IsolatedAppContext:
                     await broker.send_response(
                         message_id,
                         ErrorResponse(
-                            exception=str(e), traceback="".join(format_exception(e))
+                            exception=str(e),
+                            traceback="".join(format_exception(e)),
                         ),
                     )
         except Exception as e:
@@ -271,9 +272,7 @@ class IsolatedAppContext:
 
             mountaineer.register(plugin)
             self.exception_controller = [
-                controller
-                for controller in plugin.get_controllers()
-                if isinstance(controller, ExceptionController)
+                controller for controller in plugin.get_controllers() if isinstance(controller, ExceptionController)
             ][0]
             mountaineer.app.exception_handler(Exception)(self.handle_dev_exception)
         except ImportError:
@@ -298,9 +297,7 @@ class IsolatedAppContext:
 
         if request.method == "GET":
             with log_time_duration("Exception parsing took", warning_threshold=0.5):
-                parsed_exception = (
-                    self.exception_controller.traceback_parser.parse_exception(exc)
-                )
+                parsed_exception = self.exception_controller.traceback_parser.parse_exception(exc)
             with log_time_duration(
                 "Exception controller took to render the exception page",
                 warning_threshold=0.5,
@@ -311,5 +308,4 @@ class IsolatedAppContext:
                     parsed_exception=parsed_exception,
                 )
             return html
-        else:
-            raise exc
+        raise exc

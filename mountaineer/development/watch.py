@@ -1,9 +1,10 @@
 import asyncio
 import importlib.metadata
+from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from enum import Flag, auto
 from pathlib import Path
-from typing import Any, Callable, Coroutine, Iterable
+from typing import Any
 
 from watchfiles import Change, awatch
 
@@ -61,20 +62,18 @@ class FileWatcher:
         path_components = set(path_str.split("/"))
 
         # Check for any nested hidden directories and ignored directories
-        if self.ignore_hidden and any(
-            component.startswith(".") for component in path_components
-        ):
-            return True
-        elif path_components & set(self.ignore_list) != set():
+        if (
+            self.ignore_hidden and any(component.startswith(".") for component in path_components)
+        ) or path_components & set(self.ignore_list) != set():
             return True
         return False
 
     def _map_change_to_callback_type(self, change: Change) -> CallbackType:
         if change == Change.added:
             return CallbackType.CREATED
-        elif change == Change.modified:
+        if change == Change.modified:
             return CallbackType.MODIFIED
-        elif change == Change.deleted:
+        if change == Change.deleted:
             return CallbackType.DELETED
         # Default to modified for any other changes
         return CallbackType.MODIFIED
@@ -96,11 +95,7 @@ class FileWatcher:
         Runs all callbacks for the given action.
         """
         for callback in self.callbacks:
-            valid_events = [
-                event
-                for event in self.pending_events
-                if event.action in callback.action
-            ]
+            valid_events = [event for event in self.pending_events if event.action in callback.action]
             if valid_events:
                 await callback.callback(CallbackMetadata(events=valid_events))
 
@@ -143,6 +138,7 @@ class PackageWatchdog:
     import asyncio
     from mountaineer.development.watch import PackageWatchdog, CallbackDefinition, CallbackType, CallbackMetadata
 
+
     # Define a callback function to handle file changes
     async def reload_modules(metadata: CallbackMetadata) -> None:
         print(f"Changes detected in {len(metadata.events)} files")
@@ -150,17 +146,13 @@ class PackageWatchdog:
             print(f"  {event.action.name}: {event.path}")
             # You would typically reload modules or trigger other actions here
 
+
     # Create a watchdog for your main package and any dependencies
     watchdog = PackageWatchdog(
         main_package="my_app",
         dependent_packages=["my_library"],
-        callbacks=[
-            CallbackDefinition(
-                action=CallbackType.MODIFIED | CallbackType.CREATED,
-                callback=reload_modules
-            )
-        ],
-        run_on_bootup=True
+        callbacks=[CallbackDefinition(action=CallbackType.MODIFIED | CallbackType.CREATED, callback=reload_modules)],
+        run_on_bootup=True,
     )
 
     await watchdog.start_watching()
@@ -219,13 +211,15 @@ class PackageWatchdog:
         watcher = FileWatcher(callbacks=self.callbacks)
 
         CONSOLE.print(
-            f"👀 Watching {len(self.paths)} {pluralize(len(self.paths), 'path', 'paths')}"
+            f"👀 Watching {len(self.paths)} {pluralize(len(self.paths), 'path', 'paths')}",
         )
         for path in self.paths:
             LOGGER.info(f"Watching {path}")
 
         async for changes in awatch(
-            *self.paths, stop_event=self.stop_event, watch_filter=None
+            *self.paths,
+            stop_event=self.stop_event,
+            watch_filter=None,
         ):
             await watcher.process_changes(changes)
 
@@ -251,7 +245,7 @@ class PackageWatchdog:
                 importlib.metadata.version(package)
             except importlib.metadata.PackageNotFoundError:
                 raise ValueError(
-                    f"Package '{package}' is not installed in the current environment"
+                    f"Package '{package}' is not installed in the current environment",
                 )
 
     def get_package_paths(self):

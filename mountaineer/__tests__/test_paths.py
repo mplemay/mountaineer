@@ -63,10 +63,10 @@ def test_is_path_file_heuristic(path: Path, expected_is_file: Path):
         ),
         (
             Path(
-                "/Users/root/projects/mountaineer/ci_webapp/ci_webapp/views/app/home/_server"
+                "/Users/root/projects/mountaineer/ci_webapp/ci_webapp/views/app/home/_server",
             ),
             Path(
-                "/Users/root/projects/mountaineer/ci_webapp/ci_webapp/views/_server/server.tsx"
+                "/Users/root/projects/mountaineer/ci_webapp/ci_webapp/views/_server/server.tsx",
             ),
             True,
             "../../../_server/server",
@@ -87,7 +87,9 @@ def test_generate_relative_import(
 ):
     assert (
         generate_relative_import(
-            current_import, desired_import, strip_js_extensions=strip_js_extensions
+            current_import,
+            desired_import,
+            strip_js_extensions=strip_js_extensions,
         )
         == expected
     )
@@ -249,8 +251,8 @@ def test_resolve_dist_links(package_name: str, egg_info_name: str):
                 {
                     "dir_info": {"editable": True},
                     "url": f"file://{package_dir_path.absolute()}",
-                }
-            )
+                },
+            ),
         )
 
         with patch("importlib.metadata.distribution") as mock_distribution:

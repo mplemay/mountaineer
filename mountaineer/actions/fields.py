@@ -2,25 +2,23 @@ import collections
 import collections.abc
 import typing
 import warnings
+from collections.abc import Awaitable, Callable
 from enum import Enum
 from inspect import (
-    iscoroutinefunction,
     isclass,
+    iscoroutinefunction,
     ismethod,
 )
 from json import loads as json_loads
 from typing import (
     TYPE_CHECKING,
     Any,
-    Awaitable,
-    Callable,
     Concatenate,
     Generic,
     NotRequired,
     Optional,
     ParamSpec,
     Protocol,
-    Type,
     TypedDict,
     TypeVar,
     get_args,
@@ -69,7 +67,9 @@ C = TypeVar("C")
 
 class SideeffectWrappedCallable(Protocol[C, T, R]):
     def __call__(
-        self: Any, *args: T.args, **kwargs: T.kwargs
+        self: Any,
+        *args: T.args,
+        **kwargs: T.kwargs,
     ) -> Awaitable[SideeffectResponseBase[R]]: ...
 
     # Since the original function is extracted directly from the class, it's
@@ -90,28 +90,22 @@ class FunctionMetadata(BaseModel):
 
     # Specified for sideeffects, where all data shouldn't be update. Limits the
     # update to fields defined in this tuple.
-    reload_states: tuple[FieldClassDefinition, ...] | None | MountaineerUnsetValue = (
-        MountaineerUnsetValue()
-    )
+    reload_states: tuple[FieldClassDefinition, ...] | None | MountaineerUnsetValue = MountaineerUnsetValue()
 
     # Defines the data schema returned from the function that will be included in the
     # response payload sent to the client. This might be used for either passthrough
     # or sideeffect
-    passthrough_model: Type[BaseModel] | None | MountaineerUnsetValue = (
-        MountaineerUnsetValue()
-    )
-    exception_models: list[Type[APIException]] = [RequestValidationError]
+    passthrough_model: type[BaseModel] | None | MountaineerUnsetValue = MountaineerUnsetValue()
+    exception_models: list[type[APIException]] = [RequestValidationError]
     media_type: str | None | MountaineerUnsetValue = MountaineerUnsetValue()
     is_raw_response: bool = False
 
     # Render type, defines the data model that is returned by the render typehint
     # If "None", the user has explicitly stated that no render model is returned
-    render_model: Type[RenderBase] | None | MountaineerUnsetValue = (
-        MountaineerUnsetValue()
-    )
+    render_model: type[RenderBase] | None | MountaineerUnsetValue = MountaineerUnsetValue()
 
     # Inserted when concrete controllers are mounted to the application controller
-    return_models: dict[Any, Type[BaseModel]] = Field(default_factory=dict)
+    return_models: dict[Any, type[BaseModel]] = Field(default_factory=dict)
 
     # An API action might be mounted by multiple controllers, if it comes from a superclass
     # that's inherited by multiple child controllers. This lookup lets us track which
@@ -133,17 +127,17 @@ class FunctionMetadata(BaseModel):
             raise ValueError("Reload states not set")
         return self.reload_states
 
-    def get_render_model(self) -> Type[RenderBase] | None:
+    def get_render_model(self) -> type[RenderBase] | None:
         if isinstance(self.render_model, MountaineerUnsetValue):
             raise ValueError("Render model not set")
         return self.render_model or RenderNull
 
-    def get_passthrough_model(self) -> Type[BaseModel] | None:
+    def get_passthrough_model(self) -> type[BaseModel] | None:
         if isinstance(self.passthrough_model, MountaineerUnsetValue):
             raise ValueError("Passthrough model not set")
         return self.passthrough_model
 
-    def get_exception_models(self) -> list[Type[APIException]] | None:
+    def get_exception_models(self) -> list[type[APIException]] | None:
         if isinstance(self.exception_models, MountaineerUnsetValue):
             raise ValueError("Exception models not set")
         return self.exception_models
@@ -156,29 +150,31 @@ class FunctionMetadata(BaseModel):
     def get_is_raw_response(self) -> bool:
         return self.is_raw_response
 
-    def get_return_model(self, controller: Type["ControllerBase"]) -> Type[BaseModel]:
+    def get_return_model(self, controller: type["ControllerBase"]) -> type[BaseModel]:
         if controller not in self.return_models:
             raise ValueError("Return model not set")
         return self.return_models[controller]
 
-    def register_controller_url(self, controller: Type["ControllerBase"], url: str):
+    def register_controller_url(self, controller: type["ControllerBase"], url: str):
         if controller in self.controller_mounts:
             # See if it's the same URL
             if self.controller_mounts[controller] != url:
                 raise ValueError(
                     f"Controller {controller} already mounted at {self.controller_mounts[controller]} with different URL\n"
-                    f"Old: {self.controller_mounts[controller]} New: {url}"
+                    f"Old: {self.controller_mounts[controller]} New: {url}",
                 )
         self.controller_mounts[controller] = url
 
     def register_return_model(
-        self, controller: Type["ControllerBase"], model: Type[BaseModel]
+        self,
+        controller: type["ControllerBase"],
+        model: type[BaseModel],
     ):
         if controller in self.return_models:
             if self.return_models[controller] != model:
                 raise ValueError(
                     f"Controller {controller} already registered with a different return model\n"
-                    f"Old: {self.return_models[controller]} New: {model}"
+                    f"Old: {self.return_models[controller]} New: {model}",
                 )
         self.return_models[controller] = model
 
@@ -224,7 +220,7 @@ def get_function_metadata(fn: Callable) -> FunctionMetadata:
 
 def annotation_is_metadata(annotation: type | None):
     if not annotation:
-        return
+        return None
 
     return annotation == Metadata or annotation == Optional[Metadata]
 
@@ -232,8 +228,8 @@ def annotation_is_metadata(annotation: type | None):
 def fuse_metadata_to_response_typehint(
     metadata: FunctionMetadata,
     controller: "ControllerBase",
-    render_model: Type[RenderBase] | None,
-) -> Type[BaseModel]:
+    render_model: type[RenderBase] | None,
+) -> type[BaseModel]:
     """
     Functions can either be marked up with side effects, explicit responses, or both.
     This function merges them into the expected output payload so we can typehint the responses.
@@ -241,8 +237,8 @@ def fuse_metadata_to_response_typehint(
     """
     # Prefer to use existing BaseModels where possible, we only create synthetic values
     # if we need to mask the response model
-    passthrough_model: Type[BaseModel] | None = None
-    sideeffect_model: Type[BaseModel] | None = None
+    passthrough_model: type[BaseModel] | None = None
+    sideeffect_model: type[BaseModel] | None = None
 
     base_response_name = camelize(metadata.function_name) + "ResponseWrapped"
     base_response_params = {}
@@ -252,7 +248,8 @@ def fuse_metadata_to_response_typehint(
     base_module = controller.__module__
 
     if metadata.passthrough_model is not None and not isinstance(
-        metadata.passthrough_model, MountaineerUnsetValue
+        metadata.passthrough_model,
+        MountaineerUnsetValue,
     ):
         passthrough_model = metadata.passthrough_model
 
@@ -261,7 +258,8 @@ def fuse_metadata_to_response_typehint(
         sideeffect_model = render_model
 
         if metadata.reload_states is not None and not isinstance(
-            metadata.reload_states, MountaineerUnsetValue
+            metadata.reload_states,
+            MountaineerUnsetValue,
         ):
             # Make sure this class actually aligns to the response model
             # If not the user mis-specified the reload states
@@ -273,10 +271,11 @@ def fuse_metadata_to_response_typehint(
             reload_classes = {field.root_model for field in metadata.reload_states}
             reload_keys = {field.key for field in metadata.reload_states}
             if len(reload_classes) != 1 or not issubclass(
-                render_model, next(iter(reload_classes))
+                render_model,
+                next(iter(reload_classes)),
             ):
                 raise ValueError(
-                    f"Reload states {reload_classes} do not align to response model {render_model}"
+                    f"Reload states {reload_classes} do not align to response model {render_model}",
                 )
             sideeffect_model = create_model(
                 base_response_name + "SideEffectWrapped",
@@ -300,7 +299,7 @@ def fuse_metadata_to_response_typehint(
             FieldInfo(alias="sideeffect"),
         )
 
-    model: Type[BaseModel] = create_model(
+    model: type[BaseModel] = create_model(
         base_response_name,
         __module__=base_module,
         **base_response_params,  # type: ignore
@@ -320,9 +319,7 @@ def format_final_action_response(dict_payload: dict[str, Any]):
 
     """
     responses: list[tuple[str, JSONResponse]] = [
-        (key, response)
-        for key, response in dict_payload.items()
-        if isinstance(response, JSONResponse)
+        (key, response) for key, response in dict_payload.items() if isinstance(response, JSONResponse)
     ]
 
     if len(responses) > 1:
@@ -342,15 +339,14 @@ def format_final_action_response(dict_payload: dict[str, Any]):
         content=dict_payload,
         status_code=response.status_code,
         headers={
-            key: value
-            for key, value in response.headers.items()
-            if key not in {"content-length", "content-type"}
+            key: value for key, value in response.headers.items() if key not in {"content-length", "content-type"}
         },
     )
 
 
 def extract_response_model_from_signature(
-    func: Callable, explicit_response: Type[BaseModel] | None = None
+    func: Callable,
+    explicit_response: type[BaseModel] | None = None,
 ):
     typehinted_response = func.__annotations__.get("return", MountaineerUnsetValue())
     if explicit_response:
@@ -384,7 +380,7 @@ def extract_response_model_from_signature(
 
 def extract_model_from_decorated_types(
     type_hint: Any,
-) -> tuple[Type[BaseModel] | None, ResponseModelType]:
+) -> tuple[type[BaseModel] | None, ResponseModelType]:
     """
     Support response_model typehints like Iterator[Type[BaseModel]] and AsyncIterator[Type[BaseModel]].
 
@@ -393,9 +389,9 @@ def extract_model_from_decorated_types(
 
     if type_hint is None:
         return None, ResponseModelType.SINGLE_RESPONSE
-    elif isclass(type_hint) and issubclass(type_hint, BaseModel):
+    if isclass(type_hint) and issubclass(type_hint, BaseModel):
         return type_hint, ResponseModelType.SINGLE_RESPONSE
-    elif origin_type in (
+    if origin_type in (
         typing.Iterator,
         typing.AsyncIterator,
         # At runtime our types are sometimes instantiated as collections.abc objects
@@ -406,15 +402,15 @@ def extract_model_from_decorated_types(
         if args and issubclass(args[0], BaseModel):
             return args[0], ResponseModelType.ITERATOR_RESPONSE
         raise ValueError(
-            f"Invalid response_model typehint for iterator action: {type_hint} {origin_type} {args}"
+            f"Invalid response_model typehint for iterator action: {type_hint} {origin_type} {args}",
         )
-    elif isclass(type_hint) and issubclass(type_hint, starlette.responses.Response):
+    if isclass(type_hint) and issubclass(type_hint, starlette.responses.Response):
         # No pydantic model to include in the API schema, instead the endpoint
         # will just return the raw value
         return None, ResponseModelType.SINGLE_RESPONSE
 
     raise ValueError(
-        f"Invalid response_model typehint for standard action: {type_hint}"
+        f"Invalid response_model typehint for standard action: {type_hint}",
     )
 
 
@@ -426,9 +422,8 @@ def create_original_fn(fn):
     """
     if iscoroutinefunction(fn):
         return fn
-    else:
 
-        async def async_fn(*args, **kwargs):
-            return fn(*args, **kwargs)
+    async def async_fn(*args, **kwargs):
+        return fn(*args, **kwargs)
 
-        return async_fn
+    return async_fn
