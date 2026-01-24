@@ -323,7 +323,7 @@ requires-python = ">=3.11,<3.15"
   - Update or add tests in `mountaineer/__tests__/actions/` to ensure sideeffect/passthrough payloads serialize with the
     TypedDict-based payload model (no 3.10 fallback paths).
 - **Integration tests**
-  - Run existing integration tests (`@pytest.mark.integration_tests`) across Python 3.11-3.14 in CI to validate end-to-end
+  - Run existing integration tests (`@pytest.mark.integration`) across Python 3.11-3.14 in CI to validate end-to-end
     behavior.
   - Execute `make test-lib-integrations` in CI matrix to ensure the fixture webapp aligns with new requirements.
 - **Version matrix coverage**
