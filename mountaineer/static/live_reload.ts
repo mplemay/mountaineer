@@ -111,13 +111,13 @@ class ReconnectWebSocket {
 }
 
 const mountLiveReload = (
-  { 
+  {
     host,
     port,
     SSR_RENDERING,
     NODE_ENV,
     LIVE_RELOAD_PORT,
-  }: { 
+  }: {
     host?: string;
     port?: number;
     SSR_RENDERING: boolean;
