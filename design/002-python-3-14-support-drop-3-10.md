@@ -4,10 +4,10 @@
 
 ### High-Level Description
 
-This change updates Mountaineer to officially support Python 3.14 while dropping Python 3.10. The work spans packaging
-metadata, CI/build matrices, lockfiles, and a small set of compatibility shims that only exist for 3.10-era behavior.
-The runtime surface area should remain stable, but we will simplify version-gated code paths to target Python 3.11-3.14
-only and align documentation and fixtures with the new supported range.
+This change updates Mountaineer to officially support Python 3.14 while dropping Python 3.10.
+The work spans packaging metadata, CI/build matrices, lockfiles, and compatibility shims for 3.10-era behavior.
+The runtime surface area should remain stable.
+We will simplify version-gated code paths to target Python 3.11-3.14 only and align docs with the new range.
 
 ### Goals
 
@@ -30,10 +30,9 @@ only and align documentation and fixtures with the new supported range.
 
 #### Description
 
-Sideeffect and passthrough actions construct response payloads that use TypedDict generics and NotRequired fields. With
-Python 3.10 dropped, we can rely on the built-in typing features in Python 3.11+ and remove the fallback TypedDict
-implementation. The decorators build the payload and hand it off to the response formatter without additional runtime
-branching for Python 3.10.
+Sideeffect and passthrough actions construct response payloads that use TypedDict generics and NotRequired fields.
+With Python 3.10 dropped, we can rely on built-in typing features in Python 3.11+ and remove fallback TypedDict.
+Decorators build the payload and hand it off to the response formatter without runtime branching for Python 3.10.
 
 #### Usage Example
 
@@ -82,7 +81,8 @@ sequenceDiagram
 
 #### Key Components
 
-- **SideeffectResponseBase** (`mountaineer/actions/fields.py:SideeffectResponseBase`) - TypedDict used for action payloads
+- **SideeffectResponseBase** (`mountaineer/actions/fields.py:SideeffectResponseBase`) - TypedDict used for
+  action payloads
 - **sideeffect decorator** (`mountaineer/actions/sideeffect_dec.py:sideeffect`) - Builds sideeffect payloads
 - **passthrough decorator** (`mountaineer/actions/passthrough_dec.py:passthrough`) - Builds passthrough payloads
 - **format_final_action_response** (`mountaineer/actions/fields.py`) - Serializes action responses
@@ -91,9 +91,10 @@ sequenceDiagram
 
 #### Description
 
-CI should test and lint against Python 3.11, 3.12, 3.13, and 3.14. Release builds should produce wheels for the same
-interpreter set and exclude 3.10. The rust-tests job should use the minimum supported version (3.11). Lockfiles in the
-root, .github, and benchmarking projects should be regenerated to reflect updated Python constraints.
+CI should test and lint against Python 3.11, 3.12, 3.13, and 3.14.
+Release builds should produce wheels for the same interpreter set and exclude 3.10.
+The rust-tests job should use the minimum supported version (3.11).
+Lockfiles in the root, .github, and benchmarking projects should be regenerated to reflect updated Python constraints.
 
 #### Usage Example
 
@@ -320,11 +321,11 @@ requires-python = ">=3.11,<3.15"
 
 - **Unit tests**
   - Re-run `mountaineer/__tests__/test_compat.py` to validate StrEnum behavior under Python 3.11-3.14.
-  - Update or add tests in `mountaineer/__tests__/actions/` to ensure sideeffect/passthrough payloads serialize with the
-    TypedDict-based payload model (no 3.10 fallback paths).
+  - Update or add tests in `mountaineer/__tests__/actions/` to ensure sideeffect/passthrough payloads serialize
+    with the TypedDict-based payload model (no 3.10 fallback paths).
 - **Integration tests**
-  - Run existing integration tests (`@pytest.mark.integration_tests`) across Python 3.11-3.14 in CI to validate end-to-end
-    behavior.
+  - Run existing integration tests (`@pytest.mark.integration_tests`) across Python 3.11-3.14 in CI to validate
+    end-to-end behavior.
   - Execute `make test-lib-integrations` in CI matrix to ensure the fixture webapp aligns with new requirements.
 - **Version matrix coverage**
   - Ensure CI `test`, `lint`, and `lib-integration-test` jobs cover 3.11-3.14.
@@ -337,9 +338,9 @@ requires-python = ">=3.11,<3.15"
 1. **Metadata and docs updates** (version range)
    - `pyproject.toml`, `.github/pyproject.toml`, `benchmarking/pyproject.toml`, docs, fixtures
 2. **Compatibility layer updates** (runtime typing)
-   - `mountaineer/compat.py`, `mountaineer/actions/fields.py`, `mountaineer/actions/sideeffect_dec.py`, `mountaineer/actions/passthrough_dec.py`
-3. **CI/build matrix updates**
-   - `.github/workflows/test.yml` and any related scripts
+   - `mountaineer/compat.py`, `mountaineer/actions/fields.py`, `mountaineer/actions/sideeffect_dec.py`,
+     `mountaineer/actions/passthrough_dec.py`
+3. **CI/build matrix updates** - `.github/workflows/test.yml` and any related scripts
 4. **Lockfile refresh**
    - `uv.lock`, `.github/uv.lock`, `benchmarking/uv.lock`
 5. **Test updates and validation**
@@ -377,9 +378,10 @@ requires-python = ">=3.11,<3.15"
 
 ## Open Questions
 
-1. Should we set an explicit upper bound in the root `requires-python` (e.g., `<3.15`) until 3.14 support is validated?
-2. Do we want to keep `typing_extensions` as a direct dependency (for `dataclass_transform`) or migrate to stdlib typing
-   now that 3.11 is the minimum?
+1. Should we set an explicit upper bound in the root `requires-python` (e.g., `<3.15`) until 3.14 support is
+   validated?
+2. Do we want to keep `typing_extensions` as a direct dependency (for `dataclass_transform`) or migrate to stdlib
+   typing now that 3.11 is the minimum?
 
 ## Future Enhancements
 
@@ -420,8 +422,8 @@ None.
 - More branching in runtime type hints and decorators
 - CI/build times increase with a larger version matrix
 
-**Why not chosen**: The goal is to reduce maintenance and align with modern Python features. Dropping 3.10 enables
-simpler typing constructs and fewer compatibility shims while still supporting 3.11+.
+**Why not chosen**: The goal is to reduce maintenance and align with modern Python features.
+Dropping 3.10 enables simpler typing constructs and fewer compatibility shims while still supporting 3.11+.
 
 ### Approach 2: Drop 3.10 and 3.11, Target 3.12+ Only
 
@@ -437,8 +439,8 @@ simpler typing constructs and fewer compatibility shims while still supporting 3
 - Drops a larger segment of users
 - Increases migration burden for downstream projects
 
-**Why not chosen**: 3.11 is still widely used and offers most of the typing/runtime features needed here. Limiting to
-3.12+ is unnecessary for the scope of this change.
+**Why not chosen**: 3.11 is still widely used and offers most of the typing/runtime features needed here.
+Limiting to 3.12+ is unnecessary for the scope of this change.
 
 ### Approach 3: Treat 3.14 as Experimental Only
 

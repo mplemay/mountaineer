@@ -4,17 +4,17 @@
 
 ### High-Level Description
 
-Mountaineer currently ships a plugin system (`MountaineerPlugin`) that allows external packages to register
-controllers with separate view roots and precompiled assets. This adds complexity across controller registration,
-static asset routing, build pipelines, and dev tooling (including a plugin-based exception page). The request is to
-remove plugin support entirely and delete infrastructure that only exists to support plugins, including
-`IsolatedAppContext`.
+Mountaineer ships a plugin system (`MountaineerPlugin`).
+It lets external packages register controllers with separate view roots.
+This adds complexity across controller registration, static routing, build pipelines, and dev tooling.
+This design removes plugin support entirely.
+It deletes infrastructure like `IsolatedAppContext` that only supports plugins.
 
-This design removes the `MountaineerPlugin` API and all plugin-only logic from the core, simplifying registration,
-build, and runtime assumptions to a single view root. It also replaces the isolated-process development pipeline
-with an in-process `DevSession` that manages app initialization and build steps without external plugins. The CLI
-(`handle_runserver`, `handle_watch`, `handle_build`) will call this new session directly. Documentation and tests
-are updated to reflect the removal and the simplified workflow.
+This design removes the `MountaineerPlugin` API and plugin-only logic.
+It simplifies registration, build, and runtime to a single view root.
+It replaces the isolated-process pipeline with an in-process `DevSession` managing app initialization and builds.
+The CLI (`handle_runserver`, `handle_watch`, `handle_build`) will call this new session directly.
+Documentation and tests are updated to reflect the removal and the simplified workflow.
 
 ### Goals
 
@@ -38,9 +38,9 @@ are updated to reflect the removal and the simplified workflow.
 
 #### Description
 
-Users register `ControllerBase` / `LayoutControllerBase` instances directly on a `Mountaineer` instance. Plugin
-objects are no longer supported; static asset routing always uses the default `/static` prefix and the single
-project view root. Build steps and dev tooling operate exclusively on that root.
+Users register `ControllerBase` / `LayoutControllerBase` instances directly on a `Mountaineer` instance.
+Plugin objects are no longer supported; static routing uses the default `/static` prefix and single project view.
+Build steps and dev tooling operate exclusively on that root.
 
 #### Usage Example
 
@@ -100,10 +100,11 @@ sequenceDiagram
 
 #### Description
 
-The CLI creates a `DevSession` that loads the Mountaineer instance, initializes builders, runs a dev server, and
-watches files. JS/TS/CSS changes trigger frontend rebuilds. Python changes trigger module reload and reinitialization
-of the Mountaineer instance. The Watcher webservice broadcasts rebuild notifications. No custom dev exception page
-is installed.
+The CLI creates a `DevSession` that loads the Mountaineer instance, initializes builders, and runs a dev server.
+JS/TS/CSS changes trigger frontend rebuilds.
+Python changes trigger module reload and reinitialization of the Mountaineer instance.
+The Watcher webservice broadcasts rebuild notifications.
+No custom dev exception page is installed.
 
 #### Usage Example
 
@@ -374,7 +375,7 @@ class PostCSSBundler(APIBuilderBase):
 
 Tests should be organized by module/file and cover unit tests, integration tests, and edge cases.
 
-#### `mountaineer/__tests__/development/test_session.py`
+### `mountaineer/__tests__/development/test_session.py`
 
 - Create `DevSession` from a fixture webcontroller and validate `mountaineer`, `js_compiler`, `app_compiler` are set.
 - Verify `build_use_server()` delegates to `APIBuilder` (mocked).
@@ -399,7 +400,8 @@ Tests should be organized by module/file and cover unit tests, integration tests
 
 #### `mountaineer/__tests__/test_cli.py`
 
-- Patch `DevSession` in `handle_build` and assert expected sequence (`initialize_app_state`, `build_use_server`, `run_builder_plugins`).
+- Patch `DevSession` in `handle_build` and assert expected sequence (`initialize_app_state`, `build_use_server`,
+  `run_builder_plugins`).
 
 **Integration Tests:**
 

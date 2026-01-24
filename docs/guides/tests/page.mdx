@@ -1,6 +1,8 @@
 # Tests
 
-By convention, Mountaineer applications use **pytest** and **pytest-asyncio** for comprehensive testing. The framework provides patterns for testing controllers, sideeffects, database operations, and frontend integrations with proper isolation and setup. You can use whatever testing framework you want if you're willing to go off road.
+By convention, Mountaineer applications use **pytest** and **pytest-asyncio** for comprehensive testing.
+The framework provides patterns for testing controllers, sideeffects, database operations, and frontend integrations with proper isolation and setup.
+You can use whatever testing framework you want if you're willing to go off road.
 
 Mountaineer applications should set up a complete testing environment with the necessary dependencies and configuration.
 
@@ -10,7 +12,7 @@ Mountaineer applications should set up a complete testing environment with the n
 
 Every new Mountaineer project includes a `__tests__/` directory with a pre-configured testing environment:
 
-```
+```text
 my_webapp/
 ├── __tests__/
 │   ├── __init__.py
@@ -26,7 +28,8 @@ my_webapp/
 
 ### Base Configuration (`conftest.py`)
 
-The template provides a robust test configuration that handles test setup and dependency injection. The generated `conftest.py` includes:
+The template provides a robust test configuration that handles test setup and dependency injection.
+The generated `conftest.py` includes:
 
 - **Automatic config setup** with test-time configuration
 - **Test fixtures** for common testing patterns
@@ -49,13 +52,16 @@ PACKAGE=my_webapp
 
 ### Testing Controller Render Functions
 
-The `render()` function is the heart of every controller - it defines what data your frontend receives. Testing render functions ensures that your controllers produce the correct data structure and handle various input scenarios properly.
+The `render()` function is the heart of every controller - it defines what data your frontend receives.
+Testing render functions ensures that your controllers produce the correct data structure and handle various input scenarios properly.
 
-**What we're testing**: The render function should return the expected data payload based on the current application state and request parameters. This is essentially testing your "read" operations.
+**What we're testing**: The render function should return the expected data payload based on the current application state and request parameters.
+This is essentially testing your "read" operations.
 
 _Testing Render with Data_
 
-The most common scenario is testing that when a user visits a page, they see the correct data. This test validates your application's "happy path" - when everything is working correctly and you have data to display.
+The most common scenario is testing that when a user visits a page, they see the correct data.
+This test validates your application's "happy path" - when everything is working correctly and you have data to display.
 
 We set up some test data, create a mock request (simulating a user visiting the page), call the render method, and verify both the response structure and the actual content.
 
@@ -99,7 +105,8 @@ async def test_home_render_with_todos():
 
 _Testing Render with Empty State_
 
-Your application should gracefully handle empty states, which is common when users first visit your app or when they've cleared all their data. This test ensures that your render function doesn't break when there's no data to display.
+Your application should gracefully handle empty states, which is common when users first visit your app or when they've cleared all their data.
+This test ensures that your render function doesn't break when there's no data to display.
 
 ```python
 @pytest.mark.asyncio
@@ -125,13 +132,16 @@ async def test_home_render_empty_state():
 
 ### Testing Action Functions (Sideeffects & Passthroughs)
 
-Action functions handle the "write" operations in your application - creating, updating, or deleting data. These tests ensure that user interactions properly modify your application state.
+Action functions handle the "write" operations in your application - creating, updating, or deleting data.
+These tests ensure that user interactions properly modify your application state.
 
-**What we're testing**: Action functions should correctly process user input, update application state, and trigger appropriate render refreshes. Both `@sideeffect` and `@passthrough` decorated functions follow similar testing patterns.
+**What we're testing**: Action functions should correctly process user input, update application state, and trigger appropriate render refreshes.
+Both `@sideeffect` and `@passthrough` decorated functions follow similar testing patterns.
 
 _Testing Data Creation_
 
-This test validates the most common user interaction - adding new data to your application. When users submit a form or click a button to create something new, you want to ensure that data is correctly saved.
+This test validates the most common user interaction - adding new data to your application.
+When users submit a form or click a button to create something new, you want to ensure that data is correctly saved.
 
 Since this uses a `@sideeffect` decorator, it will also trigger a render refresh on the frontend, keeping the UI in sync with the data.
 
@@ -168,7 +178,8 @@ async def test_add_todo_action():
 
 _Testing Data Updates_
 
-This test covers modification operations - when users interact with existing data to change its state. A common example is checking off a todo item to mark it complete.
+This test covers modification operations - when users interact with existing data to change its state.
+A common example is checking off a todo item to mark it complete.
 
 The test ensures that only the intended fields are modified while leaving other data unchanged.
 
@@ -203,7 +214,8 @@ async def test_toggle_todo_action():
 
 _Testing Error Handling_
 
-Your action functions should properly handle invalid input and provide appropriate feedback to users. This test ensures that when users submit malformed or incomplete data, your application gracefully rejects it without corrupting state.
+Your action functions should properly handle invalid input and provide appropriate feedback to users.
+This test ensures that when users submit malformed or incomplete data, your application gracefully rejects it without corrupting state.
 
 ```python
 @pytest.mark.asyncio
@@ -244,7 +256,8 @@ pytest -k "render"
 
 ### Additional Testing
 
-If your application uses a database or external services, make sure those are properly configured for testing. You may want to:
+If your application uses a database or external services, make sure those are properly configured for testing.
+You may want to:
 
 - Use separate test databases or in-memory databases
 - Mock external API calls

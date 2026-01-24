@@ -1,12 +1,13 @@
 # Layout Organization
 
-Mountaineer supports flexible layout organization patterns inspired by Next.js. This guide explains how to structure your layouts for different scenarios.
+Mountaineer supports flexible layout organization patterns inspired by Next.js.
+This guide explains how to structure your layouts for different scenarios.
 
 ## Default Layout Structure
 
 By default, Mountaineer uses a cascading layout system where layouts apply to all pages in their directory and subdirectories:
 
-```
+```text
 views/
 └── app/
     ├── layout.tsx         # Root layout (applies to all pages)
@@ -24,9 +25,10 @@ In this structure, when rendering `dashboard/home/page.tsx`, the page will be wr
 
 ## Optional Layout Structure with (root) Folder
 
-For more granular control over which layouts apply to which pages, you can use the optional (root) folder pattern. This allows you to isolate layouts to specific sections of your application:
+For more granular control over which layouts apply to which pages, you can use the optional (root) folder pattern.
+This allows you to isolate layouts to specific sections of your application:
 
-```
+```text
 views/
 └── app/
     ├── (root)/            # Root group
@@ -38,10 +40,12 @@ views/
 ```
 
 In this structure:
+
 - The layout in `(root)/layout.tsx` only applies to pages within the `(root)` directory
 - Pages outside the `(root)` directory (like `dashboard/page.tsx`) don't inherit the root layout
 
 This pattern is useful when:
+
 - You want different sections of your app to have completely different layouts
 - You need to isolate layout changes to prevent them from affecting other parts of your application
 - You're building a multi-tenant application where each tenant needs its own layout
@@ -50,7 +54,7 @@ This pattern is useful when:
 
 You can also nest these layout groups for even more control:
 
-```
+```text
 views/
 └── app/
     ├── (root)/
@@ -67,6 +71,7 @@ views/
 
 ## Implementation Details
 
-When Mountaineer encounters a folder name wrapped in parentheses like `(root)`, it treats it as a layout group. The parentheses in the folder name are just a convention to indicate that this folder is used for layout organization and doesn't affect the actual URL routing.
+When Mountaineer encounters a folder name wrapped in parentheses like `(root)`, it treats it as a layout group.
+The parentheses in the folder name are just a convention to indicate that this folder is used for layout organization and doesn't affect the actual URL routing.
 
 This approach gives you the flexibility to organize your layouts in a way that matches your application's structure while maintaining clean separation between different sections.

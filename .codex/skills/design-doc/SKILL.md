@@ -7,12 +7,14 @@ description: Create a detailed design document in a repo's design/ folder using 
 
 ## Goal
 
-Turn a user prompt into a **highly detailed design document** saved under `design/NNN-kebab-title.md`, following the
-repo’s template and conventions. This skill is design-only (no implementation) and does not perform external research.
+Turn a user prompt into a **highly detailed design document**.
+Save it under `design/NNN-kebab-title.md`, following the repo's template and conventions.
+This skill is design-only (no implementation) and does not perform external research.
 
 ## Minimal workflow (step-by-step)
 
-Throughout the workflow, do not browse the web. Use only local repo files and user-provided resources.
+Throughout the workflow, do not browse the web.
+Use only local repo files and user-provided resources.
 
 1. **Scan context quickly**
    - Read `design/000-design-template.md` and `design/000-design-example.md`.
@@ -132,7 +134,8 @@ Use the repo’s template if it differs; otherwise follow this skeleton exactly.
 
 Good:
 
-- **Overview**: Clear problem statement, why it matters, and how this design solves it. Goals are testable.
+- **Overview**: Clear problem statement, why it matters, and how this design solves it.
+  Goals are testable.
 - **Workflows**: Each workflow includes Description, Usage Example, Call Graph, Key Components, plus a Sequence Diagram
   when multi-component.
 - **Dependencies**: Mermaid graph clearly labels new vs existing modules.

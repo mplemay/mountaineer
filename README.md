@@ -2,17 +2,17 @@
 
 ![Mountaineer Logo](https://raw.githubusercontent.com/piercefreeman/mountaineer/main/media/header.png)
 
-![Python Version](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fpiercefreeman%2Fmountaineer%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
-[![Test status](https://github.com/piercefreeman/mountaineer/actions/workflows/test.yml/badge.svg)](https://github.com/piercefreeman/mountaineer/actions)
+![Python Version](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fpiercefreeman%2Fmountaineer%2Frefs%2Fheads%2Fmain%2Fpyproject.toml) [![Test status](https://github.com/piercefreeman/mountaineer/actions/workflows/test.yml/badge.svg)](https://github.com/piercefreeman/mountaineer/actions)
 
+*Move fast, climb mountains, and don't break things.*
 
-<p align="center"><i>Move fast. Climb mountains. Don't break things.</i></p>
-
-Mountaineer 🏔️ is a framework to easily build webapps in Python and React. If you've used either of these languages before for development, we think you'll be right at home.
+Mountaineer 🏔️ is a framework to easily build webapps in Python and React.
+If you've used either of these languages before for development, we think you'll be right at home.
 
 ## Main Features
 
-Each framework has its own unique features and tradeoffs. Mountaineer focuses on developer productivity above all else, with production speed a close second.
+Each framework has its own unique features and tradeoffs.
+Mountaineer focuses on developer productivity above all else, with production speed a close second.
 
 - 📝 Typehints up and down the stack: frontend, backend, and database
 - 🎙️ Trivially easy client<->server communication, data binding, and function calling
@@ -24,11 +24,14 @@ Each framework has its own unique features and tradeoffs. Mountaineer focuses on
 
 ### New Project
 
-To get started with a new Mountaineer project, refer to our [quickstart guide](https://mountaineer.sh/mountaineer/guides/quickstart) which walks you through setting up a project from scratch.
+To get started with a new Mountaineer project, refer to our
+[quickstart guide](https://mountaineer.sh/mountaineer/guides/quickstart) which walks you through setting up a
+project from scratch.
 
-Mountaineer projects all follow a similar structure. After running this CLI you should see a new folder called `my_webapp`, with folders like the following:
+Mountaineer projects all follow a similar structure.
+After running this CLI you should see a new folder called `my_webapp`, with folders like the following:
 
-```
+```text
 my_webapp
   /controllers
     /home.py
@@ -46,7 +49,12 @@ my_webapp
 pyproject.toml
 ```
 
-Every service file is nested under the `my_webapp` root package. Views are defined in a disk-based hierarchy (`views`) where nested routes are in nested folders. This folder acts as your React project and is where you can define requirements and build parameters in `package.json` and `tsconfig.json`. Controllers are defined nearby in a flat folder (`controllers`) where each route is a separate file. Everything else is just standard Python code for you to modify as needed.
+Every service file is nested under the `my_webapp` root package.
+Views are defined in a disk-based hierarchy (`views`) where nested routes are in nested folders.
+This folder acts as your React project.
+Define requirements and build parameters in `package.json` and `tsconfig.json`.
+Controllers are defined nearby in a flat folder (`controllers`) where each route is a separate file.
+Everything else is just standard Python code for you to modify as needed.
 
 ### Development
 
@@ -56,9 +64,11 @@ If you're starting a new application from scratch, you can immediately start the
 uv run runserver
 ```
 
-Mountaineer relies on watching your project for changes and doing progressive compilation. We provide a few CLI commands to help with this.
+Mountaineer relies on watching your project for changes and doing progressive compilation.
+We provide a few CLI commands to help with this.
 
-While doing development work, you'll usually want to preview the frontend and automatically build dependent files. You can do this with:
+While doing development work, you'll usually want to preview the frontend and automatically build dependent files.
+You can do this with:
 
 ```bash
 $ uv run runserver
@@ -69,12 +79,13 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:5006 (Press CTRL+C to quit)
 ```
 
-Navigate to http://127.0.0.1:5006 to see your new webapp running.
+Navigate to <http://127.0.0.1:5006> to see your new webapp running.
 
-Or, if you just want to watch the source tree for changes without hosting the server. Watching will allow your frontend to pick up API definitions from your backend controllers:
+Or, if you just want to watch the source tree for changes without hosting the server.
+Watching will allow your frontend to pick up API definitions from your backend controllers:
 
 ```bash
-$ uv run watch
+uv run watch
 ```
 
 Both of these CLI commands are specified in your project's `cli.py` file.

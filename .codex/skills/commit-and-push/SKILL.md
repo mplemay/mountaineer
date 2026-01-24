@@ -31,8 +31,8 @@ Use this workflow to validate changes, fix failures, create a conventional commi
   - If hooks conflict (format vs. lint), resolve the underlying formatting/code issue, then re-run the affected hooks.
 - When all hooks pass, run `uv run pre-commit run --all` again to confirm.
 - Ruff is the linter; rules are in `pyproject.toml`.
-- Type checking uses `ty`. Use specific ignores only when needed, e.g. `# ty: ignore[attr-defined]` with a short reason
-  when not obvious.
+- Type checking uses `ty`.
+  Use specific ignores only when needed, e.g. `# ty: ignore[attr-defined]` with a short reason when not obvious.
 - Pre-commit configuration is in `.pre-commit-config.yaml`.
 
 ### 3) Commit
