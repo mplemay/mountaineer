@@ -2,23 +2,20 @@
 
 ## PostCSS
 
-[PostCSS](https://postcss.org/) is a compiler for CSS. It enables buildtime transformation
-of CSS files to convert SCSS, LESS, or other CSS-like languages into
-standard CSS. It also has utilities for polyfills and browser-specific
-prefixes. I think of it like a swiss-army knife for CSS: it helps ensure
-that your styling intentions are actually rendered uniformily across
-browsers.
+[PostCSS](https://postcss.org/) is a compiler for CSS.
+It enables buildtime transformation of CSS files to convert SCSS, LESS, or other CSS-like languages into standard CSS.
+It also has utilities for polyfills and browser-specific prefixes.
+I think of it like a swiss-army knife for CSS: it helps ensure that your styling intentions are actually rendered uniformily across browsers.
 
-PostCSS support is handled as a buildtime plugin with Mountaineer. It's
-disabled by default. To enable, make sure you have `postcss-cli` installed
-within your `views` project:
+PostCSS support is handled as a buildtime plugin with Mountaineer.
+It's disabled by default.
+To enable, make sure you have `postcss-cli` installed within your `views` project:
 
 ```bash
 npm install postcss-cli
 ```
 
-After this you can leverage the `PostCSSBundler` within your custom
-build pipeline:
+After this you can leverage the `PostCSSBundler` within your custom build pipeline:
 
 ```python
 from mountaineer.client_compiler.postcss import PostCSSBundler
@@ -30,32 +27,28 @@ mountaineer = Mountaineer(
 )
 ```
 
-Adding the PostCSSBundler will find all the `.css` that you have
-specified within your `views` directory and pass them through
-PostCSS. Let's say you have the following CSS files:
+Adding the PostCSSBundler will find all the `.css` that you have specified within your `views` directory and pass them through PostCSS.
+Let's say you have the following CSS files:
 
-```
+```text
 /views/app/home/style.css
 /views/app/detail/style.css
 ```
 
 The compiler will pass each through PostCSS and deposit these artifacts into:
 
-```
+```text
 /views/_static/home_style.css
 /views/_static/detail_style.css
 ```
 
-You can then import this CSS file in whatever `<meta>` tag is relevant
-to your project. See the [metadata documentation](/mountaineer/guides/metadata) for
-more details on how to do this.
+You can then import this CSS file in whatever `<meta>` tag is relevant to your project.
+See the [metadata documentation](/mountaineer/guides/metadata) for more details on how to do this.
 
 ## Tailwind
 
-Tailwind uses PostCSS to handle the tree shaking and project analysis
-that allows it to output the minimal amount of CSS tags to correctly render
-your project. If you set up the PostCSS extension like described above,
-you should be able to follow the typical Tailwind [setup](https://tailwindcss.com/docs/installation) steps.
+Tailwind uses PostCSS to handle the tree shaking and project analysis that allows it to output the minimal amount of CSS tags to correctly render your project.
+If you set up the PostCSS extension like described above, you should be able to follow the typical Tailwind [setup](https://tailwindcss.com/docs/installation) steps.
 
 ```typescript
 // views/app/tailwind.config.ts
