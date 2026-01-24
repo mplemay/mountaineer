@@ -94,7 +94,7 @@ sequenceDiagram
 CI should test and lint against Python 3.11, 3.12, 3.13, and 3.14.
 Release builds should produce wheels for the same interpreter set and exclude 3.10.
 The rust-tests job should use the minimum supported version (3.11).
-Lockfiles in the root, .github, and benchmarking projects should be regenerated to reflect updated Python constraints.
+Lockfiles in the root and .github projects should be regenerated to reflect updated Python constraints.
 
 #### Usage Example
 
@@ -139,7 +139,7 @@ sequenceDiagram
 - **CI workflow** (`.github/workflows/test.yml`) - Test, lint, integration, build matrices
 - **Setup action** (`.github/actions/setup-python-rust/action.yml`) - Python + Rust setup
 - **Project metadata** (`pyproject.toml`) - `requires-python` and dependency constraints
-- **Lockfiles** (`uv.lock`, `.github/uv.lock`, `benchmarking/uv.lock`) - Resolved deps for new range
+- **Lockfiles** (`uv.lock`, `.github/uv.lock`) - Resolved deps for new range
 
 ## Dependencies
 
@@ -149,8 +149,6 @@ graph TD
     RootLock["(UPDATED)<br/>uv.lock"]
     ScriptsPyproject["(UPDATED)<br/>.github/pyproject.toml"]
     ScriptsLock["(UPDATED)<br/>.github/uv.lock"]
-    BenchPyproject["(UPDATED)<br/>benchmarking/pyproject.toml"]
-    BenchLock["(UPDATED)<br/>benchmarking/uv.lock"]
     CIWorkflow["(UPDATED)<br/>.github/workflows/test.yml"]
     Compat["(UPDATED)<br/>mountaineer/compat.py"]
     Fields["(UPDATED)<br/>mountaineer/actions/fields.py"]
@@ -161,7 +159,6 @@ graph TD
 
     RootPyproject --> RootLock
     ScriptsPyproject --> ScriptsLock
-    BenchPyproject --> BenchLock
     CIWorkflow --> RootPyproject
     CIWorkflow --> RootLock
     Fields --> Sideeffect
@@ -186,9 +183,6 @@ graph TD
 │   │   └── test.yml
 │   └── actions/
 │       └── setup-python-rust/action.yml
-├── benchmarking/
-│   ├── pyproject.toml
-│   └── uv.lock
 ├── docs/
 │   └── guides/quickstart/page.mdx
 ├── mountaineer/
@@ -216,15 +210,6 @@ requires-python = ">=3.11,<3.15"
 #### `.github/pyproject.toml`
 
 CI scripts should allow Python 3.14 while keeping a conservative upper bound.
-
-```toml
-[project]
-requires-python = ">=3.11,<3.15"
-```
-
-#### `benchmarking/pyproject.toml`
-
-Benchmarking scripts should follow the same supported range as the root project.
 
 ```toml
 [project]
@@ -336,13 +321,13 @@ requires-python = ">=3.11,<3.15"
 ### Implementation Order
 
 1. **Metadata and docs updates** (version range)
-   - `pyproject.toml`, `.github/pyproject.toml`, `benchmarking/pyproject.toml`, docs, fixtures
+   - `pyproject.toml`, `.github/pyproject.toml`, docs, fixtures
 2. **Compatibility layer updates** (runtime typing)
    - `mountaineer/compat.py`, `mountaineer/actions/fields.py`, `mountaineer/actions/sideeffect_dec.py`,
      `mountaineer/actions/passthrough_dec.py`
 3. **CI/build matrix updates** - `.github/workflows/test.yml` and any related scripts
 4. **Lockfile refresh**
-   - `uv.lock`, `.github/uv.lock`, `benchmarking/uv.lock`
+   - `uv.lock`, `.github/uv.lock`
 5. **Test updates and validation**
    - Any adjustments needed to tests; run full matrix locally or in CI
 
@@ -351,7 +336,6 @@ requires-python = ">=3.11,<3.15"
 - [ ] **Update version metadata**
   - [ ] Bump root `requires-python` to `>=3.11,<3.15` in `pyproject.toml`
   - [ ] Update `.github/pyproject.toml` to `>=3.11,<3.15`
-  - [ ] Update `benchmarking/pyproject.toml` to `>=3.11,<3.15`
   - [ ] Update fixture `mountaineer/__tests__/fixtures/ci_webapp/pyproject.toml`
   - [ ] Update quickstart docs to reference Python 3.11+
 
@@ -368,7 +352,6 @@ requires-python = ">=3.11,<3.15"
 - [ ] **Refresh lockfiles**
   - [ ] Run `uv sync` (or `uv lock`) in the root project
   - [ ] Run `uv sync` (or `uv lock`) in `.github/`
-  - [ ] Run `uv sync` (or `uv lock`) in `benchmarking/`
 
 - [ ] **Testing and validation**
   - [ ] Run `uv run pytest` (unit tests)
