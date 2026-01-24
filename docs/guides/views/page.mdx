@@ -50,10 +50,13 @@ A controller backs a view in a 1:1 relationship. It provides the backend plumbin
 
 from mountaineer import sideeffect, ControllerBase, RenderBase
 
-from iceaxe import select, DBConnection
-from iceaxe.mountaineer import DatabaseDependencies
-
 from myapp.models import TodoItem
+
+# Example in-memory storage
+# In a real app, you might use a database
+todos_storage: list[TodoItem] = [
+    TodoItem(description="Example todo", completed=False)
+]
 
 class HomeRender(RenderBase):
     todos: list[TodoItem]
@@ -62,15 +65,8 @@ class HomeController(ControllerBase):
     url = "/"
     view_path = "/app/home/page.tsx"
 
-    async def render(
-        self,
-        session: DBConnection = Depends(DatabaseDependencies.get_db_connection)
-    ) -> HomeRender:
-        todos = (await session.execute(select(TodoItem))).all()
-
-        return HomeRender(
-            todos=todos
-        )
+    async def render(self) -> HomeRender:
+        return HomeRender(todos=todos_storage)
 ```
 
 ### Path Parameters

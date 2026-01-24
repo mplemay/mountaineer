@@ -26,29 +26,23 @@ my_webapp/
 
 ### Base Configuration (`conftest.py`)
 
-A robust test configuration handles database setup and dependency injection. Your `conftest.py` should include:
+The template provides a robust test configuration that handles test setup and dependency injection. The generated `conftest.py` includes:
 
-- **Automatic config setup** with test database configuration
-- **Database connection fixture** that provides clean isolation between tests
-- **Schema recreation** for each test to ensure isolation
+- **Automatic config setup** with test-time configuration
+- **Test fixtures** for common testing patterns
 
 ### Key Fixtures Available
 
 The generated test configuration provides these fixtures:
 
 - `config`: Auto-used fixture that sets up test-time configuration
-- `db_connection`: Async fixture providing a clean database connection for each test
 
 ### Environment Variables
 
 Create a `.env.test` file for test-specific configuration:
 
 ```bash title=".env.test"
-TEST_POSTGRES_HOST=localhost
-TEST_POSTGRES_USER=my_webapp
-TEST_POSTGRES_PASSWORD=mysecretpassword
-TEST_POSTGRES_DB=my_webapp_test_db
-POSTGRES_PORT=5438
+PACKAGE=my_webapp
 ```
 
 ## Core Testing Patterns
@@ -57,48 +51,46 @@ POSTGRES_PORT=5438
 
 The `render()` function is the heart of every controller - it defines what data your frontend receives. Testing render functions ensures that your controllers produce the correct data structure and handle various input scenarios properly.
 
-**What we're testing**: The render function should return the expected data payload based on the current database state and request parameters. This is essentially testing your "read" operations.
+**What we're testing**: The render function should return the expected data payload based on the current application state and request parameters. This is essentially testing your "read" operations.
 
 _Testing Render with Data_
 
-The most common scenario is testing that when a user visits a page, they see the correct data from the database. This test validates your application's "happy path" - when everything is working correctly and you have data to display.
+The most common scenario is testing that when a user visits a page, they see the correct data. This test validates your application's "happy path" - when everything is working correctly and you have data to display.
 
-We set up some test data in the database, create a mock request (simulating a user visiting the page), call the render method, and verify both the response structure and the actual content.
+We set up some test data, create a mock request (simulating a user visiting the page), call the render method, and verify both the response structure and the actual content.
 
 ```python title="my_webapp/__tests__/test_render.py"
 import pytest
 from fastapi import Request
 from unittest.mock import Mock
-from my_webapp.controllers.home import HomeController, HomeRender
+from my_webapp.controllers.home import HomeController, HomeRender, todos_storage
 from my_webapp.models.todo import TodoItem
 
 @pytest.mark.asyncio
-async def test_home_render_with_todos(db_connection):
+async def test_home_render_with_todos():
     """Test that the home controller renders todo data correctly."""
     controller = HomeController()
-    
-    # Set up test data in the database - this simulates having real todos
-    await db_connection.insert([
+
+    # Set up test data - this simulates having real todos
+    todos_storage.clear()
+    todos_storage.extend([
         TodoItem(description="Learn Mountaineer", completed=False),
         TodoItem(description="Build awesome app", completed=True)
     ])
-    
+
     # Create a mock request (this would normally come from FastAPI)
     mock_request = Mock(spec=Request)
     mock_request.client = Mock()
     mock_request.client.host = "127.0.0.1"
-    
+
     # Call the render method - this is what happens when a user visits the page
-    result = await controller.render(
-        request=mock_request,
-        db_connection=db_connection
-    )
-    
+    result = await controller.render(request=mock_request)
+
     # Verify the response structure and data
     assert isinstance(result, HomeRender)
     assert result.client_ip == "127.0.0.1"
     assert len(result.todos) == 2
-    
+
     # Check that both todos are present with correct data
     todo_descriptions = [todo.description for todo in result.todos]
     assert "Learn Mountaineer" in todo_descriptions
@@ -111,20 +103,20 @@ Your application should gracefully handle empty states, which is common when use
 
 ```python
 @pytest.mark.asyncio
-async def test_home_render_empty_state(db_connection):
+async def test_home_render_empty_state():
     """Test that the render function handles empty data gracefully."""
     controller = HomeController()
-    
+
+    # Clear any existing data
+    todos_storage.clear()
+
     mock_request = Mock(spec=Request)
     mock_request.client = Mock()
     mock_request.client.host = "192.168.1.1"
-    
-    # Call render with empty database
-    result = await controller.render(
-        request=mock_request,
-        db_connection=db_connection
-    )
-    
+
+    # Call render with empty storage
+    result = await controller.render(request=mock_request)
+
     # Should still return valid structure with empty todos
     assert isinstance(result, HomeRender)
     assert result.client_ip == "192.168.1.1"
@@ -135,42 +127,39 @@ async def test_home_render_empty_state(db_connection):
 
 Action functions handle the "write" operations in your application - creating, updating, or deleting data. These tests ensure that user interactions properly modify your application state.
 
-**What we're testing**: Action functions should correctly process user input, update the database, and trigger appropriate render refreshes. Both `@sideeffect` and `@passthrough` decorated functions follow similar testing patterns.
+**What we're testing**: Action functions should correctly process user input, update application state, and trigger appropriate render refreshes. Both `@sideeffect` and `@passthrough` decorated functions follow similar testing patterns.
 
 _Testing Data Creation_
 
-This test validates the most common user interaction - adding new data to your application. When users submit a form or click a button to create something new, you want to ensure that data is correctly saved to the database.
+This test validates the most common user interaction - adding new data to your application. When users submit a form or click a button to create something new, you want to ensure that data is correctly saved.
 
-Since this uses a `@sideeffect` decorator, it will also trigger a render refresh on the frontend, keeping the UI in sync with the database.
+Since this uses a `@sideeffect` decorator, it will also trigger a render refresh on the frontend, keeping the UI in sync with the data.
 
 ```python title="my_webapp/__tests__/test_actions.py"
 import pytest
-from my_webapp.controllers.home import HomeController
+from pydantic import ValidationError
+from my_webapp.controllers.home import HomeController, NewTodoRequest, todos_storage
 from my_webapp.models.todo import TodoItem
-from iceaxe import select
 
 @pytest.mark.asyncio
-async def test_add_todo_action(db_connection):
+async def test_add_todo_action():
     """Test adding a new todo item via sideeffect."""
     controller = HomeController()
-    
+
     # Set up initial state - maybe the user already has one todo
-    await db_connection.insert([
-        TodoItem(description="Existing task", completed=False)
-    ])
-    
+    todos_storage.clear()
+    todos_storage.append(TodoItem(description="Existing task", completed=False))
+
     # Simulate user action - adding a new todo
     await controller.add_todo(
-        payload={"description": "New important task"},
-        db_connection=db_connection
+        payload=NewTodoRequest(description="New important task")
     )
-    
-    # Verify the database was updated correctly
-    todos = await db_connection.exec(select(TodoItem))
-    assert len(todos) == 2  # Original + new todo
-    
+
+    # Verify the storage was updated correctly
+    assert len(todos_storage) == 2  # Original + new todo
+
     # Find the new todo and verify its properties
-    new_todos = [todo for todo in todos if todo.description == "New important task"]
+    new_todos = [todo for todo in todos_storage if todo.description == "New important task"]
     assert len(new_todos) == 1
     new_todo = new_todos[0]
     assert new_todo.completed is False  # Should default to incomplete
@@ -185,53 +174,54 @@ The test ensures that only the intended fields are modified while leaving other 
 
 ```python
 @pytest.mark.asyncio
-async def test_toggle_todo_action(db_connection):
+async def test_toggle_todo_action():
     """Test updating a todo's completion status."""
     controller = HomeController()
-    
+
     # Create a todo to modify
-    todo_id = "550e8400-e29b-41d4-a716-446655440000"
-    await db_connection.insert([
+    from uuid import UUID
+    todo_id = UUID("550e8400-e29b-41d4-a716-446655440000")
+    todos_storage.clear()
+    todos_storage.append(
         TodoItem(
             id=todo_id,
             description="Task to complete",
             completed=False
         )
-    ])
-    
+    )
+
     # Simulate user toggling the todo completion
     await controller.toggle_todo(
-        payload={"todo_id": todo_id},
-        db_connection=db_connection
+        payload={"todo_id": str(todo_id)}
     )
-    
+
     # Verify the todo was updated
-    todos = await db_connection.exec(select(TodoItem))
-    updated_todo = todos[0]
+    updated_todo = todos_storage[0]
     assert updated_todo.completed is True
     assert updated_todo.description == "Task to complete"  # Description unchanged
 ```
 
 _Testing Error Handling_
 
-Your action functions should properly handle invalid input and provide appropriate feedback to users. This test ensures that when users submit malformed or incomplete data, your application gracefully rejects it without corrupting the database.
+Your action functions should properly handle invalid input and provide appropriate feedback to users. This test ensures that when users submit malformed or incomplete data, your application gracefully rejects it without corrupting state.
 
 ```python
 @pytest.mark.asyncio
-async def test_action_with_validation_error(db_connection):
+async def test_action_with_validation_error():
     """Test that action functions handle invalid input properly."""
     controller = HomeController()
-    
+
+    # Clear existing data
+    todos_storage.clear()
+
     # Test with invalid payload - missing required field
     with pytest.raises(ValidationError):
         await controller.add_todo(
-            payload={"invalid_field": "value"},  # Missing 'description'
-            db_connection=db_connection
+            payload={"invalid_field": "value"}  # Missing 'description'
         )
-    
-    # Verify no data was created in the database
-    todos = await db_connection.exec(select(TodoItem))
-    assert len(todos) == 0
+
+    # Verify no data was created
+    assert len(todos_storage) == 0
 ```
 
 ## Running Tests
@@ -252,20 +242,13 @@ pytest __tests__/test_render.py
 pytest -k "render"
 ```
 
-### Database Testing
+### Additional Testing
 
-Make sure your test database is running before executing database tests:
+If your application uses a database or external services, make sure those are properly configured for testing. You may want to:
 
-```bash
-# Start test database (if using Docker)
-docker compose -f docker-compose.test.yml up -d
-
-# Run database tests
-pytest __tests__/ -v
-
-# Clean up
-docker compose -f docker-compose.test.yml down
-```
+- Use separate test databases or in-memory databases
+- Mock external API calls
+- Set up test fixtures for common data patterns
 
 ## Reference
 
