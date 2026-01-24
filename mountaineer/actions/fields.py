@@ -4,8 +4,8 @@ import typing
 import warnings
 from enum import Enum
 from inspect import (
-    iscoroutinefunction,
     isclass,
+    iscoroutinefunction,
     ismethod,
 )
 from json import loads as json_loads

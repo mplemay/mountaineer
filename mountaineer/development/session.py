@@ -94,7 +94,9 @@ class DevSession:
         for path in updated_js or []:
             self.mountaineer.invalidate_view(path)
 
-    async def start_server(self, *, host: str, port: int, live_reload_port: int) -> None:
+    async def start_server(
+        self, *, host: str, port: int, live_reload_port: int
+    ) -> None:
         if self.webservice_thread is not None:
             return
         if self.mountaineer is None:
@@ -121,9 +123,7 @@ class DevSession:
         self, *, host: str, port: int, live_reload_port: int
     ) -> None:
         await self.stop_server()
-        await self.start_server(
-            host=host, port=port, live_reload_port=live_reload_port
-        )
+        await self.start_server(host=host, port=port, live_reload_port=live_reload_port)
 
     def reload_python(self, *, changed_files: list[Path]) -> bool:
         if self.environment is not None:
