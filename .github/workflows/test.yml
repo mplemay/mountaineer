@@ -41,11 +41,6 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
 
-    services:
-      docker:
-        image: docker:24.0.2
-        options: --privileged
-
     env:
       PYTHON: ${{ matrix.python-version }}
 
@@ -134,7 +129,7 @@ jobs:
         run: cargo check --benches
 
   build:
-    name: build os=${{ matrix.os }} target=${{ matrix.target }} int=${{ matrix.interpreter || 'all' }} ml=${{ matrix.manylinux || 'auto' }} release=${{ matrix.release || 'latest' }}
+    name: build os=${{ matrix.os }} target=${{ matrix.target }} int=${{ matrix.interpreter || 'all' }} ml=${{ matrix.manylinux || 'off' }} release=${{ matrix.release || 'latest' }}
     if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'Full Build')
     strategy:
       fail-fast: false
@@ -142,8 +137,10 @@ jobs:
         include:
           - os: linux
             target: x86_64
+            manylinux: off
           - os: linux
             target: aarch64
+            manylinux: off
           - os: macos
             target: x86_64
           - os: macos
@@ -194,10 +191,9 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          manylinux: ${{ matrix.manylinux || 'auto' }}
+          manylinux: ${{ matrix.manylinux || 'off' }}
           args: -vv --release --out dist --interpreter ${{ matrix.interpreter || '3.11 3.12 3.13 3.14' }}
           rust-toolchain: stable
-          docker-options: -e CI -e CI_TARGET=${{ matrix.target }}
           # Already defaults to build, but we make explicit here. Any arguments should
           # be added to args above and not here - otherwise we will affect the switch()
           # condition handling of maturin-action.
