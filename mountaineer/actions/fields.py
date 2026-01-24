@@ -2,9 +2,9 @@ import collections
 import collections.abc
 import typing
 import warnings
-from asyncio import iscoroutinefunction
 from enum import Enum
 from inspect import (
+    iscoroutinefunction,
     isclass,
     ismethod,
 )
