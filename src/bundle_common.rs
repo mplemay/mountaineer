@@ -418,7 +418,7 @@ mod tests {
             export function greet(name) {
                 return `Hello, ${name}!`;
             }
-            
+
             console.log(greet('World'));
         "#;
 
@@ -481,12 +481,12 @@ mod tests {
         // Create a main entry file that imports the module
         let entry_js = r#"
             import { formatName } from './utils';
-            
+
             export function greet(firstName, lastName) {
                 const fullName = formatName(firstName, lastName);
                 return `Hello, ${fullName}!`;
             }
-            
+
             console.log(greet('John', 'Doe'));
         "#;
 
@@ -558,7 +558,7 @@ mod tests {
                     body: `Processed request from ${req.ip}`
                 };
             }
-            
+
             module.exports = { processRequest };
         "#;
 
