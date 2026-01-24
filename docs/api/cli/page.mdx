@@ -17,8 +17,8 @@ to 10s, `handle_runserver` provides a better workflow for daily development.
 
 ## Global Env
 
-Our development server (used in `runserver` and `watch`) rely on forking processes to keep your
-development workflow fast. This requires that third party packages don't spawn any threads
+Our development server (used in `runserver` and `watch`) uses firehot to isolate imports during
+reloads. This requires that third party packages don't spawn any threads
 during their import, otherwise you might see a warning like the following:
 
 ```

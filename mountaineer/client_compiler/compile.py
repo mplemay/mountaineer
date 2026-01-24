@@ -133,26 +133,16 @@ class ClientCompiler:
 
     def _get_all_root_views(self) -> list[ManagedViewPath]:
         """
-        The self.view_root variable is the root of the current user project. We may have other
-        "view roots" that store view for plugins.
+        The self.view_root variable is the root of the current user project.
 
-        This function inspects the controller path definitions and collects all of the
-        unique root view paths. The returned ManagedViewPaths are all copied and set to
-        share the same package root as the user project.
+        This function returns the single root view path used by the build pipeline.
 
         """
-        # Find the view roots
-        view_roots = {self.view_root.copy()}
-        for controller_definition in self.app.graph.controllers:
-            view_path = controller_definition.controller.view_path
-            if isinstance(view_path, ManagedViewPath):
-                view_roots.add(view_path.get_root_link().copy())
+        view_root = self.view_root.copy()
+        if view_root.package_root_link is None:
+            view_root.package_root_link = view_root
 
-        # All the view roots should have the same package root
-        for view_root in view_roots:
-            view_root.package_root_link = self.view_root.package_root_link
-
-        return list(view_roots)
+        return [view_root]
 
     def _move_build_artifacts_into_project(self):
         """

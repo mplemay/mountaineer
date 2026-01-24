@@ -12,10 +12,10 @@ import httpx
 import pytest
 import toml
 
+import mountaineer.cli as cli_module
+from mountaineer import ControllerBase, Mountaineer
 from mountaineer.__tests__.fixtures import get_fixture_path
-from mountaineer.cli import (
-    find_packages_with_prefix,
-)
+from mountaineer.cli import find_packages_with_prefix
 
 
 @pytest.fixture
@@ -54,6 +54,82 @@ def test_find_packages_with_prefix():
         "pydantic_core",
         "pydantic-settings",
     }
+
+
+@pytest.mark.asyncio
+async def test_handle_build_uses_dev_session(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    views_dir = tmp_path / "views"
+    views_dir.mkdir()
+
+    class DummyController(ControllerBase):
+        view_path = "/dummy_controller/page.tsx"
+        url = "/"
+
+        async def render(self) -> None:
+            return None
+
+    app = Mountaineer(view_root=views_dir)
+    app.register(DummyController())
+
+    class DummyCompiler:
+        def __init__(self):
+            self.called = False
+
+        async def run_builder_plugins(self, *, limit_paths: list[Path] | None = None):
+            self.called = True
+
+    class DummySession:
+        def __init__(self):
+            self.mountaineer = app
+            self.js_compiler = object()
+            self.app_compiler = DummyCompiler()
+            self.build_called = False
+
+        async def build_use_server(self) -> None:
+            self.build_called = True
+
+    session = DummySession()
+
+    monkeypatch.setattr(
+        cli_module.DevSession,
+        "from_webcontroller",
+        lambda *, webcontroller: session,
+    )
+
+    def fake_compile_production_bundle(*_args, **_kwargs):
+        return {
+            "entrypoints": ["console.log('client');"],
+            "entrypoint_maps": ["{}"],
+            "supporting": {},
+        }
+
+    def fake_compile_independent_bundles(*_args, **_kwargs):
+        return ["console.log('ssr');"], None
+
+    monkeypatch.setattr(
+        cli_module.mountaineer_rs,
+        "compile_production_bundle",
+        fake_compile_production_bundle,
+    )
+    monkeypatch.setattr(
+        cli_module.mountaineer_rs,
+        "compile_independent_bundles",
+        fake_compile_independent_bundles,
+    )
+
+    handler = getattr(cli_module.handle_build, "__wrapped__", None)
+    assert handler is not None
+    await handler(
+        webcontroller="package.module:mountaineer",
+        minify=True,
+    )
+
+    assert session.build_called is True
+    assert session.app_compiler.called is True
+    assert (views_dir / "_static" / "dummy_controller.js").exists()
+    assert (views_dir / "_ssr" / "dummy_controller.js").exists()
 
 
 async def check_server_bound(port: int, timeout=8):

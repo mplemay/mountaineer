@@ -272,7 +272,7 @@ class Metadata(BaseModel):
     explicit_response: Response | None = None
 
     # If enabled, we won't attempt to use the global metadata for this route
-    # Helpful for plugins or otherwise for nested routes that should escape the container
+    # Helpful for nested routes that should escape the container
     ignore_global_metadata: bool = False
 
     model_config = {

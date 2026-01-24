@@ -1,7 +1,7 @@
 from copy import copy
 from dataclasses import dataclass
 from enum import Enum
-from inspect import isclass
+from inspect import get_annotations, isclass
 from typing import (
     Any,
     Callable,
@@ -509,12 +509,18 @@ class ControllerParser:
             generic_origin = generic_metadata["origin"]
             generic_args = generic_metadata["args"]
 
+        def get_annotation_keys(target: type[BaseModel]) -> set[str]:
+            try:
+                return set(get_annotations(target, eval_str=False).keys())
+            except Exception:
+                return set(target.__dict__.get("__annotations__", {}) or {})
+
         if generic_origin and generic_args:
             # Build annotations dict by resolving generic types just for the fields that
             # were defined directly on the superclass. Since we're iterating with model_fields
             # on the synthetically created generic subclass, all of the annotations should be resolved
             # to real types by this point
-            parent_owned_fields = generic_origin.__dict__.get("__annotations__", {})
+            parent_owned_fields = get_annotation_keys(generic_origin)
 
             return create_model(  # type: ignore
                 model.__name__,
@@ -530,10 +536,11 @@ class ControllerParser:
             )
         else:
             # Regular model - use original logic
+            owned_fields = get_annotation_keys(model)
             include_fields = {
                 field_name: (field_info.annotation, field_info)
                 for field_name, field_info in model.model_fields.items()
-                if field_name in model.__dict__.get("__annotations__", {})
+                if field_name in owned_fields
             }
             return create_model(  # type: ignore
                 model.__name__,

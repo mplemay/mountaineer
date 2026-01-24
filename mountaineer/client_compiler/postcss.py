@@ -38,23 +38,16 @@ class PostCSSBundler(APIBuilderBase):
             # not just the stylesheet itself since plugins like tailwind analyze the frontend
             # files for style declarations
 
-            # However, we should only track files that belong to build-enabled controllers
-            # to avoid warnings about plugin files that have _build_enabled = False
-            build_enabled_controllers = [
-                (controller, view_path)
-                for controller, view_path in self.controllers
-                if controller._build_enabled
-            ]
             unique_roots = {
-                view_path.get_root_link() for _, view_path in build_enabled_controllers
+                view_path.get_root_link() for _, view_path in self.controllers
             }
 
-            # Check if this file belongs to any build-enabled view root
-            file_belongs_to_build_enabled_root = any(
+            # Check if this file belongs to any known view root
+            file_belongs_to_view_root = any(
                 file_path.is_relative_to(root) for root in unique_roots
             )
 
-            if file_belongs_to_build_enabled_root:
+            if file_belongs_to_view_root:
                 super().mark_file_dirty(file_path)
 
     async def build(self):

@@ -29,9 +29,24 @@ P = ParamSpec("P")
 def async_to_sync(async_fn: Callable[P, Coroutine[Any, Any, T]]) -> Callable[P, T]:
     @wraps(async_fn)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-        loop = asyncio.get_event_loop()
-        result = loop.run_until_complete(async_fn(*args, **kwargs))
-        return result
+        try:
+            running_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            running_loop = None
+
+        if running_loop is not None:
+            raise RuntimeError(
+                "async_to_sync cannot be called from a running event loop; use await"
+            )
+
+        loop = asyncio.new_event_loop()
+        try:
+            asyncio.set_event_loop(loop)
+            result = loop.run_until_complete(async_fn(*args, **kwargs))
+            return result
+        finally:
+            loop.close()
+            asyncio.set_event_loop(None)
 
     return wrapper
 

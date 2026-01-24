@@ -1,7 +1,9 @@
 import traceback
 from contextlib import contextmanager
+from dataclasses import dataclass, field
 from multiprocessing import get_start_method, set_start_method
 from os import getenv
+from pathlib import Path
 from time import time
 from typing import Any, Callable, Coroutine
 
@@ -12,24 +14,10 @@ from rich.traceback import install as rich_traceback_install
 from mountaineer import mountaineer as mountaineer_rs  # type: ignore
 from mountaineer.console import CONSOLE
 from mountaineer.constants import KNOWN_JS_EXTENSIONS
-from mountaineer.development.isolation import IsolatedAppContext
-from mountaineer.development.manager import (
-    FileChangesState,
-    IsolatedContext,
-    WebserverConfig,
-    rebuild_frontend,
-    restart_backend,
-)
-from mountaineer.development.messages import (
-    SuccessResponse,
-)
-from mountaineer.development.messages_broker import (
-    AsyncMessageBroker,
-    BrokerExecutionError,
-)
 from mountaineer.development.packages import (
     find_packages_with_prefix,
 )
+from mountaineer.development.session import DevSession
 from mountaineer.development.watch import (
     CallbackDefinition,
     CallbackMetadata,
@@ -41,6 +29,12 @@ from mountaineer.io import async_to_sync
 from mountaineer.logging import LOGGER
 from mountaineer.ssr import find_tsconfig
 from mountaineer.static import get_static_path
+
+
+@dataclass
+class FileChangesState:
+    pending_js: set[Path] = field(default_factory=set)
+    pending_python: set[Path] = field(default_factory=set)
 
 
 @async_to_sync
@@ -70,72 +64,66 @@ async def handle_watch(
     file_changes_state = FileChangesState()
     first_run: bool = True
 
-    async with AsyncMessageBroker.start_server() as (broker, config):
-        isolated_context = IsolatedContext(
+    with get_mountaineer_isolated_env(package) as environment:
+        session = DevSession.from_webcontroller(
             webcontroller=webcontroller,
-            webserver_config=None,
-            message_config=config,
+            environment=environment,
         )
+        CONSOLE.print("[bold blue]Development manager started")
 
-        with get_mountaineer_isolated_env(package) as environment:
-            CONSOLE.print("[bold blue]Development manager started")
+        async def handle_file_changes(metadata: CallbackMetadata):
+            try:
+                LOGGER.debug(f"Handling file changes: {metadata}")
+                nonlocal first_run
+                nonlocal file_changes_state
 
-            async def handle_file_changes(metadata: CallbackMetadata):
-                try:
-                    LOGGER.debug(f"Handling file changes: {metadata}")
-                    nonlocal first_run
-                    nonlocal file_changes_state
+                # First collect all the files that need updating
+                for event in metadata.events:
+                    if event.path.suffix in KNOWN_JS_EXTENSIONS:
+                        file_changes_state.pending_js.add(event.path)
+                    elif event.path.suffix == ".py":
+                        file_changes_state.pending_python.add(event.path)
 
-                    # First collect all the files that need updating
-                    for event in metadata.events:
-                        if event.path.suffix in KNOWN_JS_EXTENSIONS:
-                            file_changes_state.pending_js.add(event.path)
-                        elif event.path.suffix == ".py":
-                            file_changes_state.pending_python.add(event.path)
+                if not first_run and not (
+                    file_changes_state.pending_js or file_changes_state.pending_python
+                ):
+                    return
 
-                    if not first_run and not (
-                        file_changes_state.pending_js
-                        or file_changes_state.pending_python
-                    ):
+                if file_changes_state.pending_python or first_run:
+                    did_reload = session.reload_python(
+                        changed_files=list(file_changes_state.pending_python)
+                    )
+                    if not did_reload:
+                        CONSOLE.print("[red]Error: Failed to reload Python modules")
                         return
+                    await session.build_use_server()
 
-                    try:
-                        if file_changes_state.pending_python or first_run:
-                            await restart_backend(
-                                environment,
-                                broker,
-                                file_changes_state,
-                                isolated_context,
-                            )
+                if file_changes_state.pending_js or first_run:
+                    await session.build_frontend(
+                        updated_js=list(file_changes_state.pending_js)
+                        if file_changes_state.pending_js
+                        else None
+                    )
 
-                        if file_changes_state.pending_js or first_run:
-                            await rebuild_frontend(
-                                broker,
-                                file_changes_state,
-                            )
-                    except BrokerExecutionError as e:
-                        CONSOLE.print(f"[red]Error: {e.error}\n\n{e.traceback}")
-                        return
+                # If we've succeeded, we should clear out the pending
+                # files so we don't rebuild them again
+                file_changes_state.pending_js.clear()
+                file_changes_state.pending_python.clear()
 
-                    # If we've succeeded, we should clear out the pending
-                    # files so we don't rebuild them again
-                    file_changes_state.pending_js.clear()
-                    file_changes_state.pending_python.clear()
+                first_run = False
 
-                    first_run = False
+            except Exception as e:
+                # Otherwise silently caught by our watchfiles command
+                CONSOLE.print(f"[red]Error: {e}")
+                CONSOLE.print(traceback.format_exc())
+                raise e
 
-                except Exception as e:
-                    # Otherwise silently caught by our watchfiles command
-                    CONSOLE.print(f"[red]Error: {e}")
-                    CONSOLE.print(traceback.format_exc())
-                    raise e
-
-            watchdog = build_common_watchdog(
-                package,
-                handle_file_changes,
-                subscribe_to_mountaineer=subscribe_to_mountaineer,
-            )
-            await watchdog.start_watching()
+        watchdog = build_common_watchdog(
+            package,
+            handle_file_changes,
+            subscribe_to_mountaineer=subscribe_to_mountaineer,
+        )
+        await watchdog.start_watching()
 
     CONSOLE.print("[green]Shutdown complete")
 
@@ -173,83 +161,76 @@ async def handle_runserver(
 
     file_changes_state = FileChangesState()
 
-    # Nonlocal vars for shutdown context
-    watchdog: PackageWatchdog
     first_run: bool = True
 
-    async with AsyncMessageBroker.start_server() as (broker, config):
-        isolated_context = IsolatedContext(
+    with get_mountaineer_isolated_env(package) as environment:
+        session = DevSession.from_webcontroller(
             webcontroller=webcontroller,
-            webserver_config=WebserverConfig(
-                host=host,
-                port=port,
-                live_reload_port=watcher_webservice.port,
-            ),
-            message_config=config,
+            environment=environment,
         )
+        CONSOLE.print("[bold blue]Development manager started")
 
-        with get_mountaineer_isolated_env(package) as environment:
-            CONSOLE.print("[bold blue]Development manager started")
+        async def handle_file_changes(metadata: CallbackMetadata):
+            try:
+                LOGGER.debug(f"Handling file changes: {metadata}")
+                nonlocal first_run
+                nonlocal file_changes_state
 
-            async def handle_file_changes(metadata: CallbackMetadata):
-                try:
-                    LOGGER.debug(f"Handling file changes: {metadata}")
-                    nonlocal first_run
-                    nonlocal file_changes_state
+                # First collect all the files that need updating
+                for event in metadata.events:
+                    if event.path.suffix in KNOWN_JS_EXTENSIONS:
+                        file_changes_state.pending_js.add(event.path)
+                    elif event.path.suffix == ".py":
+                        file_changes_state.pending_python.add(event.path)
 
-                    # First collect all the files that need updating
-                    for event in metadata.events:
-                        if event.path.suffix in KNOWN_JS_EXTENSIONS:
-                            file_changes_state.pending_js.add(event.path)
-                        elif event.path.suffix == ".py":
-                            file_changes_state.pending_python.add(event.path)
+                if not first_run and not (
+                    file_changes_state.pending_js or file_changes_state.pending_python
+                ):
+                    return
 
-                    if not first_run and not (
-                        file_changes_state.pending_js
-                        or file_changes_state.pending_python
-                    ):
+                if file_changes_state.pending_python or first_run:
+                    did_reload = session.reload_python(
+                        changed_files=list(file_changes_state.pending_python)
+                    )
+                    if not did_reload:
+                        CONSOLE.print("[red]Error: Failed to reload Python modules")
                         return
+                    await session.build_use_server()
+                    await session.restart_server(
+                        host=host,
+                        port=port,
+                        live_reload_port=watcher_webservice.port,
+                    )
 
-                    try:
-                        if file_changes_state.pending_python or first_run:
-                            await restart_backend(
-                                environment,
-                                broker,
-                                file_changes_state,
-                                isolated_context,
-                            )
+                if file_changes_state.pending_js or first_run:
+                    await session.build_frontend(
+                        updated_js=list(file_changes_state.pending_js)
+                        if file_changes_state.pending_js
+                        else None
+                    )
 
-                        if file_changes_state.pending_js or first_run:
-                            await rebuild_frontend(
-                                broker,
-                                file_changes_state,
-                            )
-                    except BrokerExecutionError as e:
-                        CONSOLE.print(f"[red]Error: {e.error}\n\n{e.traceback}")
-                        return
+                # If we've succeeded, we should clear out the pending
+                # files so we don't rebuild them again
+                file_changes_state.pending_js.clear()
+                file_changes_state.pending_python.clear()
 
-                    # If we've succeeded, we should clear out the pending
-                    # files so we don't rebuild them again
-                    file_changes_state.pending_js.clear()
-                    file_changes_state.pending_python.clear()
+                # Ping the watcher webservice to let it know we've updated
+                await watcher_webservice.broadcast_listeners()
 
-                    # Ping the watcher webservice to let it know we've updated
-                    await watcher_webservice.broadcast_listeners()
+                first_run = False
 
-                    first_run = False
+            except Exception as e:
+                # Otherwise silently caught by our watchfiles command
+                CONSOLE.print(f"[red]Error: {e}")
+                CONSOLE.print(traceback.format_exc())
+                raise e
 
-                except Exception as e:
-                    # Otherwise silently caught by our watchfiles command
-                    CONSOLE.print(f"[red]Error: {e}")
-                    CONSOLE.print(traceback.format_exc())
-                    raise e
-
-            watchdog = build_common_watchdog(
-                package,
-                handle_file_changes,
-                subscribe_to_mountaineer=subscribe_to_mountaineer,
-            )
-            await watchdog.start_watching()
+        watchdog = build_common_watchdog(
+            package,
+            handle_file_changes,
+            subscribe_to_mountaineer=subscribe_to_mountaineer,
+        )
+        await watchdog.start_watching()
 
     CONSOLE.print("[green]Shutdown complete")
 
@@ -274,30 +255,21 @@ async def handle_build(
     """
     start = time()
 
-    # Initialize the isolated context directly
-    isolated_context = IsolatedAppContext.from_webcontroller(
-        webcontroller=webcontroller,
-        use_dev_exceptions=False,
-    )
-
-    # Initialize app state
-    response = await isolated_context.initialize_app_state()
-    if not isinstance(response, SuccessResponse):
-        raise ValueError("Failed to initialize app state")
+    session = DevSession.from_webcontroller(webcontroller=webcontroller)
 
     # Type validation
-    assert isolated_context.js_compiler is not None
-    assert isolated_context.app_compiler is not None
-    assert isolated_context.mountaineer is not None
+    assert session.js_compiler is not None
+    assert session.app_compiler is not None
+    assert session.mountaineer is not None
 
     # Build the frontend support bundle
-    await isolated_context.js_compiler.build_use_server()
-    await isolated_context.app_compiler.run_builder_plugins()
+    await session.build_use_server()
+    await session.app_compiler.run_builder_plugins()
 
     # Get the build-enabled controllers
     build_controllers = [
         controller_definition
-        for controller_definition in isolated_context.mountaineer.graph.controllers
+        for controller_definition in session.mountaineer.graph.controllers
         if controller_definition.controller._build_enabled
     ]
 
@@ -319,7 +291,7 @@ async def handle_build(
     # Compile the final client bundle
     client_bundle_result = mountaineer_rs.compile_production_bundle(
         all_view_paths,
-        str(isolated_context.mountaineer._view_root / "node_modules"),
+        str(session.mountaineer._view_root / "node_modules"),
         "production",
         minify,
         str(get_static_path("live_reload.ts").resolve().absolute()),
@@ -327,8 +299,8 @@ async def handle_build(
         tsconfig_path,
     )
 
-    static_output = isolated_context.mountaineer._view_root.get_managed_static_dir()
-    ssr_output = isolated_context.mountaineer._view_root.get_managed_ssr_dir()
+    static_output = session.mountaineer._view_root.get_managed_static_dir()
+    ssr_output = session.mountaineer._view_root.get_managed_ssr_dir()
 
     # If we don't have the same number of entrypoints as controllers, something went wrong
     if len(client_bundle_result["entrypoints"]) != len(build_controllers):
@@ -357,7 +329,7 @@ async def handle_build(
     # into a single runnable script for ease of use by the V8 engine
     result_scripts, _ = mountaineer_rs.compile_independent_bundles(
         all_view_paths,
-        str(isolated_context.mountaineer._view_root / "node_modules"),
+        str(session.mountaineer._view_root / "node_modules"),
         "production",
         0,
         str(get_static_path("live_reload.ts").resolve().absolute()),
