@@ -72,10 +72,7 @@ lint-validation-scripts:
 
 # Tests
 test-lib:
-	@(cd $(LIB_DIR) && docker compose -f docker-compose.test.yml up -d)
-	@$(call wait-for-postgres,30,5438)
 	@$(call test-common,$(LIB_DIR),$(LIB_NAME))
-	@(cd $(LIB_DIR) && docker compose -f docker-compose.test.yml down)
 	@$(call test-rust-common,$(LIB_DIR),$(LIB_NAME))
 test-lib-integrations:
 	$(call test-common-integrations,$(LIB_DIR),$(LIB_NAME))
@@ -156,18 +153,3 @@ define lint-rust
 	@echo "=== All Rust linters completed successfully for $(1) ==="
 endef
 
-# Database helper functions
-define wait-for-postgres
-	@echo "\n=== Waiting for PostgreSQL to be ready ==="
-	@timeout=$(1); \
-	while ! nc -z localhost $(2) >/dev/null 2>&1; do \
-		timeout=$$((timeout-1)); \
-		if [ $$timeout -le 0 ]; then \
-			echo "FAILED: Timed out waiting for PostgreSQL to start on port $(2)"; \
-			exit 1; \
-		fi; \
-		echo "Waiting for PostgreSQL to start..."; \
-		sleep 1; \
-	done; \
-	echo "=== PostgreSQL is ready on port $(2) ==="
-endef

@@ -12,7 +12,6 @@ dependencies = [
     {% else %}
     "mountaineer=={{ mountaineer_min_version }}",
     {% endif %}
-    "iceaxe>=0.5.0"
 ]
 
 {% if package_manager == "poetry" %}
@@ -52,7 +51,6 @@ build-backend = "setuptools.build_meta"
 runserver = "{{ project_name }}.cli:runserver"
 watch = "{{ project_name }}.cli:watch"
 build = "{{ project_name }}.cli:build"
-createdb = "{{ project_name }}.cli:createdb"
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]

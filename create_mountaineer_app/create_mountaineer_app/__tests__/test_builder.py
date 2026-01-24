@@ -1,10 +1,8 @@
 import subprocess
 import sys
 from itertools import product
-from os import environ
 from pathlib import Path
 from time import sleep
-from uuid import uuid4
 
 import pytest
 from click import secho
@@ -17,7 +15,6 @@ if sys.version_info >= (3, 11):
 else:
     from toml import loads as toml_loads
 
-from create_mountaineer_app.__tests__.common import wait_for_database_to_be_ready
 from create_mountaineer_app.builder import (
     build_project,
     environment_from_metadata,
@@ -116,8 +113,7 @@ def test_valid_permutations(
     new_project_dir = Path(tmpdir) / "my_project"
     main_mountaineer_path = Path(__file__).parent.parent.parent.parent
 
-    # Find an available port for postgres and the webserver
-    postgres_port = get_free_port()
+    # Find an available port for the webserver
     webhost_port = get_free_port()
 
     metadata = ProjectMetadata(
@@ -129,7 +125,6 @@ def test_valid_permutations(
         use_tailwind=use_tailwind,
         editor_config=editor_config,
         create_stub_files=create_stub_files,
-        postgres_port=postgres_port,
         # Stub, not used in template generation since we also have
         # the mountaineer_dev_path
         mountaineer_min_version="0.1.0",
@@ -138,32 +133,7 @@ def test_valid_permutations(
 
     build_project(metadata, mountaineer_wheel=mountaineer_wheel)
 
-    # Launch docker to host the default database
-    docker_compose_env = {
-        **environ,
-        "COMPOSE_PROJECT_NAME": f"test_project-{uuid4()}",
-    }
-    subprocess.run(
-        ["docker", "compose", "up", "-d"],
-        cwd=metadata.project_path,
-        check=True,
-        env=docker_compose_env,
-    )
-
-    # Wait until the database is ready
-    wait_for_database_to_be_ready(metadata)
-
     environment = environment_from_metadata(metadata)
-
-    # Make sure the required models are created
-    create_db_process = environment.run_command(["createdb"], metadata.project_path)
-    output, errors = create_db_process.communicate()
-    if create_db_process.returncode != 0:
-        if output:
-            secho(output.decode("utf-8"), fg="red")
-        if errors:
-            secho(errors.decode("utf-8"), fg="red")
-        raise ValueError("Failed to create database.")
 
     # Make sure we can build the files without any errors
     build_process = environment.run_command(["build"], metadata.project_path)
@@ -216,17 +186,6 @@ def test_valid_permutations(
             process.terminate()
             process.wait()
             secho("Server shut down...")
-        else:
-            secho(f"Server exited with code {process.returncode}")
-
-        secho("Shutting down docker...")
-        subprocess.run(
-            ["docker", "compose", "down"],
-            cwd=metadata.project_path,
-            check=True,
-            env=docker_compose_env,
-        )
-        secho("Docker shut down successfully.")
 
 
 @pytest.mark.parametrize(

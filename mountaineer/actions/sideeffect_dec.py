@@ -80,30 +80,31 @@ def sideeffect(*args, **kwargs):  # type: ignore
     to internally merge it with render() sideeffect update.
 
     ```python {{sticky: True}}
-    from mountaineer import sideeffect, RenderBase, ControllerBase, Depends
-    from iceaxe import DBConnection, select
-    from iceaxe.mountaineer import DatabaseDependencies
+    from mountaineer import sideeffect, RenderBase, ControllerBase
+    from httpx import AsyncClient
 
-    from myapp import models
+    # In-memory counter for this example
+    counter = {"count": 0}
 
     class ControllerRender(RenderBase):
-        count: str
+        count: int
+        api_status: str
 
     class MyController(ControllerBase):
-        async def render(
-            self,
-            db_connection: DBConnection = Depends(DatabaseDependencies.get_db_connection),
-        ) -> ControllerRender:
-            elements = await db_connection.exec(select(models.MyModel.id))
-            return ControllerRender(count=len(elements))
+        async def render(self) -> ControllerRender:
+            # Example: fetch data from external API
+            async with AsyncClient() as client:
+                response = await client.get("https://api.example.com/status")
+                api_status = response.json().get("status", "unknown")
+
+            return ControllerRender(
+                count=counter["count"],
+                api_status=api_status
+            )
 
         @sideeffect
-        async def increment_count(
-            self,
-            db_connection: DBConnection = Depends(DatabaseDependencies.get_db_connection),
-        ) -> None:
-            new_model = models.MyModel()
-            await db_connection.insert([new_model])
+        async def increment_count(self) -> None:
+            counter["count"] += 1
 
     ```
 

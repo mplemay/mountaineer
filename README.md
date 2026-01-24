@@ -54,14 +54,13 @@ Every service file is nested under the `my_webapp` root package. Views are defin
 
 ### Development
 
-If you're starting a new application from scratch, you'll typically want to create your new database tables. Make sure you have postgres running. We bundle a docker compose file for convenience with `create-mountaineer-app`.
+If you're starting a new application from scratch, you can immediately start the development server:
 
 ```bash
-docker compose up -d
-uv run createdb
+uv run runserver
 ```
 
-Of course you can also use an existing database instance, simply configure it in the `.env` file in the project root.
+The default template includes simple example controllers. To add database integration, you can install [Iceaxe](https://github.com/piercefreeman/iceaxe) or your preferred ORM.
 
 Mountaineer relies on watching your project for changes and doing progressive compilation. We provide a few CLI commands to help with this.
 

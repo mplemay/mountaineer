@@ -15,9 +15,6 @@ class ProjectMetadata(BaseModel):
     editor_config: EditorType | None
     project_path: Path
 
-    postgres_password: str = "mysecretpassword"
-    postgres_port: int = 5432
-
     create_stub_files: bool
 
     # Current version of mountaineer tied to CMA version
