@@ -46,7 +46,6 @@ from mountaineer.graph.cache import (
 )
 from mountaineer.logging import LOGGER, debug_log_artifact
 from mountaineer.paths import ManagedViewPath, resolve_package_path
-from mountaineer.plugin import MountaineerPlugin
 from mountaineer.render import Metadata, RenderBase, RenderNull
 from mountaineer.ssr import render_ssr
 
@@ -232,7 +231,7 @@ class Mountaineer:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         await self.app(scope, receive, send)
 
-    def register(self, controller: ControllerBase | MountaineerPlugin):
+    def register(self, controller: ControllerBase):
         """
         Register a new controller. This will:
 
@@ -244,12 +243,10 @@ class Mountaineer:
         kwarg args that you need before it's registered.
 
         """
-        if isinstance(controller, ControllerBase):
-            self._register_controller(controller)
-        elif isinstance(controller, MountaineerPlugin):
-            self._register_plugin(controller)
-        else:
-            raise ValueError(f"Unknown controller type: {type(controller)}")
+        if not isinstance(controller, ControllerBase):
+            raise TypeError(f"Unknown controller type: {type(controller)}")
+
+        self._register_controller(controller)
 
     def _register_controller(self, controller: ControllerBase):
         # This allows each view to avoid having to find these on disk, as well as gives
@@ -289,44 +286,6 @@ class Mountaineer:
         )
         for controller_definition in updated_controllers:
             self._remount_controller(controller_definition)
-
-    def _register_plugin(self, plugin: MountaineerPlugin):
-        for controller in plugin.get_controllers():
-            if isinstance(controller.view_path, str):
-                controller.view_path = (
-                    ManagedViewPath.from_view_root(plugin.view_root)
-                    / controller.view_path
-                )
-
-            # This should find our precompiled static and ssr files
-            controller._scripts_prefix = f"/static_plugins/{plugin.name}"
-            controller._build_enabled = False
-
-            controller.resolve_paths(plugin.view_root, force=True)
-
-            # Unlike standard controllers, plugins are expected to have precompiled scripts
-            # at all times
-            if not controller._ssr_path:
-                raise ValueError(
-                    f"Controller {controller} was not able to find SSR scripts for plugin {plugin.name}"
-                )
-            if not controller._bundled_scripts:
-                raise ValueError(
-                    f"Controller {controller} was not able to find bundled scripts for plugin {plugin.name}"
-                )
-
-            # Dev mode is disabled so the app is forced to load the full built javascript
-            # bundle when the pages load. This doesn't affect how the controller API endpoints
-            # are mounted or otherwise how the view controller is added to the app.
-            self._register_controller_common(controller, dev_enabled=False)
-
-        # Mount the view_root / _static directory, since we'll need
-        # this for the client mounted view files
-        self.app.mount(
-            f"/static_plugins/{plugin.name}",
-            StaticFiles(directory=str(plugin.view_root / "_static")),
-            name=f"static-{plugin.name}",
-        )
 
     def _register_controller_common(
         self, controller: ControllerBase, dev_enabled: bool = True

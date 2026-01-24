@@ -66,19 +66,10 @@ class APIBuilderBase(ABC):
         specified by the controllers. Returns the ManagedViewPath objects for
         all paths where a match is found.
 
-        Only includes paths from controllers that have build enabled (excluding plugins).
+        Only includes paths from known controller view roots.
 
         """
-        # Index all of the unique view roots to track the DAG hierarchies
-        # Only include controllers that have build enabled (exclude plugins)
-        build_enabled_controllers = [
-            (controller, view_path)
-            for controller, view_path in self.controllers
-            if controller._build_enabled
-        ]
-        unique_roots = {
-            view_path.get_root_link() for _, view_path in build_enabled_controllers
-        }
+        unique_roots = {view_path.get_root_link() for _, view_path in self.controllers}
 
         # Convert all of the dirty files into managed paths
         converted_paths: list[ManagedViewPath] = []

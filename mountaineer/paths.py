@@ -25,8 +25,8 @@ class ManagedViewPath(type(Path())):  # type: ignore
     root_link: Optional["ManagedViewPath"]
 
     # Root link to the directory that stores package.json / node_modules / etc
-    # Typically this is the same thing as the root_link, but in the case of plugins
-    # they may be different
+    # Typically this is the same thing as the root_link, but may differ when
+    # view roots are resolved from another package root.
     package_root_link: Optional["ManagedViewPath"]
 
     def __new__(cls, *args, **kwargs):

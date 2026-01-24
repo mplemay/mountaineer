@@ -67,23 +67,19 @@ approach to build up a DAG of dependencies between modules so we can reload them
 
 There are some cases, however, where we can't naively reload a module. One common case is in SQLAlchemy where Table
 definitions can only be added once to the global registry. If we were to reload a module that added a table to the
-registry, it raises a runtime exception. In these cases our dev app manager will perform a full server restart by shutting down
-the old process and starting a new one.
+registry, it raises a runtime exception. In these cases our dev session will fall back to rebuilding the app state
+instead of a targeted reload.
 
 Regardless of the approach, the main process will wait for the new server to boot up and then send a notification
 to the frontend via our websocket server `WatcherWebservice`.
 
 ---
 
-::: mountaineer.development.manager.DevAppManager
+::: mountaineer.development.session.DevSession
 
 ---
 
-::: mountaineer.development.isolation.IsolatedAppContext
-
----
-
-::: mountaineer.development.hotreload.HotReloader
+::: mountaineer.development.reload.ModuleReloader
 
 ---
 
@@ -94,5 +90,3 @@ to the frontend via our websocket server `WatcherWebservice`.
 ::: mountaineer.development.watch_server.WatcherWebservice
 
 ---
-
-::: mountaineer.development.messages.AsyncMessageBroker
