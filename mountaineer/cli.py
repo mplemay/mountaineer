@@ -339,6 +339,7 @@ async def handle_build(
         build_controllers,
         client_bundle_result["entrypoints"],
         client_bundle_result["entrypoint_maps"],
+        strict=True,
     ):
         script_root = underscore(controller_definition.controller.__class__.__name__)
         (static_output / f"{script_root}.js").write_text(content)
@@ -362,7 +363,7 @@ async def handle_build(
     )
 
     # Write each script to disk
-    for controller_definition, script in zip(build_controllers, result_scripts):
+    for controller_definition, script in zip(build_controllers, result_scripts, strict=True):
         script_root = underscore(controller_definition.controller.__class__.__name__)
         (ssr_output / f"{script_root}.js").write_text(script)
 

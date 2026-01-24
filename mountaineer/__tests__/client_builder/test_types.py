@@ -92,7 +92,7 @@ class TypeComparisonHelpers:
         if len(child_types_1) != len(child_types_2):
             return False
 
-        for a, b in zip(child_types_1, child_types_2):
+        for a, b in zip(child_types_1, child_types_2, strict=True):
             if not TypeComparisonHelpers.are_types_equivalent(a, b):
                 return False
 

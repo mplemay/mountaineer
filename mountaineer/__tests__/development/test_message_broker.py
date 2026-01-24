@@ -120,7 +120,7 @@ async def test_multiple_jobs(
     job_data = [{"message": f"message{i}"} for i in range(3)]
 
     # Send all jobs
-    for job_id, data in zip(job_ids, job_data):
+    for job_id, data in zip(job_ids, job_data, strict=True):
         response = await server_broker.send_job(job_id, data)
         assert isinstance(response, OKResponse)
 
@@ -241,7 +241,7 @@ async def test_multiple_process_clients():
         job_ids = [f"job-{i}" for i in range(3)]
         responses = [f"process-response-{i}" for i in range(3)]
 
-        for job_id, response in zip(job_ids, responses):
+        for job_id, response in zip(job_ids, responses, strict=True):
             process = multiprocessing.Process(
                 target=client_process_entrypoint,
                 args=(config_dict, job_id, response),

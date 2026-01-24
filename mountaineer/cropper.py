@@ -50,7 +50,7 @@ class SyntheticVarInserter(ast.NodeTransformer):
         new_stmts = []
 
         if isinstance(node.value, ast.Dict):  # Direct dictionary returns
-            for i, (key, value) in enumerate(zip(node.value.keys, node.value.values)):
+            for i, (key, value) in enumerate(zip(node.value.keys, node.value.values, strict=True)):
                 key_str = key.value if isinstance(key, ast.Constant) else None
                 if key_str and isinstance(key_str, str):
                     assign, synthetic_var_name = self.create_synthetic_assign(
@@ -202,12 +202,13 @@ class ASTReducer(ast.NodeTransformer):
             for key, value in zip(
                 [ast.Constant(value=arg.arg) for arg in stmt.value.keywords],
                 [arg.value for arg in stmt.value.keywords],
+                strict=True,
             ):
                 if isinstance(value, ast.Name) and value.id in self.needed_vars:
                     new_keys.append(key)
                     new_values.append(value)
         elif isinstance(stmt.value, ast.Dict):
-            for dict_key, dict_value in zip(stmt.value.keys, stmt.value.values):
+            for dict_key, dict_value in zip(stmt.value.keys, stmt.value.values, strict=True):
                 if (
                     isinstance(dict_key, ast.Constant)
                     and isinstance(dict_value, ast.Name)

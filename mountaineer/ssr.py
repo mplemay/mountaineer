@@ -310,7 +310,7 @@ def render_ssr(
                 corr_file,
                 corr_line,
                 corr_col,
-            ) in zip(original_error_locations, corrected_error_locations):
+            ) in zip(original_error_locations, corrected_error_locations, strict=True):
                 # Only extract context for anonymous locations (compiled code)
                 if orig_file == "<anonymous>":
                     # Use corrected line numbers for the location key (display purposes)

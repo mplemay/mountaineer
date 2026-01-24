@@ -22,7 +22,7 @@ def get_typevar_mapping(cls):
                 instantiated_params = get_args(origin_base)
 
                 # Update mapping with current base's mappings
-                base_mapping = dict(zip(base_params, instantiated_params))
+                base_mapping = dict(zip(base_params, instantiated_params, strict=True))
                 for key, value in base_mapping.items():
                     # If value is another TypeVar, resolve it if possible
                     if isinstance(value, TypeVar) and value in mapping:
