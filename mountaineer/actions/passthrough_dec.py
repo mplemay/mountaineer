@@ -162,11 +162,12 @@ def passthrough(*args, **kwargs):  # type: ignore
                 if isasyncgen(response):
                     return wrap_passthrough_generator(response)
 
-                # Following types ignored to support 3.10
-                final_payload: SideeffectResponseBase[Any] = {  # type: ignore
+                final_payload: SideeffectResponseBase[Any] = {
                     "passthrough": response,
                 }
-                return format_final_action_response(final_payload)  # type: ignore
+                return format_final_action_response(  # type: ignore[arg-type]  # TypedDict payload not accepted by mypy for dict param
+                    final_payload
+                )
 
             metadata = init_function_metadata(inner, FunctionActionType.PASSTHROUGH)
             metadata.passthrough_model = passthrough_model

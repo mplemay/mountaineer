@@ -212,12 +212,13 @@ def sideeffect(*args, **kwargs):  # type: ignore
                     if isawaitable(server_data):
                         server_data = await server_data
 
-                    # Following types ignored to support 3.10
-                    final_payload: SideeffectResponseBase[Any] = {  # type: ignore
+                    final_payload: SideeffectResponseBase[Any] = {
                         "sideeffect": server_data,
                         "passthrough": passthrough_values,
                     }
-                    return format_final_action_response(final_payload)  # type: ignore
+                    return format_final_action_response(  # type: ignore[arg-type]  # TypedDict payload not accepted by mypy for dict param
+                        final_payload
+                    )
 
             # Update the signature of 'inner' to include 'request: Request'
             # We need to modify this to conform to the request parameters that are sniffed
