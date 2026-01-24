@@ -1,6 +1,7 @@
 # CLI Plugins
 
-CLI Plugins provide default handling for the most common lifecycle events during Mountaineer development. Import these if convenient, otherwise you can follow our implementation approaches to implement your own.
+CLI Plugins provide default handling for the most common lifecycle events during Mountaineer development. Import these
+if convenient, otherwise you can follow our implementation approaches to implement your own.
 
 ## Webapp CLI
 
@@ -21,7 +22,7 @@ Our development server (used in `runserver` and `watch`) rely on forking process
 development workflow fast. This requires that third party packages don't spawn any threads
 during their import, otherwise you might see a warning like the following:
 
-```
+```text
 [2025-03-14T23:47:49Z ERROR firehot::layer] Import of 'gent.config' introduced 2 new threads:
 [2025-03-14T23:47:49Z ERROR firehot::layer]   - Total threads: 1 -> 3
 [2025-03-14T23:47:49Z ERROR firehot::layer]   - Python threads: 1 -> 1
@@ -34,7 +35,7 @@ threads on import. This is an antipattern in library design. If you've confirmed
 being imported into the main process. Instead it will delay until it's loaded in your application layer. This makes
 hotreloads a bit slower:
 
-```
+```text
 MOUNTAINEER_IGNORE_HOTRELOAD=gent.config,gent.main poetry run runserver
 ```
 

@@ -1,14 +1,18 @@
 # Deploy
 
-You can deploy your Mountaineer project using whatever container technology you'd like, on whatever hosting provider you'd like. Most hosts at this point mandate or highly encourage containerization of your dependencies with Docker - so we start there.
+You can deploy your Mountaineer project using whatever container technology you'd like, on whatever hosting provider
+you'd like. Most hosts at this point mandate or highly encourage containerization of your dependencies with Docker - so
+we start there.
 
-This page contains a reasonable default configuration to get you started. We make heavy use of multi-stage builds to cache dependencies and minimize the size of your final image that your webservers will have to pull down.
+This page contains a reasonable default configuration to get you started. We make heavy use of multi-stage builds to
+cache dependencies and minimize the size of your final image that your webservers will have to pull down.
 
 ## Docker
 
-First, add the following to your `.dockerignore` file. This will prevent Docker from trying to copy over heavy artifacts that aren't needed for the build.
+First, add the following to your `.dockerignore` file. This will prevent Docker from trying to copy over heavy artifacts
+that aren't needed for the build.
 
-```
+```text
 **/node_modules
 **/_server
 **/_ssr
@@ -18,7 +22,8 @@ First, add the following to your `.dockerignore` file. This will prevent Docker 
 
 ### Image 1: Frontend Dependencies
 
-Our first stage uses `npm` to fetch your frontend dependencies. This is an isolated context since it's the only place we need node / npm in the build pipeline.
+Our first stage uses `npm` to fetch your frontend dependencies. This is an isolated context since it's the only place we
+need node / npm in the build pipeline.
 
 ```docker
 FROM node:20-slim as node-dependencies
@@ -32,7 +37,9 @@ RUN npm install
 
 ### Image 2: Python Dependencies Base
 
-Our build pipeline requires Poetry and a basic Python configuration in multiple stages. This initial stage sets up the Poetry CLI and a Python 3.11 environment. By default we make use of Docker's `buildx` to compile for linux/amd64 (Intel) since this is what most servers run on. It also lets us leverage our prebuild Mountaineer wheels.
+Our build pipeline requires Poetry and a basic Python configuration in multiple stages. This initial stage sets up the
+Poetry CLI and a Python 3.11 environment. By default we make use of Docker's `buildx` to compile for linux/amd64 (Intel)
+since this is what most servers run on. It also lets us leverage our prebuild Mountaineer wheels.
 
 ```docker
 FROM --platform=linux/amd64 python:3.11-slim as poetry-base
@@ -126,7 +133,8 @@ This runs with production-minified assets and the same configuration as the prod
 
 ## Common Errors
 
-If you see "required file not found" when you try to run this docker image, double check that your venv is pointing to the correct version of Python within the container:
+If you see "required file not found" when you try to run this docker image, double check that your venv is pointing to
+the correct version of Python within the container:
 
 ```bash
 $ ls -ls /venv/bin

@@ -1,8 +1,13 @@
 # Views & Layouts
 
-Your React app should be initialized in the `/views` folder of your Mountaineer project. This is the directory where we look for package.json and tsconfig.json, and where esbuild looks for specific build-time overrides. In other words, the views folder should look just like your frontend application if you were building a Single-Page-App (SPA). It's just embedded within your larger Mountaineer project and rendered separately.
+Your React app should be initialized in the `/views` folder of your Mountaineer project. This is the directory where we
+look for package.json and tsconfig.json, and where esbuild looks for specific build-time overrides. In other words, the
+views folder should look just like your frontend application if you were building a Single-Page-App (SPA). It's just
+embedded within your larger Mountaineer project and rendered separately.
 
-We expect that all controller views will be labeled as a `page.tsx`, so they'll typically sit in a folder with themselves and other tightly connected React components. These views should have one default export, which is your page constructor:
+We expect that all controller views will be labeled as a `page.tsx`, so they'll typically sit in a folder with
+themselves and other tightly connected React components. These views should have one default export, which is your page
+constructor:
 
 ```typescript title="/views/app/home/page.tsx"
 import React from "react";
@@ -19,9 +24,11 @@ const Home = () => {
 export default Home;
 ```
 
-We don't support async functions for these page renders, instead expecting that your backend will provide all data required to serialize the view.
+We don't support async functions for these page renders, instead expecting that your backend will provide all data
+required to serialize the view.
 
-If you want actions performed on the client-side after the view has been hydrated with Javascript, you can use a `useEffect` hook with an empty dependency list:
+If you want actions performed on the client-side after the view has been hydrated with Javascript, you can use a
+`useEffect` hook with an empty dependency list:
 
 ```typescript title="/views/app/home/page.tsx"
 import React, { useEffect } from "react";
@@ -44,7 +51,10 @@ export default Home;
 
 ## Controllers
 
-A controller backs a view in a 1:1 relationship. It provides the backend plumbing to render the view, and can also provide sideeffects and passthroughs actions. The main entrypoint into this is the `render` function, which is called on your initial view to serialize all the data that your frontend will need when displaying the initial state of the page. All your data heavy lifting (database queries, manipulation, etc) should go here.
+A controller backs a view in a 1:1 relationship. It provides the backend plumbing to render the view, and can also
+provide sideeffects and passthroughs actions. The main entrypoint into this is the `render` function, which is called on
+your initial view to serialize all the data that your frontend will need when displaying the initial state of the page.
+All your data heavy lifting (database queries, manipulation, etc) should go here.
 
 ```python title="/controllers/home.py"
 
@@ -71,9 +81,10 @@ class HomeController(ControllerBase):
 
 ### Path Parameters
 
-The `render` function signature is inspected to provide the full URL that can be called. To provide a URL parameter that extracts a given ID identifier and matches the following:
+The `render` function signature is inspected to provide the full URL that can be called. To provide a URL parameter that
+extracts a given ID identifier and matches the following:
 
-```
+```text
 /details/a687566b-db3e-42e3-9053-4f679abe8277
 /details/4a4c26bc-554a-40dd-aecd-916abd3bc475
 ```
@@ -94,9 +105,10 @@ class DetailController(ControllerBase):
 
 ### Query Parameters
 
-Query parameters are also supported. We support both simple types (str, float, UUID, etc) alongside lists of simple types. To provide a query parameter that matches the following:
+Query parameters are also supported. We support both simple types (str, float, UUID, etc) alongside lists of simple
+types. To provide a query parameter that matches the following:
 
-```
+```text
 /search?name=Apple&cost=30&cost=50
 /search?name=Banana
 ```
@@ -119,15 +131,16 @@ class SearchController(ControllerBase):
         ...
 ```
 
-<Note>
-    Both path and query parameters are validated by FastAPI, so you can use the same validation techniques. For more details, see the FastAPI [guide](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/).
-</Note>
+<Note> Both path and query parameters are validated by FastAPI, so you can use the same validation techniques. For more
+details, see the FastAPI [guide](https://fastapi.tiangolo.com/tutorial/query-params-str-validations/). . </Note>
 
 ## Layouts
 
-We also support the Next.js `layout.tsx` convention, which is a special file that will be used to wrap all containing views in a common layout. This is useful for things like headers, footers, and other common elements.
+We also support the Next.js `layout.tsx` convention, which is a special file that will be used to wrap all containing
+views in a common layout. This is useful for things like headers, footers, and other common elements.
 
-The children of the page will be passed as `{children}` to the layout component. Make sure to include this in your rendered view:
+The children of the page will be passed as `{children}` to the layout component. Make sure to include this in your
+rendered view:
 
 ```typescript title="/views/app/layout.tsx"
 import React from "react";
@@ -153,7 +166,7 @@ export default Layout;
 
 This allows you to chain layouts before rendering the final, most specific page:
 
-```
+```text
 views/
 └── app/
     ├── dashboard/
@@ -165,15 +178,20 @@ views/
     └── layout.tsx
 ```
 
-When rendering `dashboard/home/page.tsx`, the view will be wrapped in the `app/dashboard/layout.tsx` layout alongside `app/layout.tsx`. These layout files will be automatically found by Mountaineer during the build process. They don't require any explicit declaration in your Python backend if you're just using them for styling.
+When rendering `dashboard/home/page.tsx`, the view will be wrapped in the `app/dashboard/layout.tsx` layout alongside
+`app/layout.tsx`. These layout files will be automatically found by Mountaineer during the build process. They don't
+require any explicit declaration in your Python backend if you're just using them for styling.
 
-For more advanced layout organization, including isolating layouts to specific sections of your application using the `(root)` folder pattern, see the [Layout Organization](./layout-organization) guide.
+For more advanced layout organization, including isolating layouts to specific sections of your application using the
+`(root)` folder pattern, see the [Layout Organization](./layout-organization) guide.
 
-If you need more server side power and want to define them in Python, you can add a LayoutController that backs the layout.
+If you need more server side power and want to define them in Python, you can add a LayoutController that backs the
+layout.
 
 ### Layout Controllers
 
-Layouts support most of the same controller logic that regular pages do. They can specify their own actions, both sideeffects and passthroughs, which will re-render the layout as required.
+Layouts support most of the same controller logic that regular pages do. They can specify their own actions, both
+sideeffects and passthroughs, which will re-render the layout as required.
 
 ```python title="/controllers/root_layout.py"
 from mountaineer import LayoutControllerBase, RenderBase
@@ -199,7 +217,8 @@ class RootLayoutController(LayoutControllerBase):
         self.layout_value += 1
 ```
 
-All these functions are now exposed to the frontend layout, including the link generator, state, and any actions specified.
+All these functions are now exposed to the frontend layout, including the link generator, state, and any actions
+specified.
 
 ```typescript title="/views/app/layout.tsx"
 import React, { ReactNode } from "react";
@@ -236,13 +255,22 @@ mountaineer = Mountaineer(...)
 mountaineer.register(RootLayoutController())
 ```
 
-In general you can implement layout controllers just like you do for pages. But since they're shared across multiple child controllers, make sure the keyword arguments you use in your `render` signature don't have any conflicts. Mountaineer will merge these signatures at runtime and check for duplicate keyword names across the layout's child pages. Arguments are allowed to share the same name _and_ type, in which case they will be resolved to the same value. Arguments with conflicting types will raise a `TypeError`.
+In general you can implement layout controllers just like you do for pages. But since they're shared across multiple
+child controllers, make sure the keyword arguments you use in your `render` signature don't have any conflicts.
+Mountaineer will merge these signatures at runtime and check for duplicate keyword names across the layout's child
+pages. Arguments are allowed to share the same name _and_ type, in which case they will be resolved to the same value.
+Arguments with conflicting types will raise a `TypeError`.
 
-It's also worth noting that layout controllers will resolve their dependencies in the same scope as the page controllers. So if you need database access within your layout, you'll receive the same underlying transaction as the page controller. This makes dependency injection a powerful way to save on resources, but be careful to not treat them as isolated objects.
+It's also worth noting that layout controllers will resolve their dependencies in the same scope as the page
+controllers. So if you need database access within your layout, you'll receive the same underlying transaction as the
+page controller. This makes dependency injection a powerful way to save on resources, but be careful to not treat them
+as isolated objects.
 
 ## Typescript Configuration
 
-If you want to customize how Mountaineer builds your view files into raw client-side javascript, add a `tsconfig.json` file. The Typescript website includes a [full list](https://www.typescriptlang.org/tsconfig) of the available options here. A good place to start is:
+If you want to customize how Mountaineer builds your view files into raw client-side javascript, add a `tsconfig.json`
+file. The Typescript website includes a [full list](https://www.typescriptlang.org/tsconfig) of the available options
+here. A good place to start is:
 
 ```json
 {
@@ -266,7 +294,9 @@ If you want to customize how Mountaineer builds your view files into raw client-
 }
 ```
 
-A common convention is importing all your view paths with absolute paths (like `@/components/myfile`) instead of having to do relative imports (`../../components/myfile`). This can be easily achieved by adding a `paths` key to your `tsconfig.json`. Your import becomes relative to all paths in the root directory.
+A common convention is importing all your view paths with absolute paths (like `@/components/myfile`) instead of having
+to do relative imports (`../../components/myfile`). This can be easily achieved by adding a `paths` key to your
+`tsconfig.json`. Your import becomes relative to all paths in the root directory.
 
 ```json
 {

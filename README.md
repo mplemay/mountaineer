@@ -5,7 +5,7 @@
 ![Python Version](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fpiercefreeman%2Fmountaineer%2Frefs%2Fheads%2Fmain%2Fpyproject.toml)
 [![Test status](https://github.com/piercefreeman/mountaineer/actions/workflows/test.yml/badge.svg)](https://github.com/piercefreeman/mountaineer/actions)
 
-<p align="center"><i>Move fast. Climb mountains. Don't break things.</i></p>
+*Move fast. Climb mountains. Don't break things.*
 
 Mountaineer 🏔️ is a framework to easily build webapps in Python and React. If you've used either of these languages
 before for development, we think you'll be right at home.
