@@ -1,12 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Generic, TypeVar
-
-TResponse = TypeVar("TResponse")
 
 
 @dataclass
-class IsolatedMessageBase(Generic[TResponse]):
+class IsolatedMessageBase[TResponse]:
     """Base class for all messages passed between main process and isolated app context"""
 
 

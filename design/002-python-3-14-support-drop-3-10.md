@@ -268,9 +268,7 @@ Use built-in NotRequired and TypedDict generics without a 3.10 fallback.
 ```python
 from typing import Any, Generic, NotRequired, TypedDict, TypeVar
 
-P = TypeVar("P")
-
-class SideeffectResponseBase(TypedDict, Generic[P]):
+class SideeffectResponseBase[P](TypedDict):
     passthrough: P
     sideeffect: NotRequired[Any]
 ```

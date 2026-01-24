@@ -8,7 +8,7 @@ from base64 import b64decode, b64encode
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from threading import Thread
-from typing import Annotated, Any, Generic, Literal, TypeVar, cast
+from typing import Annotated, Any, Literal, cast
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, TypeAdapter
@@ -16,16 +16,13 @@ from pydantic import BaseModel, Field, TypeAdapter
 from mountaineer.development.messages import ErrorResponse
 from mountaineer.logging import LOGGER
 
-TResponse = TypeVar("TResponse")
-AppMessageTypes = TypeVar("AppMessageTypes")
 
-
-class BrokerMessageFuture(Generic[TResponse], asyncio.Future[TResponse]):
+class BrokerMessageFuture[TResponse](asyncio.Future[TResponse]):
     pass
 
 
 @dataclass
-class BrokerServerConfig(Generic[AppMessageTypes]):
+class BrokerServerConfig[AppMessageTypes]:
     """
     Config required to access a server that controls queues
     in a separate thread.
@@ -121,7 +118,7 @@ response_type_adapter = TypeAdapter(  # type: ignore
 )
 
 
-class AsyncMessageBroker(Thread, Generic[AppMessageTypes]):
+class AsyncMessageBroker[AppMessageTypes](Thread):
     """
     A simple process-independent message broker server. This works around limitations
     with `multiprocessing.Queue` that require all processes to be related to the central

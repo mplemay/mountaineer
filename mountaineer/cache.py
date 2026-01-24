@@ -6,7 +6,7 @@ from collections.abc import Callable
 from contextlib import asynccontextmanager
 from hashlib import sha256
 from json import dumps as json_dumps
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -101,10 +101,7 @@ def extended_lru_cache(maxsize: int, max_size_mb: float | None = None):
     return decorator
 
 
-T = TypeVar("T")
-
-
-class AsyncLoopObjectCache(Generic[T]):
+class AsyncLoopObjectCache[T]:
     """
     Utility class to tie a certain global session with an active event loop. Used as a helper
     for global objects (like DB sessions) that we want to cache across multiple requests, but

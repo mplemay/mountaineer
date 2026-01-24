@@ -2,7 +2,7 @@ from collections.abc import AsyncIterator
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Generic, Optional, TypeVar
+from typing import Optional
 
 import pytest
 from fastapi import File, Form, UploadFile
@@ -34,11 +34,6 @@ class StandardResponse(BaseModel):
     message: str
 
 
-# Type variables for generic tests
-T = TypeVar("T")
-S = TypeVar("S")
-
-
 # Core test enum
 class ExampleEnum(Enum):
     A = "a"
@@ -60,16 +55,16 @@ class ExampleModelBase(BaseModel):
 
 
 # Generic test models
-class GenericTestModel(BaseModel, Generic[T]):
+class GenericTestModel[T](BaseModel):
     value: T
     metadata: str
 
 
-class MultiGenericTestModel(GenericTestModel[T], Generic[T, S]):
+class MultiGenericTestModel[T, S](GenericTestModel[T]):
     second_value: S
 
 
-class NestedGenericTestModel(BaseModel, Generic[T]):
+class NestedGenericTestModel[T](BaseModel):
     wrapper: GenericTestModel[T]
     list_of: list[GenericTestModel[T]]
 
@@ -458,7 +453,7 @@ class TestIsolatedModelCreation:
         assert "grandparent_field" not in isolated.model_fields
 
     def test_generic_model_isolation(self, parser: ControllerParser):
-        class GenericParent(BaseModel, Generic[T]):
+        class GenericParent[T](BaseModel):
             parent_field: T
             shared_field: str = "parent"
 
@@ -477,7 +472,7 @@ class TestIsolatedModelCreation:
         assert isolated.model_fields["shared_field"].annotation is str
 
     def test_multi_generic_model_isolation(self, parser: ControllerParser):
-        class MultiGenericParent(BaseModel, Generic[T, S]):
+        class MultiGenericParent[T, S](BaseModel):
             field_t: T
             field_s: S
 

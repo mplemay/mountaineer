@@ -14,13 +14,10 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Concatenate,
-    Generic,
     NotRequired,
     Optional,
-    ParamSpec,
     Protocol,
     TypedDict,
-    TypeVar,
     get_args,
     get_origin,
 )
@@ -50,22 +47,14 @@ class ResponseModelType(Enum):
     ITERATOR_RESPONSE = "ITERATOR_RESPONSE"
 
 
-P = TypeVar("P")
-
-
-class SideeffectResponseBase(TypedDict, Generic[P]):
+class SideeffectResponseBase[P](TypedDict):
     passthrough: P
     # We can't yet typehint across the boundary of the sideeffect -> render
     # within one class since @sideeffect is isolated to just the wrapped function
     sideeffect: NotRequired[Any]
 
 
-T = ParamSpec("T")
-R = TypeVar("R")
-C = TypeVar("C")
-
-
-class SideeffectWrappedCallable(Protocol[C, T, R]):
+class SideeffectWrappedCallable[C, **T, R](Protocol):
     def __call__(
         self: Any,
         *args: T.args,
@@ -78,7 +67,7 @@ class SideeffectWrappedCallable(Protocol[C, T, R]):
     original: Callable[Concatenate[C, T], Awaitable[R]]
 
 
-class SideeffectRawCallable(Protocol[C, T, R]):
+class SideeffectRawCallable[C, **T, R](Protocol):
     def __call__(self: Any, *args: T.args, **kwargs: T.kwargs) -> Awaitable[R]: ...
 
     original: Callable[Concatenate[C, T], Awaitable[R]]

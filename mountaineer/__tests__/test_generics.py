@@ -1,16 +1,11 @@
-from typing import Generic, TypeVar
-
 from mountaineer.generics import expand_typevars, get_typevar_mapping
 
-T = TypeVar("T")
-K = TypeVar("K")
 
-
-class Base(Generic[T]):
+class Base[T]:
     pass
 
 
-class Intermediate(Base[T], Generic[T, K]):
+class Intermediate[T, K](Base[T]):
     pass
 
 
@@ -21,6 +16,10 @@ class Final(Intermediate[int, str]):
 def test_get_typevar_mapping():
     mapping = get_typevar_mapping(Final)
 
+    # With PEP 695, we need to get the type parameters from the class
+    T = Base.__type_params__[0]  # type: ignore
+    K = Intermediate.__type_params__[1]  # type: ignore
+
     assert mapping == {
         T: int,
         K: str,
@@ -28,6 +27,10 @@ def test_get_typevar_mapping():
 
 
 def test_expand_typevars():
+    # With PEP 695, we need to get the type parameters from the class
+    T = Base.__type_params__[0]  # type: ignore
+    K = Intermediate.__type_params__[1]  # type: ignore
+
     assert expand_typevars(
         {
             K: T,

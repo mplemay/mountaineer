@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Generic, Optional, TypeVar, cast
+from typing import Optional, cast
 
 import pytest
 from pydantic import BaseModel
@@ -14,8 +14,6 @@ from mountaineer.client_builder.parser import (
     WrapperName,
 )
 from mountaineer.controller import ControllerBase
-
-T = TypeVar("T")
 
 
 class TestAliasManager:
@@ -217,7 +215,7 @@ class TestAliasManager:
         parser: ControllerParser,
         alias_manager: AliasManager,
     ) -> None:
-        class Container(BaseModel, Generic[T]):
+        class Container[T](BaseModel):
             value: T
 
         string_generic = cast("type[BaseModel]", Container[str])

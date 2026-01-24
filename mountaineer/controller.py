@@ -6,9 +6,7 @@ from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
-    Generic,
     Optional,
-    ParamSpec,
 )
 
 from inflection import underscore
@@ -29,10 +27,8 @@ from mountaineer.render import (
 if TYPE_CHECKING:
     from mountaineer.app import ControllerDefinition
 
-RenderInput = ParamSpec("RenderInput")
 
-
-class ControllerBase(ABC, Generic[RenderInput]):
+class ControllerBase[**RenderInput](ABC):
     """
     One Controller should be created for every frontend page in your webapp. The controller
     is where you place all logic that's necessary for this one page - the data that's pushed
