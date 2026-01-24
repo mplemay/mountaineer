@@ -216,9 +216,7 @@ def sideeffect(*args, **kwargs):  # type: ignore
                         "sideeffect": server_data,
                         "passthrough": passthrough_values,
                     }
-                    return format_final_action_response(  # type: ignore[arg-type]  # TypedDict payload not accepted by mypy for dict param
-                        final_payload
-                    )
+                    return format_final_action_response(final_payload)  # type: ignore[arg-type]
 
             # Update the signature of 'inner' to include 'request: Request'
             # We need to modify this to conform to the request parameters that are sniffed

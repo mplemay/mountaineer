@@ -12,7 +12,9 @@ class ModuleReloader:
         modules: list[str] = []
         for file_path in files:
             try:
-                module = package_path_to_module(package=self.package, file_path_raw=file_path)
+                module = package_path_to_module(
+                    package=self.package, file_path_raw=file_path
+                )
             except ValueError:
                 continue
             modules.append(module)

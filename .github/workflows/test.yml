@@ -33,63 +33,52 @@ on:
     types: [labeled]
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
-    name: test py${{ matrix.python-version }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
-
-    env:
-      PYTHON: ${{ matrix.python-version }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-python-rust
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache-prefix: 'test'
-
-      - name: Install main dependencies
-        run: |
-          export PATH="/Users/runner/.local/bin:/Users/runner/.cargo/bin:$PATH"
-          make install-deps-lib
-
-      - name: Tests
-        run: make test-lib
-
-  lint:
-    name: lint py${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-
+    name: ci py${{ matrix.python-version }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-python-rust
+      - uses: astral-sh/setup-uv@v7
         with:
+          enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache-prefix: 'lint'
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "rust-ci-cache"
+          save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
 
       - name: Install dependencies
         run: make install-deps
 
-      - name: Run typehinting
+      - name: Pre-commit checks
+        run: uv run pre-commit run --all-files
+
+      - name: Lint validation
         run: make lint-validation
 
-      - name: Lint Clippy
+      - name: Cargo clippy
         run: cargo clippy -- -D warnings
+
+      - name: Unit tests
+        run: make test-lib
+
+      - name: Integration tests
+        timeout-minutes: 10
+        run: make test-lib-integrations
 
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:
     if: always()
-    needs: [test, lint]
+    needs: [ci]
     runs-on: ubuntu-latest
     steps:
       - name: Decide whether the needed jobs succeeded or failed
@@ -111,7 +100,7 @@ jobs:
 
     runs-on: ${{ (matrix.os == 'linux' && 'ubuntu') || matrix.os }}-${{ matrix.release || 'latest' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python 3.11 (min supported version)
         uses: actions/setup-python@v5
@@ -150,15 +139,23 @@ jobs:
 
     runs-on: ${{ (matrix.os == 'linux' && 'ubuntu') || matrix.os }}-${{ matrix.release || 'latest' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: ./.github/actions/setup-python-rust
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@v7
         with:
+          enable-cache: true
           python-version: "3.11"
-          cache-prefix: 'build'
-          os: ${{ matrix.os }}
-          target: ${{ matrix.target }}
-          python-architecture: ${{ matrix.python-architecture || 'x64' }}
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: v1-build-${{ matrix.os }}-${{ matrix.target }}-3.11
+          shared-key: "rust-build-cache"
+          save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
 
       - name: Update version
         if: startsWith(github.ref, 'refs/tags/v')
@@ -233,7 +230,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: set up python
         uses: actions/setup-python@v5
@@ -300,7 +297,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: get unpacked_wheels artifacts
         uses: actions/download-artifact@v4
@@ -341,27 +338,3 @@ jobs:
           path: dist/
 
       - uses: pypa/gh-action-pypi-publish@release/v1
-
-  lib-integration-test:
-    name: Integration Tests - py${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-python-rust
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache-prefix: 'integration'
-
-      - name: Install dependencies
-        run: make install-deps-lib
-
-      - name: Run tests
-        timeout-minutes: 10
-        run: make test-lib-integrations

@@ -64,7 +64,7 @@ async def test_build_use_server_invokes_builder(tmp_path: Path):
     )
 
     builder = SimpleNamespace(build_use_server=AsyncMock())
-    session.js_compiler = builder
+    session.js_compiler = builder  # type: ignore[assignment]
 
     await session.build_use_server()
 
@@ -89,14 +89,14 @@ async def test_build_frontend_runs_plugins_and_invalidates(tmp_path: Path):
         async def run_builder_plugins(self, *, limit_paths: list[Path] | None = None):
             called["limit_paths"] = limit_paths
 
-    session.app_compiler = DummyCompiler()
+    session.app_compiler = DummyCompiler()  # type: ignore[assignment]
 
     invalidated: list[Path] = []
 
     def capture_invalidate(path: Path) -> None:
         invalidated.append(path)
 
-    session.mountaineer.invalidate_view = capture_invalidate  # ty: ignore[assignment]
+    session.mountaineer.invalidate_view = capture_invalidate  # type: ignore[method-assign]
 
     changed_files = [tmp_path / "test.tsx", tmp_path / "nested" / "other.tsx"]
     await session.build_frontend(updated_js=changed_files)
@@ -150,7 +150,7 @@ async def test_start_and_stop_server(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
     assert session.mountaineer.live_reload_port == 4321
     assert session.webservice_thread is not None
-    assert session.webservice_thread.started is True
+    assert session.webservice_thread.started is True  # type: ignore[attr-defined]
 
     await session.stop_server()
 

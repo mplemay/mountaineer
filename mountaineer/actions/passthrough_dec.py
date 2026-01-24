@@ -165,9 +165,7 @@ def passthrough(*args, **kwargs):  # type: ignore
                 final_payload: SideeffectResponseBase[Any] = {
                     "passthrough": response,
                 }
-                return format_final_action_response(  # type: ignore[arg-type]  # TypedDict payload not accepted by mypy for dict param
-                    final_payload
-                )
+                return format_final_action_response(final_payload)  # type: ignore[arg-type]
 
             metadata = init_function_metadata(inner, FunctionActionType.PASSTHROUGH)
             metadata.passthrough_model = passthrough_model
