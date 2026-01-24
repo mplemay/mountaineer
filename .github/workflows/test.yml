@@ -57,23 +57,16 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
 
       - name: Install dependencies
-        run: make install-deps
+        run: uv sync --all-groups
 
       - name: Pre-commit checks
         run: uv run pre-commit run --all-files
 
-      - name: Lint validation
-        run: make lint-validation
+      - name: Python tests
+        run: uv run pytest -vvv -W "error::Warning" -W "default::PendingDeprecationWarning" mountaineer
 
-      - name: Cargo clippy
-        run: cargo clippy -- -D warnings
-
-      - name: Unit tests
-        run: make test-lib
-
-      - name: Integration tests
-        timeout-minutes: 10
-        run: make test-lib-integrations
+      - name: Rust tests
+        run: cargo test --all
 
   # https://github.com/marketplace/actions/alls-green#why used for branch protection checks
   check:

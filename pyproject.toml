@@ -27,7 +27,6 @@ exclude = [
     "ci_webapp",
     "media",
     "docs_website",
-    "benchmarking",
 ]
 
 [build-system]
