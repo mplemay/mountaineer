@@ -371,7 +371,7 @@ requires-python = ">=3.11,<3.15"
 
 - [ ] **Testing and validation**
   - [ ] Run `uv run pytest` (unit tests)
-  - [ ] Run `uv run pytest -m integration_tests`
+  - [ ] Run `uv run pytest -m integration`
   - [ ] Run lint and type checks (`uv run ruff check`, `uv run mypy`, `uv run pyright`)
   - [ ] Verify CI matrix green for 3.11-3.14
 

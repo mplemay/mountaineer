@@ -88,7 +88,7 @@ endef
 # Integration testing functions
 define test-common-integrations
 	echo "\n=== Running integration tests for $(2) ==="
-	(cd $(1) && uv run pytest -s -m integration_tests -vvv -W "error::Warning" -W "default::PendingDeprecationWarning" $(2))
+	(cd $(1) && uv run pytest -s -m integration -vvv -W "error::Warning" -W "default::PendingDeprecationWarning" $(2))
 	echo "=== Integration tests completed successfully for $(2) ==="
 endef
 
