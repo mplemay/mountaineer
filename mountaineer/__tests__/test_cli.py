@@ -56,7 +56,10 @@ def test_find_packages_with_prefix():
     }
 
 
-def test_handle_build_uses_dev_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+@pytest.mark.asyncio
+async def test_handle_build_uses_dev_session(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     views_dir = tmp_path / "views"
     views_dir.mkdir()
 
@@ -116,13 +119,12 @@ def test_handle_build_uses_dev_session(tmp_path: Path, monkeypatch: pytest.Monke
         fake_compile_independent_bundles,
     )
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        cli_module.handle_build(webcontroller="package.module:mountaineer", minify=True)
-    finally:
-        loop.close()
-        asyncio.set_event_loop(None)
+    handler = getattr(cli_module.handle_build, "__wrapped__", None)
+    assert handler is not None
+    await handler(
+        webcontroller="package.module:mountaineer",
+        minify=True,
+    )
 
     assert session.build_called is True
     assert session.app_compiler.called is True
