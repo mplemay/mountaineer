@@ -15,18 +15,6 @@ import pytest
 from mountaineer.logging import LOGGER
 
 
-class ExecutionTooLongError(Exception):
-    pass
-
-
-class NotCoroutineFunctionError(Exception):
-    pass
-
-
-class TimingNotCalledError(Exception):
-    pass
-
-
 def benchmark_function(  # noqa: C901, PLR0915
     max_time_seconds: float,
     time_budget_seconds: float = 5,
@@ -58,7 +46,7 @@ def benchmark_function(  # noqa: C901, PLR0915
                 f"Test function {test_func.__name__} is not a coroutine function. "
                 "Please decorate it with pytest.mark.asyncio"
             )
-            raise NotCoroutineFunctionError(msg)
+            raise TypeError(msg)
 
         async def single_time_test(
             fn: Callable[..., Any],
@@ -90,6 +78,21 @@ def benchmark_function(  # noqa: C901, PLR0915
 
             return (start, end, result)
 
+        def validate_timing_result(start: int | None, end: int | None) -> None:
+            """Validate that timing callbacks were called."""
+            if start is None:
+                msg = "Test function did not call start_timing"
+                raise RuntimeError(msg)
+            if end is None:
+                msg = "Test function did not call end_timing"
+                raise RuntimeError(msg)
+
+        def validate_duration(duration: float) -> None:
+            """Validate that execution duration is within limits."""
+            if duration / 1e9 > max_time_seconds:
+                msg = f"Test execution took {duration / 1e9}s, exceeding max of {max_time_seconds}s"
+                raise RuntimeError(msg)
+
         @wraps(test_func)
         async def wrapper(
             *args: Any,  # noqa: ANN401
@@ -113,13 +116,7 @@ def benchmark_function(  # noqa: C901, PLR0915
                         **kwargs,
                     )
 
-                    if start is None:
-                        msg = "Test function did not call start_timing"
-                        raise TimingNotCalledError(msg)
-                    if end is None:
-                        msg = "Test function did not call end_timing"
-                        raise TimingNotCalledError(msg)
-
+                    validate_timing_result(start, end)
                     timed_durations.append((start, end))
                     results.append(result)
 
@@ -130,12 +127,11 @@ def benchmark_function(  # noqa: C901, PLR0915
                 )
                 LOGGER.info(f"Test function took average: {average_duration / 1e9}")
 
-                if average_duration / 1e9 > max_time_seconds:
-                    raise ExecutionTooLongError  # noqa: TRY301
+                validate_duration(average_duration)
 
                 return results[0]
 
-            except ExecutionTooLongError as e:
+            except RuntimeError as e:
                 LOGGER.error(f"Test function failed due to: {e}")
 
                 # This should already be true, but we want to be explicit to help mypy
