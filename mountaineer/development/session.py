@@ -1,6 +1,7 @@
 import importlib
 from pathlib import Path
 from tempfile import mkdtemp
+from types import ModuleType
 from typing import Self
 
 from firehot.environment import Environment
@@ -33,7 +34,7 @@ class DevSession:
         self.app_compiler: ClientCompiler | None = None
         self.reloader = ModuleReloader(package=package)
         self.webservice_thread: UvicornThread | None = None
-        self.module = None
+        self.module: ModuleType | None = None
 
     @classmethod
     def from_webcontroller(
