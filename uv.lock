@@ -369,6 +369,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "python-multipart" },
     { name = "ruff" },
+    { name = "rumdl" },
     { name = "toml" },
     { name = "tqdm" },
     { name = "types-setuptools" },
@@ -403,6 +404,7 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.25.3" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "ruff", specifier = ">=0.10.0" },
+    { name = "rumdl", specifier = ">=0.1.0" },
     { name = "toml", specifier = ">=0.10.2" },
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "types-setuptools", specifier = ">=76.0.0.20250313" },
@@ -854,6 +856,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/2c/aa/9f89c719c467dfaf8ad799b9bae0df494513fb21d31a6059cb5870e57e74/ruff-0.14.14-py3-none-win32.whl", hash = "sha256:b530c191970b143375b6a68e6f743800b2b786bbcf03a7965b06c4bf04568167", size = 10502442, upload-time = "2026-01-22T22:30:38.93Z" },
     { url = "https://files.pythonhosted.org/packages/87/44/90fa543014c45560cae1fffc63ea059fb3575ee6e1cb654562197e5d16fb/ruff-0.14.14-py3-none-win_amd64.whl", hash = "sha256:3dde1435e6b6fe5b66506c1dff67a421d0b7f6488d466f651c07f4cab3bf20fd", size = 11630486, upload-time = "2026-01-22T22:30:10.852Z" },
     { url = "https://files.pythonhosted.org/packages/9e/6a/40fee331a52339926a92e17ae748827270b288a35ef4a15c9c8f2ec54715/ruff-0.14.14-py3-none-win_arm64.whl", hash = "sha256:56e6981a98b13a32236a72a8da421d7839221fa308b223b9283312312e5ac76c", size = 10920448, upload-time = "2026-01-22T22:30:15.417Z" },
+]
+
+[[package]]
+name = "rumdl"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/02/6641457f33adafdc53e5e9f876341d345a35b296291998c819f21907dac4/rumdl-0.1.0.tar.gz", hash = "sha256:5273c18133eedc6899b03203e2195d8e54fc4eec826c241f306431860918cf34", size = 1701155, upload-time = "2026-01-23T20:25:28.351Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/2f/197b23d69375717bd867bcf5b99478895cfc332861b980ce084534832e39/rumdl-0.1.0-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:de58598b8c6e9cb260d988c47c8f04e52de610cb22bdc3ea61bf0eee62112839", size = 3169806, upload-time = "2026-01-23T20:25:21.712Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/4c/baad3b9f0663fa40726e139eb757bf6b6a25a1091e6795cc53f0f1d410b5/rumdl-0.1.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:7595a19e1f202521b1cb06496df5b6739a4b5f343af5ab614ca006453c3f5737", size = 3042746, upload-time = "2026-01-23T20:25:17.403Z" },
+    { url = "https://files.pythonhosted.org/packages/6a/94/ad2af8340d077e9ad3abfd8fa2fef80872db9324d8f2b2fc39d67b59d8ce/rumdl-0.1.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:344cd51f8ab8f0aea54e06057dc9a4dcdbc2cf406da5de745cea4335254f0a6d", size = 3409450, upload-time = "2026-01-23T20:25:19.264Z" },
+    { url = "https://files.pythonhosted.org/packages/31/14/a4c7f9b545918b41a9ff2704e641bc5a563d3ec41843e1d041c2b4cced04/rumdl-0.1.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:34fc849f0f0e10e12847f8a21e2f587121546097e694c3ee63c27f52cba55e8e", size = 3461037, upload-time = "2026-01-23T20:25:25.171Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/99/b5d47585814bf12ccf53ff9ec9643876890dcc0d6304cb3b22e62de83eb7/rumdl-0.1.0-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:2a0c3b80b585da4d511245276624b4fc78e6c61f64a246eee2dfca2a38531f34", size = 3397945, upload-time = "2026-01-23T20:25:20.525Z" },
+    { url = "https://files.pythonhosted.org/packages/fb/5c/e032fe302a27a5ef29ac8cb3189a32c1fd946834a35f2699db8029cf93c5/rumdl-0.1.0-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:566596df1bea8da8bf552c0d3eb81c3c10fe12681a8282ec4a9e1970a2dbe0cc", size = 3444174, upload-time = "2026-01-23T20:25:26.69Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/69/bd4977d4e138d4715b7aa93ad6d6d216874298352fb6e7dfa504bdaab252/rumdl-0.1.0-py3-none-win_amd64.whl", hash = "sha256:ade6002a935ef03fa26ae31d1174c4b033019bb37add18487ee476486b0fc83d", size = 3253871, upload-time = "2026-01-23T20:25:23.227Z" },
 ]
 
 [[package]]

@@ -95,4 +95,5 @@ dev = [
     "types-tqdm>=4.67.0.20250301",
     "maturin>=1.0,<2.0",
     "pre-commit>=4.5.1",
+    "rumdl>=0.1.0",
 ]
