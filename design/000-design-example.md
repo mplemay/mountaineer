@@ -4,9 +4,9 @@
 
 ### High-Level Description
 
-This feature adds a robust configuration validation system to the belgie project. It provides a declarative way to
-define configuration schemas and validate configuration dictionaries against those schemas. The validator will support
-type checking, value constraints, required fields, and custom validation rules.
+This feature adds a robust configuration validation system to the belgie project.
+It provides a declarative way to define configuration schemas and validate configuration dictionaries.
+The validator will support type checking, value constraints, required fields, and custom validation rules.
 
 The problem this solves: Currently, there's no centralized way to validate configuration inputs, leading to potential
 runtime errors when invalid configurations are passed to modules.
@@ -658,8 +658,9 @@ Tests should be organized by module/file and cover unit tests, integration tests
 - Learning curve for team members unfamiliar with Pydantic
 - May be overkill for this specific use case
 
-**Why not chosen**: The goal is to create a lightweight, project-specific validator that demonstrates architectural
-patterns and has no external dependencies. This is an educational exercise in building validation systems.
+**Why not chosen**: The goal is to create a lightweight validator.
+It should demonstrate architectural patterns with no dependencies.
+This is an educational exercise in building validation systems.
 
 ### Approach 2: Class-Based Validators
 
@@ -679,8 +680,9 @@ patterns and has no external dependencies. This is an educational exercise in bu
 - Less functional programming style
 - Slightly more complex API for simple validators
 
-**Why not chosen**: Closures provide a cleaner, more functional API for simple validators. The factory function pattern
-(`range_validator(1, 100)`) is more concise and readable than instantiating classes (`RangeValidator(min=1, max=100)`).
+**Why not chosen**: Closures provide a cleaner, more functional API for simple validators.
+The factory function pattern (`range_validator(1, 100)`) is more concise.
+It is shorter than instantiating classes (`RangeValidator(min=1, max=100)`).
 Since validators are stateless operations, functions are a better fit than classes.
 
 ### Approach 3: Decorator-Based Schema Definition
@@ -701,6 +703,5 @@ Since validators are stateless operations, functions are a better fit than class
 - Harder to reuse schemas across different classes
 - May not work well for validating plain dictionaries
 
-**Why not chosen**: The fluent API approach (`Schema().field(...)`) provides better separation of concerns and is more
-flexible for this use case. We're validating arbitrary configuration dictionaries, not necessarily tied to specific
-classes.
+**Why not chosen**: The fluent API approach (`Schema().field(...)`) provides better separation and is more flexible.
+We're validating arbitrary configuration dictionaries, not necessarily tied to specific classes.

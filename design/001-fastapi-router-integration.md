@@ -4,15 +4,16 @@
 
 ### High-Level Description
 
-Mountaineer currently owns the FastAPI application inside `AppController`, which forces users to reach through
-`controller.app` or maintain a separate `app = controller.app` file for ASGI deployment. This design replaces that
-pattern with a mountable `Mountaineer` ASGI application that can be attached to a user-owned FastAPI app via
-`app.mount(path="/", app=mountaineer, name="website")`. Mountaineer manages its internal FastAPI app, routes, static
-mounts, and OpenAPI customization internally, while the outer FastAPI app remains fully configurable by users.
+Mountaineer owns the FastAPI application inside `AppController`.
+This forces users to use `controller.app` or maintain a separate `app = controller.app` file for ASGI deployment.
+This design replaces that with a mountable `Mountaineer` ASGI application attached to a user-owned FastAPI app.
+It mounts via `app.mount(path="/", app=mountaineer, name="website")`.
+Mountaineer manages its internal FastAPI app, routes, and static mounts, while the outer app remains fully configurable.
 
-The mount prefix is resolved at runtime instead of configuration time. The server injects the active `root_path` into
-HTML responses, and the client-side runtime prefixes all generated action and link URLs using that value. This removes
-any need for a `mount_path` parameter while preserving correct URL generation under subpath mounts.
+The mount prefix is resolved at runtime instead of configuration time.
+The server injects the active `root_path` into HTML responses.
+The client runtime prefixes all generated action and link URLs.
+This removes any need for a `mount_path` parameter while preserving correct URL generation under subpath mounts.
 
 ### Goals
 
@@ -37,10 +38,10 @@ any need for a `mount_path` parameter while preserving correct URL generation un
 
 #### Description
 
-Users create their own `FastAPI` app, configure middleware/lifespan as needed, then mount a `Mountaineer` instance as
-an ASGI sub-application. Mountaineer uses its internal FastAPI app for all routing, exception handling, static mounts,
-and OpenAPI generation. The active mount prefix is injected into HTML responses and used by the client runtime to prefix
-requests and link generation.
+Users create their own `FastAPI` app and configure middleware/lifespan.
+Then they mount a `Mountaineer` instance as a sub-application.
+Mountaineer uses its internal FastAPI app for all routing, exception handling, static mounts, and OpenAPI generation.
+The active mount prefix is injected into HTML responses and used by the client runtime to prefix requests.
 
 #### Usage Example
 
@@ -262,7 +263,8 @@ Tests should be organized by module/file and cover unit tests, integration tests
 
 **Mountaineer sub-app tests:**
 
-- Mount at root: create `FastAPI()` and `Mountaineer(view_root=...)`, register a controller, then `app.mount("/", app=mountaineer)`
+- Mount at root: create `FastAPI()` and `Mountaineer(view_root=...)`, register a controller, then
+  `app.mount("/", app=mountaineer)`
 - Verify the view route is reachable via `TestClient(app)`
 - Verify action routes are reachable via `TestClient(app)`
 - Ensure `Mountaineer.__call__` delegates to the internal app
