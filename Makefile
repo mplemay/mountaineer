@@ -11,9 +11,6 @@ SHELL := /bin/bash
 LIB_DIR := ./
 LIB_NAME := mountaineer
 
-CREATE_MOUNTAINEER_APP_DIR := create_mountaineer_app
-CREATE_MOUNTAINEER_APP_NAME := create_mountaineer_app
-
 DOCS_WEBSITE_DIR := docs_website
 DOCS_WEBSITE_NAME := docs_website
 
@@ -24,29 +21,24 @@ SCRIPTS_NAME := scripts
 .PHONY: lint test
 
 # Main lint target
-lint: lint-lib lint-create-mountaineer-app lint-scripts
+lint: lint-lib lint-scripts
 
 # Lint validation target
-lint-validation: lint-validation-lib lint-validation-create-mountaineer-app lint-validation-scripts
+lint-validation: lint-validation-lib lint-validation-scripts
 
 # Testing target
-test: test-lib test-create-mountaineer-app test-scripts
+test: test-lib test-scripts
 
 # Integration testing target
-test-integrations: test-lib-integrations test-create-mountaineer-app-integrations
+test-integrations: test-lib-integrations
 
 # Install all sub-project dependencies with uv
-install-deps: install-deps-lib install-deps-create-mountaineer-app install-deps-scripts
+install-deps: install-deps-lib install-deps-scripts
 
 install-deps-lib:
 	@echo "Installing dependencies for $(LIB_DIR)..."
 	@(cd $(LIB_DIR) && uv sync)
 	@(cd $(LIB_DIR) && uv run maturin develop --uv)
-
-install-deps-create-mountaineer-app:
-	@echo "Installing dependencies for $(CREATE_MOUNTAINEER_APP_DIR)..."
-	@(cd $(CREATE_MOUNTAINEER_APP_DIR) && uv sync)
-	@(cd $(CREATE_MOUNTAINEER_APP_DIR) && uv pip install -e .)
 
 install-deps-scripts:
 	@echo "Installing dependencies for $(SCRIPTS_DIR)..."
@@ -56,8 +48,6 @@ install-deps-scripts:
 lint-lib:
 	$(call lint-common,$(LIB_DIR),$(LIB_NAME))
 	$(call lint-rust,$(LIB_DIR))
-lint-create-mountaineer-app:
-	$(call lint-common,$(CREATE_MOUNTAINEER_APP_DIR),$(CREATE_MOUNTAINEER_APP_NAME))
 lint-scripts:
 	$(call lint-common,$(SCRIPTS_DIR),$(SCRIPTS_NAME))
 
@@ -65,8 +55,6 @@ lint-scripts:
 lint-validation-lib:
 	$(call lint-validation-common,$(LIB_DIR),$(LIB_NAME))
 	$(call lint-rust,$(LIB_DIR))
-lint-validation-create-mountaineer-app:
-	$(call lint-validation-common,$(CREATE_MOUNTAINEER_APP_DIR),$(CREATE_MOUNTAINEER_APP_NAME))
 lint-validation-scripts:
 	$(call lint-validation-common,$(SCRIPTS_DIR),$(SCRIPTS_NAME))
 
@@ -76,10 +64,6 @@ test-lib:
 	@$(call test-rust-common,$(LIB_DIR),$(LIB_NAME))
 test-lib-integrations:
 	$(call test-common-integrations,$(LIB_DIR),$(LIB_NAME))
-test-create-mountaineer-app:
-	$(call test-common,$(CREATE_MOUNTAINEER_APP_DIR),$(CREATE_MOUNTAINEER_APP_NAME))
-test-create-mountaineer-app-integrations:
-	$(call test-common-integrations,$(CREATE_MOUNTAINEER_APP_DIR),$(CREATE_MOUNTAINEER_APP_NAME))
 test-scripts:
 	$(call test-common,$(SCRIPTS_DIR),$(SCRIPTS_NAME))
 

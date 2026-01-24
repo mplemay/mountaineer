@@ -2,7 +2,7 @@
 
 By convention, Mountaineer applications use **pytest** and **pytest-asyncio** for comprehensive testing. The framework provides patterns for testing controllers, sideeffects, database operations, and frontend integrations with proper isolation and setup. You can use whatever testing framework you want if you're willing to go off road.
 
-When you create a new project with `create-mountaineer-app`, it automatically sets up a complete testing environment with the necessary dependencies and configuration.
+Mountaineer applications should set up a complete testing environment with the necessary dependencies and configuration.
 
 ## Test Structure
 
@@ -30,8 +30,6 @@ The template provides a robust test configuration that handles test setup and de
 
 - **Automatic config setup** with test-time configuration
 - **Test fixtures** for common testing patterns
-
-You can view the complete implementation in the [template conftest.py](https://github.com/piercefreeman/mountaineer/blob/main/create_mountaineer_app/create_mountaineer_app/templates/project/%5Bproject_name%5D/__tests__/conftest.py).
 
 ### Key Fixtures Available
 
@@ -257,4 +255,3 @@ If your application uses a database or external services, make sure those are pr
 For more examples of testing patterns, see:
 
 - [Mountaineer's own test suite](https://github.com/piercefreeman/mountaineer/tree/main/mountaineer/__tests__)
-- [Create-mountaineer-app template tests](https://github.com/piercefreeman/mountaineer/tree/main/create_mountaineer_app/create_mountaineer_app/__tests__)

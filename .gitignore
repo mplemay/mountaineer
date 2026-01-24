@@ -160,22 +160,12 @@ target
 node_modules
 .watchdog.lock
 
-# Testing create-mountaineer-app
-test-project
-
-# Include create-mountaineer-app env files, since these are part of the template
-!*/create_mountaineer_app/templates/project/.env
-
 # We don't commit our automatically managed files - you can in your project, but these
 # change so much we'd like to avoid them in code reviews.
 _server
 _ssr
 _static
 _metadata
-
-# Ignore template files that might be used locally for testing
-# but shouldn't be added to the downstream templates
-**/create_mountaineer_app/templates/poetry.lock
 
 .DS_Store
 
