@@ -57,7 +57,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
 
       - name: Install dependencies
-        run: make install-deps-lib
+        run: make install-deps
 
       - name: Pre-commit checks
         run: uv run pre-commit run --all-files
