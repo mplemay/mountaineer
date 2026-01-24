@@ -424,33 +424,33 @@ Tests should be organized by module/file and cover unit tests, integration tests
 
 ### Tasks
 
-- [ ] **Remove plugin system**
-  - [ ] Delete `mountaineer/plugin.py`
-  - [ ] Remove plugin imports + `_register_plugin()` in `mountaineer/app.py`
-  - [ ] Remove `/static_plugins` mounting and `_scripts_prefix` overrides
-  - [ ] Add explicit TypeError on non-controller registration
+- [x] **Remove plugin system**
+  - [x] Delete `mountaineer/plugin.py`
+  - [x] Remove plugin imports + `_register_plugin()` in `mountaineer/app.py`
+  - [x] Remove `/static_plugins` mounting and `_scripts_prefix` overrides
+  - [x] Add explicit TypeError on non-controller registration
 
-- [ ] **Simplify build root logic**
-  - [ ] Update `ClientCompiler._get_all_root_views()` to return single root
-  - [ ] Remove `_build_enabled` filtering in `APIBuilderBase` and `PostCSSBundler`
-  - [ ] Remove `_build_enabled` mutation in `Mountaineer` (now unused)
+- [x] **Simplify build root logic**
+  - [x] Update `ClientCompiler._get_all_root_views()` to return single root
+  - [x] Remove `_build_enabled` filtering in `APIBuilderBase` and `PostCSSBundler`
+  - [x] Remove `_build_enabled` mutation in `Mountaineer` (now unused)
 
-- [ ] **Replace isolated dev workflow**
-  - [ ] Add `DevSession` (initialize/build/start/stop/reload)
-  - [ ] Add `ModuleReloader` helpers
-  - [ ] Update `handle_runserver`, `handle_watch`, `handle_build` to use `DevSession`
-  - [ ] Remove `IsolatedAppContext` and message broker usage
+- [x] **Replace isolated dev workflow**
+  - [x] Add `DevSession` (initialize/build/start/stop/reload)
+  - [x] Add `ModuleReloader` helpers
+  - [x] Update `handle_runserver`, `handle_watch`, `handle_build` to use `DevSession`
+  - [x] Remove `IsolatedAppContext` and message broker usage
 
-- [ ] **Docs + dependencies**
-  - [ ] Remove `docs/guides/plugins/page.mdx`
-  - [ ] Update `docs/api/development/page.mdx` to remove isolated context
-  - [ ] Update `docs/api/cli/page.mdx` for new reload behavior
+- [x] **Docs + dependencies**
+  - [x] Remove `docs/guides/plugins/page.mdx`
+  - [x] Update `docs/api/development/page.mdx` to remove isolated context
+  - [x] Update `docs/api/cli/page.mdx` for new reload behavior
 
-- [ ] **Tests**
-  - [ ] Add dev session and reload unit tests
-  - [ ] Update CLI/build tests
-  - [ ] Remove `test_message_broker.py` and related fixtures
-  - [ ] Run `uv run pytest`
+- [x] **Tests**
+  - [x] Add dev session and reload unit tests
+  - [x] Update CLI/build tests
+  - [x] Remove `test_message_broker.py` and related fixtures
+  - [x] Run `uv run pytest`
 
 ## Open Questions
 
