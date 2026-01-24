@@ -1,7 +1,7 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from hashlib import sha256
 from json import dumps as json_dumps
-from typing import TYPE_CHECKING, Any, TypeVar, dataclass_transform
+from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, dataclass_transform
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from fastapi import Response
@@ -26,34 +26,34 @@ class FieldClassDefinition(BaseModel):
 
 @dataclass_transform(kw_only_default=True, field_specifiers=(Field,))
 class ReturnModelMetaclass(ModelMetaclass):
-    INTERNAL_RENDER_FIELDS = ["metadata"]
+    INTERNAL_RENDER_FIELDS: ClassVar[list[str]] = ["metadata"]
 
     if not TYPE_CHECKING:  # pragma: no branch
         # Following the lead of the pydantic superclass, we wrap with a non-TYPE_CHECKING
         # block: "otherwise mypy allows arbitrary attribute access""
 
         def __new__(
-            self,
+            cls,
             cls_name: str,
             bases: tuple[type[Any], ...],
             namespace: dict[str, Any],
-            *args,
-            **kwargs: Any,
-        ):
+            *args: Any,  # noqa: ANN401
+            **kwargs: Any,  # noqa: ANN401
+        ) -> type[Any]:
             # Pydantic uses exceptions in the __getattr__ to handle collection of fields
             # in set_model_fields. While we're still initializing the class we have no
             # need for our custom accessor logic - so we temporarily turn it off.
-            self.is_constructing = True
-            obj = super().__new__(self, cls_name, bases, namespace, *args, **kwargs)
-            self.is_constructing = False
+            cls.is_constructing = True
+            obj = super().__new__(cls, cls_name, bases, namespace, *args, **kwargs)
+            cls.is_constructing = False
             return obj
 
-        def __getattr__(self, key: str) -> Any:
+        def __getattr__(self, key: str) -> FieldClassDefinition:  # ty: ignore[override]
             if self.is_constructing:
-                return super().__getattr__(key)
+                return super().__getattr__(key)  # ty: ignore[no-any-return]
 
             try:
-                return super().__getattr__(key)
+                return super().__getattr__(key)  # ty: ignore[no-any-return]
             except AttributeError:
                 # Determine if this field is defined within the spec
                 # If so, return it
@@ -73,7 +73,7 @@ class HashableAttribute(BaseModel):
 
     """
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         model_json = json_dumps(self.model_dump(), sort_keys=True)
         hash_object = sha256(model_json.encode())
         # __hash__ must return an integer
@@ -116,7 +116,7 @@ class ThemeColorMeta(MetaAttribute):
     media: str | None = None
 
     @model_validator(mode="after")
-    def create_attribute(self):
+    def create_attribute(self) -> Self:
         self.name = "theme-color"
         self.content = self.color
         if self.media:
@@ -144,11 +144,14 @@ class ViewportMeta(MetaAttribute):
     user_scalable: bool = False
 
     @model_validator(mode="after")
-    def create_attribute(self):
+    def create_attribute(self) -> Self:
         user_scalable_str = "yes" if self.user_scalable else "no"
 
         self.name = "viewport"
-        self.content = f"width={self.width}, initial-scale={self.initial_scale}, maximum-scale={self.maximum_scale}, user-scalable={user_scalable_str}"
+        self.content = (
+            f"width={self.width}, initial-scale={self.initial_scale}, "
+            f"maximum-scale={self.maximum_scale}, user-scalable={user_scalable_str}"
+        )
         return self
 
 
@@ -175,7 +178,7 @@ class LinkAttribute(HashableAttribute, BaseModel):
     # links will remain as-is without a resolved sha.
     add_static_sha: bool = True
 
-    def set_sha(self, sha: str):
+    def set_sha(self, sha: str) -> None:
         """
         Updates the URL by adding or modifying the 'sha' query parameter. If a sha
         is already provided as part of href, will override the existing sha.
@@ -280,8 +283,8 @@ class Metadata(BaseModel):
         "arbitrary_types_allowed": True,
     }
 
-    def merge(self, parent: "Metadata") -> "Metadata":
-        def merge_item(a: list[T], b: list[T]):
+    def merge(self, parent: Self) -> Self:
+        def merge_item(a: list[T], b: list[T]) -> list[T]:
             # Keeps the original ordering while avoiding duplicates
             for item in b:
                 if item not in a:
@@ -323,14 +326,30 @@ class Metadata(BaseModel):
         if self.title:
             tags.append(f"<title>{self.title}</title>")
 
+        self._add_meta_tags(tags, format_optional_keys)
+        self._add_script_tags(tags, format_optional_keys)
+        self._add_link_tags(tags, format_optional_keys, build_metadata)
+
+        return tags
+
+    def _add_meta_tags(
+        self,
+        tags: list[str],
+        format_fn: Callable[[Mapping[str, str | bool | None]], str],
+    ) -> None:
         for meta_definition in self.metas:
             meta_attributes = {
                 "name": meta_definition.name,
                 "content": meta_definition.content,
                 **meta_definition.optional_attributes,
             }
-            tags.append(f"<meta {format_optional_keys(meta_attributes)} />")
+            tags.append(f"<meta {format_fn(meta_attributes)} />")
 
+    def _add_script_tags(
+        self,
+        tags: list[str],
+        format_fn: Callable[[Mapping[str, str | bool | None]], str],
+    ) -> None:
         for script_definition in self.scripts:
             script_attributes: dict[str, str | bool] = {
                 "src": script_definition.src,
@@ -338,23 +357,20 @@ class Metadata(BaseModel):
                 "defer": script_definition.defer,
                 **script_definition.optional_attributes,
             }
-            tags.append(f"<script {format_optional_keys(script_attributes)}></script>")
+            tags.append(f"<script {format_fn(script_attributes)}></script>")
 
+    def _add_link_tags(
+        self,
+        tags: list[str],
+        format_fn: Callable[[Mapping[str, str | bool | None]], str],
+        build_metadata: BuildMetadata | None,
+    ) -> None:
         for link_definition in self.links:
             if build_metadata and link_definition.add_static_sha:
                 # By convention, static files should be mounted to the application in a /static endpoint. These
                 # may be served outside of mountaineer (via a CDN or similar) but we still expect
                 # these paths to reference the proper paths
-                link_sha: str | None = None
-                for (
-                    static_path,
-                    static_sha,
-                ) in build_metadata.static_artifact_shas.items():
-                    # Allow for alternative endings to support existing query parameters
-                    if link_definition.href.startswith(f"/static/{static_path}"):
-                        link_sha = static_sha
-                if link_sha:
-                    link_definition.set_sha(link_sha)
+                self._set_link_sha(link_definition, build_metadata)
 
             link_attributes = {
                 "rel": link_definition.rel,
@@ -362,9 +378,20 @@ class Metadata(BaseModel):
                 **link_definition.optional_attributes,
             }
 
-            tags.append(f"<link {format_optional_keys(link_attributes)} />")
+            tags.append(f"<link {format_fn(link_attributes)} />")
 
-        return tags
+    def _set_link_sha(
+        self,
+        link_definition: LinkAttribute,
+        build_metadata: BuildMetadata,
+    ) -> None:
+        link_sha: str | None = None
+        for static_path, static_sha in build_metadata.static_artifact_shas.items():
+            # Allow for alternative endings to support existing query parameters
+            if link_definition.href.startswith(f"/static/{static_path}"):
+                link_sha = static_sha
+        if link_sha:
+            link_definition.set_sha(link_sha)
 
 
 class RenderBase(BaseModel, metaclass=ReturnModelMetaclass):
