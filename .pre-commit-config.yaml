@@ -16,6 +16,19 @@ repos:
         args: []
         pass_filenames: false
         additional_dependencies: []
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --force-exclude
+        args: [--fix]
+        language: python
+        types_or: [python, pyi, jupyter]
+        require_serial: true
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: python
+        types_or: [python, pyi, jupyter]
+        require_serial: true
       - id: rumdl-fmt
         name: rumdl fmt
         entry: uv run rumdl fmt
@@ -28,3 +41,27 @@ repos:
         language: python
         types: [markdown]
         require_serial: true
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: python
+        types: [python]
+        require_serial: true
+      - id: pyright
+        name: pyright
+        entry: uv run pyright
+        language: python
+        types: [python]
+        require_serial: true
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt
+        language: system
+        types: [rust]
+        pass_filenames: false
+      - id: cargo-clippy
+        name: cargo clippy
+        entry: cargo clippy -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
