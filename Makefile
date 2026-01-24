@@ -33,16 +33,9 @@ test: test-lib test-scripts
 test-integrations: test-lib-integrations
 
 # Install all sub-project dependencies with uv
-install-deps: install-deps-lib install-deps-scripts
-
-install-deps-lib:
+install-deps:
 	@echo "Installing dependencies for $(LIB_DIR)..."
-	@(cd $(LIB_DIR) && uv sync)
-	@(cd $(LIB_DIR) && uv run maturin develop --uv)
-
-install-deps-scripts:
-	@echo "Installing dependencies for $(SCRIPTS_DIR)..."
-	@(cd $(SCRIPTS_DIR) && uv sync)
+	@(cd $(LIB_DIR) && uv sync --all-groups)
 
 # Standard linting - local development, with fixing enabled
 lint-lib:
