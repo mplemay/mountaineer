@@ -11,7 +11,6 @@ This guide will walk you through creating a Mountaineer project from scratch. We
 Make sure you have the following installed:
 - Python 3.11 or higher
 - Node.js 18 or higher
-- PostgreSQL (optional, for database features)
 - [uv](https://docs.astral.sh/uv/) or [poetry](https://python-poetry.org/) for dependency management
 
 ### Project Setup
@@ -92,17 +91,15 @@ Both of these CLI commands are specified in your project's `cli.py` file.
 
 Below we go through some of the unique aspects of Mountaineer. Let's create a simple Todo list where we can add new items.
 
-<<<<<<< HEAD
-For the purposes of this walkthrough we assume your project is generated with `create-mountaineer-app` and you've skipped MVC stub files. If not, you'll have to delete some of the pre-existing files.
+For the purposes of this walkthrough we assume your project is generated with `create-mountaineer-app` and you've skipped MVC stub files.
+If not, you'll have to delete some of the pre-existing files.
 
 <Note>
-    Mountaineer is database-agnostic. This example uses in-memory state for simplicity, but you can easily integrate any database or ORM you prefer, such as [Iceaxe](https://github.com/piercefreeman/iceaxe), SQLAlchemy, or others.
+    Mountaineer is database-agnostic.
+    This example uses in-memory state for simplicity, but you can easily integrate any database or ORM you prefer, such as [Iceaxe](https://github.com/piercefreeman/iceaxe), SQLAlchemy, or others.
 </Note>
 
 Let's get started by creating the data models for our Todo items. These are simple Pydantic models:
-=======
-Let's get started by creating the data models that will persist app state to the database. These definitions are effectively Pydantic schemas that will be bridged to the database via [Iceaxe](https://github.com/piercefreeman/iceaxe).
->>>>>>> origin/main
 
 ```python title="my_webapp/models/todo.py"
 from pydantic import BaseModel, Field
@@ -120,18 +117,10 @@ Update the index file as well:
 from .todo import TodoItem # noqa: F401
 ```
 
-<<<<<<< HEAD
 Start the development server:
 
 ```bash
-poetry run runserver
-=======
-Make sure you have a Postgres database running. Create the new database tables from these code definitions:
-
-```bash
-uv run createdb
 uv run runserver
->>>>>>> origin/main
 ```
 
 Great! At this point we have a basic server running. We next move to creating a new controller, since this will define which data you can push and pull to your frontend.

@@ -14,7 +14,7 @@ If you've used either of these languages before for development, we think you'll
 Each framework has its own unique features and tradeoffs.
 Mountaineer focuses on developer productivity above all else, with production speed a close second.
 
-- 📝 Typehints up and down the stack: frontend, backend, and database
+- 📝 Typehints up and down the stack: frontend and backend
 - 🎙️ Trivially easy client<->server communication, data binding, and function calling
 - 🌎 Optimized server rendering for better accessibility and SEO
 - 🏹 Static analysis of web pages for strong validation: link validity, data access, etc.
