@@ -11,7 +11,7 @@ from firehot import isolate_imports
 from inflection import underscore
 from rich.traceback import install as rich_traceback_install
 
-from mountaineer import mountaineer as mountaineer_rs  # type: ignore
+from mountaineer import _core as mountaineer_rs
 from mountaineer.console import CONSOLE
 from mountaineer.constants import KNOWN_JS_EXTENSIONS
 from mountaineer.development.packages import (

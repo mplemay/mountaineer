@@ -43,9 +43,6 @@ debug = false
 lto = true
 incremental = false
 
-[package.metadata.maturin]
-name = "mountaineer"
-
 [[bench]]
 path = "src/benches/source_map_benchmark.rs"
 name = "source_map_benchmark"

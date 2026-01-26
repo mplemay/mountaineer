@@ -6,7 +6,7 @@ from time import monotonic_ns
 
 from pydantic import BaseModel
 
-from mountaineer import mountaineer as mountaineer_rs  # type: ignore
+from mountaineer import _core as mountaineer_rs
 from mountaineer.logging import LOGGER
 
 

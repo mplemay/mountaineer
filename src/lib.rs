@@ -66,7 +66,7 @@ impl BuildContextParams {
 }
 
 #[pymodule]
-fn mountaineer(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _core(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Initialize our logger with environment-based configuration
     logging::init_logger();
 

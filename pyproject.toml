@@ -54,7 +54,12 @@ dev = [
 
 [tool.uv]
 # NOTE: https://github.com/PyO3/maturin/issues/2314
-cache-keys = [{file = "pyproject.toml"}, {file = "Cargo.toml"}, {file = "**/*.rs"}]
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.rs" }, { file = "Cargo.toml" }, { file = "Cargo.lock" }]
+
+[tool.maturin]
+module-name = "mountaineer._core"
+python-packages = ["mountaineer"]
+python-source = "src"
 
 [tool.mypy]
 warn_return_any = true

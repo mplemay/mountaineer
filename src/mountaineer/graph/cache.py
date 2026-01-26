@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
-from mountaineer import mountaineer as mountaineer_rs  # type: ignore
+from mountaineer import _core as mountaineer_rs
 from mountaineer.logging import LOGGER
 from mountaineer.paths import ManagedViewPath
 from mountaineer.ssr import find_tsconfig
