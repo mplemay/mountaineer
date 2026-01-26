@@ -1,13 +1,16 @@
+#[cfg(feature = "pyo3-bindings")]
 use pyo3::prelude::*;
+#[cfg(feature = "pyo3-bindings")]
 use pyo3::types::{PyDict, PyList};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use tempfile::TempDir;
 
-use crate::bundle_common::{self, BundleError, BundleMode};
-use crate::code_gen;
+use super::bundle_common::{self, BundleError, BundleMode};
+use super::code_gen;
 
+#[cfg(feature = "pyo3-bindings")]
 #[pyfunction]
 #[pyo3(
     signature = (

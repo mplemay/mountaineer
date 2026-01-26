@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-use crate::errors::AppError;
+use super::errors::AppError;
 
 #[cfg(unix)]
 mod platform {

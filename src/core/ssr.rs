@@ -26,9 +26,9 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-use crate::errors::AppError;
-use crate::logging::StdoutWrapper;
-use crate::timeout;
+use super::errors::AppError;
+use super::logging::StdoutWrapper;
+use super::timeout;
 use log::debug;
 use std::collections::HashMap;
 use std::io::Write;
