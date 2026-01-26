@@ -155,7 +155,7 @@ graph TD
     Sideeffect["(UPDATED)<br/>mountaineer/actions/sideeffect_dec.py"]
     Passthrough["(UPDATED)<br/>mountaineer/actions/passthrough_dec.py"]
     DocsQuickstart["(UPDATED)<br/>docs/guides/quickstart/page.mdx"]
-    FixturePyproject["(UPDATED)<br/>mountaineer/__tests__/fixtures/ci_webapp/pyproject.toml"]
+    ExamplePyproject["(UPDATED)<br/>example/pyproject.toml"]
 
     RootPyproject --> RootLock
     ScriptsPyproject --> ScriptsLock
@@ -165,7 +165,7 @@ graph TD
     Fields --> Passthrough
     Compat --> Fields
     DocsQuickstart --> RootPyproject
-    FixturePyproject --> RootPyproject
+    ExamplePyproject --> RootPyproject
 ```
 
 ## Detailed Design
@@ -191,8 +191,8 @@ graph TD
 │       ├── fields.py
 │       ├── sideeffect_dec.py
 │       └── passthrough_dec.py
-└── mountaineer/__tests__/
-    └── fixtures/ci_webapp/pyproject.toml
+└── example/
+    └── pyproject.toml
 ```
 
 ### API Design
@@ -293,9 +293,9 @@ Update user-facing documentation to reference Python 3.11+.
 requires-python = ">=3.11,<3.15"
 ```
 
-#### `mountaineer/__tests__/fixtures/ci_webapp/pyproject.toml`
+#### `example/pyproject.toml`
 
-Keep fixture metadata aligned with the supported range.
+Keep example metadata aligned with the supported range.
 
 ```toml
 [project]
@@ -336,7 +336,7 @@ requires-python = ">=3.11,<3.15"
 - [ ] **Update version metadata**
   - [ ] Bump root `requires-python` to `>=3.11,<3.15` in `pyproject.toml`
   - [ ] Update `.github/pyproject.toml` to `>=3.11,<3.15`
-  - [ ] Update fixture `mountaineer/__tests__/fixtures/ci_webapp/pyproject.toml`
+  - [ ] Update example `example/pyproject.toml`
   - [ ] Update quickstart docs to reference Python 3.11+
 
 - [ ] **Simplify compatibility shims**

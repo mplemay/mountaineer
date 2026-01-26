@@ -63,10 +63,10 @@ def test_is_path_file_heuristic(path: Path, expected_is_file: Path):
         ),
         (
             Path(
-                "/Users/root/projects/mountaineer/ci_webapp/ci_webapp/views/app/home/_server"
+                "/Users/root/projects/mountaineer/example/example/views/app/home/_server"
             ),
             Path(
-                "/Users/root/projects/mountaineer/ci_webapp/ci_webapp/views/_server/server.tsx"
+                "/Users/root/projects/mountaineer/example/example/views/_server/server.tsx"
             ),
             True,
             "../../../_server/server",

@@ -49,8 +49,8 @@ async def handle_watch(
     creates the frontend files necessary to get server-side typehints. It
     doesn't build the package for production use.
 
-    :param package: Ex. "ci_webapp"
-    :param webcontroller: Ex. "ci_webapp.app:mountaineer"
+    :param package: Ex. "my_webapp"
+    :param webcontroller: Ex. "my_webapp.app:mountaineer"
     :param subscribe_to_mountaineer:
         If True, will subscribe the local build server to changes in
         the `mountaineer` package. This is useful when doing concurrent
@@ -144,9 +144,9 @@ async def handle_runserver(
     Start a local development server. This will hot-reload your browser any time
     your frontend or backend code changes.
 
-    :param package: Ex. "ci_webapp"
-    :param webservice: Ex. "ci_webapp.app:app"
-    :param webcontroller: Ex. "ci_webapp.app:mountaineer"
+    :param package: Ex. "my_webapp"
+    :param webservice: Ex. "my_webapp.app:app"
+    :param webcontroller: Ex. "my_webapp.app:mountaineer"
     :param port: Desired port for the webapp while running locally
     :param subscribe_to_mountaineer: See `handle_watch` for more details.
 
@@ -249,7 +249,7 @@ async def handle_build(
     You'll want to do it before deploying your application into production - but since a full build can take up
     to 10s, `handle_runserver` provides a better workflow for daily development.
 
-    :param webcontroller: Ex. "ci_webapp.app:mountaineer"
+    :param webcontroller: Ex. "my_webapp.app:mountaineer"
     :param minify: Minify the JS bundle, strip debug symbols
 
     """

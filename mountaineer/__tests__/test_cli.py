@@ -14,20 +14,19 @@ import toml
 
 import mountaineer.cli as cli_module
 from mountaineer import ControllerBase, Mountaineer
-from mountaineer.__tests__.fixtures import get_fixture_path
 from mountaineer.cli import find_packages_with_prefix
 
 
 @pytest.fixture
-def tmp_ci_webapp(tmp_path: Path):
-    # Copy the full ci_webapp package so we can make local modifications
+def tmp_example_webapp(tmp_path: Path):
+    # Copy the full example package so we can make local modifications
     # just within this test
-    raw_package = get_fixture_path("ci_webapp")
-    mutable_package = tmp_path / "ci_webapp"
+    raw_package = Path(__file__).parent.parent.parent / "example"
+    mutable_package = tmp_path / "example"
     copytree(raw_package, mutable_package)
 
     pyproject_path = mutable_package / "pyproject.toml"
-    base_package_path = (get_fixture_path("") / "../../../").resolve()
+    base_package_path = Path(__file__).parent.parent.parent.resolve()
 
     with open(pyproject_path, "r") as file:
         content = toml.load(file)
@@ -150,7 +149,7 @@ async def check_server_bound(port: int, timeout=8):
 
 @pytest.mark.integration_tests
 @pytest.mark.asyncio
-async def test_handle_runserver_with_user_modifications(tmp_ci_webapp: Path):
+async def test_handle_runserver_with_user_modifications(tmp_example_webapp: Path):
     # Ensure that there is no existing webapp running
     port = 5006
     url = f"http://localhost:{port}"
@@ -167,22 +166,22 @@ async def test_handle_runserver_with_user_modifications(tmp_ci_webapp: Path):
         if not key.startswith("VIRTUAL_ENV")
     }
 
-    # We need to poetry install the packages at the new path
-    return_code = Popen(["uv", "sync"], cwd=tmp_ci_webapp, env=uv_env).wait()
+    # We need to uv sync the packages at the new path
+    return_code = Popen(["uv", "sync"], cwd=tmp_example_webapp, env=uv_env).wait()
     assert return_code == 0
 
     return_code = Popen(
-        ["npm", "install"], cwd=tmp_ci_webapp / "ci_webapp" / "views", env=uv_env
+        ["npm", "install"], cwd=tmp_example_webapp / "example" / "views", env=uv_env
     ).wait()
     assert return_code == 0
 
     # Start the handle_runserver function in a process
     server_process = Popen(
         ["uv", "run", "runserver", "--port", str(port)],
-        cwd=tmp_ci_webapp,
+        cwd=tmp_example_webapp,
         env=uv_env,
     )
-    test_file_path = tmp_ci_webapp / "ci_webapp" / "controllers" / "home.py"
+    test_file_path = tmp_example_webapp / "example" / "controllers" / "home.py"
 
     try:
         for _ in range(5):

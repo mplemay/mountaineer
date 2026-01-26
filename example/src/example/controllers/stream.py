@@ -1,8 +1,9 @@
 import asyncio
 from typing import AsyncIterator
 
-from mountaineer import ControllerBase, passthrough
 from pydantic import BaseModel
+
+from mountaineer import ControllerBase, passthrough
 
 
 class StreamActionResponse(BaseModel):

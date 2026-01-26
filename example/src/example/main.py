@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from ci_webapp.app import mountaineer
+from example.app import mountaineer
 
 # Expose for ASGI
 app = FastAPI()

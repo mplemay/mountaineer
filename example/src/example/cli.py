@@ -1,4 +1,5 @@
 from click import command, option
+
 from mountaineer.cli import handle_build, handle_runserver, handle_watch
 
 
@@ -7,9 +8,9 @@ from mountaineer.cli import handle_build, handle_runserver, handle_watch
 @option("--port", default=5006)
 def runserver(host: str, port: int):
     handle_runserver(
-        package="ci_webapp",
-        webservice="ci_webapp.main:app",
-        webcontroller="ci_webapp.app:mountaineer",
+        package="example",
+        webservice="example.main:app",
+        webcontroller="example.app:mountaineer",
         host=host,
         port=port,
         subscribe_to_mountaineer=True,
@@ -19,8 +20,8 @@ def runserver(host: str, port: int):
 @command()
 def watch():
     handle_watch(
-        package="ci_webapp",
-        webcontroller="ci_webapp.app:mountaineer",
+        package="example",
+        webcontroller="example.app:mountaineer",
         subscribe_to_mountaineer=True,
     )
 
@@ -28,5 +29,5 @@ def watch():
 @command()
 def build():
     handle_build(
-        webcontroller="ci_webapp.app:mountaineer",
+        webcontroller="example.app:mountaineer",
     )

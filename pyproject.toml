@@ -24,7 +24,6 @@ dependencies = [
 ]
 exclude = [
     "fixtures",
-    "ci_webapp",
     "media",
     "docs_website",
 ]
@@ -50,17 +49,12 @@ warn_unused_configs = true
 check_untyped_defs = true
 plugins = ["pydantic.mypy"]
 
-[[tool.mypy.overrides]]
-module = "ci_webapp.*"
-ignore_missing_imports = true
-
 [tool.pydantic-mypy]
 init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
 
 [tool.pyright]
-exclude = ["**/ci_webapp"]
 
 [tool.ruff.lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.

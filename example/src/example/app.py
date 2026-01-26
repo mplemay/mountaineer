@@ -1,12 +1,11 @@
+from example.config import AppConfig
+from example.controllers.complex import ComplexController
+from example.controllers.detail import DetailController
+from example.controllers.home import HomeController
+from example.controllers.root_layout import RootLayoutController
+from example.controllers.stream import StreamController
 from mountaineer import LinkAttribute, Metadata, Mountaineer
 from mountaineer.client_compiler.postcss import PostCSSBundler
-
-from ci_webapp.config import AppConfig
-from ci_webapp.controllers.complex import ComplexController
-from ci_webapp.controllers.detail import DetailController
-from ci_webapp.controllers.home import HomeController
-from ci_webapp.controllers.root_layout import RootLayoutController
-from ci_webapp.controllers.stream import StreamController
 
 mountaineer = Mountaineer(
     global_metadata=Metadata(
