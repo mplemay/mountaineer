@@ -13,8 +13,8 @@ Since static analysis is a personal choice, we don't yet bundle a type checker w
 `mypy` and `pyright` are the most popular type checkers for Python. They both effectively do the same thing. `mypy` is a bit more mature and has a larger community, but `pyright` is often preferred by IDEs so you help ensure your dev workflow is the same as your CI verification. We typically use both in our projects to be extra safe.
 
 ```bash
-poetry add mypy --group dev
-poetry add pyright --group dev
+uv add mypy --group dev
+uv add pyright --group dev
 ```
 
 Then modify your `pyproject.toml` to make as strict as you would like. Here's a good starting point for mypy:
@@ -37,13 +37,13 @@ typeCheckingMode = "strict"
 Then, to run against your project:
 
 ```bash
-poetry run mypy
-poetry run pyright
+uv run mypy
+uv run pyright
 ```
 
 ## Typescript
 
-Typescript's main goal as a language extension to Javascript is to provide typechecking and static analysis. These features are built into the default compiler `tsc`. As such, most frontend issues in your Mountaineer project are typically caught when we compile your typescript code with `poetry run build` or progressively with `runserver` or `watch`. However there are some cases where you don't want to perform a full build, like in CI where you just want to validate the current state of your project.
+Typescript's main goal as a language extension to Javascript is to provide typechecking and static analysis. These features are built into the default compiler `tsc`. As such, most frontend issues in your Mountaineer project are typically caught when we compile your typescript code with `uv run build` or progressively with `runserver` or `watch`. However there are some cases where you don't want to perform a full build, like in CI where you just want to validate the current state of your project.
 
 ```bash
 npm install typescript --save-dev
