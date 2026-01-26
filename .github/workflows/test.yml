@@ -63,7 +63,7 @@ jobs:
         run: uv run pre-commit run --all-files
 
       - name: Python tests
-        run: uv run pytest -vvv -W "error::Warning" -W "default::PendingDeprecationWarning" mountaineer
+        run: uv run pytest -vvv -W "error::Warning" -W "default::PendingDeprecationWarning"
 
       - name: Rust tests
         run: cargo test --all
