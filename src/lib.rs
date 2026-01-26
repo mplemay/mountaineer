@@ -1,31 +1,33 @@
-use errors::AppError;
+#[cfg(feature = "pyo3-bindings")]
 use log::debug;
+#[cfg(feature = "pyo3-bindings")]
 use pyo3::exceptions::{PyConnectionAbortedError, PyValueError};
+#[cfg(feature = "pyo3-bindings")]
 use pyo3::prelude::*;
+#[cfg(feature = "pyo3-bindings")]
 use pyo3::types::{PyDict, PyString};
 
-mod bundle_common;
-mod bundle_independent;
-mod bundle_prod;
-mod code_gen;
-mod errors;
-mod lexers;
-mod logging;
-mod source_map;
-mod ssr;
-mod timeout;
+mod core;
+
+#[cfg(feature = "pyo3-bindings")]
+use core::errors::AppError;
+#[cfg(feature = "pyo3-bindings")]
+use core::logging;
+#[cfg(feature = "pyo3-bindings")]
+use core::{bundle_independent, bundle_prod, ssr};
 
 #[macro_use]
 extern crate lazy_static;
 
 // Export mainly for use in benchmarks
-pub use lexers::strip_js_comments;
-pub use source_map::{
+pub use core::lexers::strip_js_comments;
+pub use core::source_map::{
     make_source_map_paths_absolute, update_source_map_path, MapMetadata, SourceMapParser,
     VLQDecoder,
 };
-pub use ssr::Ssr;
+pub use core::ssr::Ssr;
 
+#[cfg(feature = "pyo3-bindings")]
 #[derive(Debug, PartialEq, Clone)]
 #[pyclass(get_all, set_all)]
 struct BuildContextParams {
@@ -41,6 +43,7 @@ struct BuildContextParams {
     output_dir: String,
 }
 
+#[cfg(feature = "pyo3-bindings")]
 #[pymethods]
 impl BuildContextParams {
     #[new]
@@ -65,6 +68,7 @@ impl BuildContextParams {
     }
 }
 
+#[cfg(feature = "pyo3-bindings")]
 #[pymodule]
 fn _core(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Initialize our logger with environment-based configuration

@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
 use path_absolutize::*;
+#[cfg(feature = "pyo3-bindings")]
 use pyo3::prelude::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -7,20 +8,18 @@ use std::collections::HashMap;
 use std::path::Path;
 
 #[derive(Debug, PartialEq, Clone)]
-#[pyclass(get_all, set_all)]
+#[cfg_attr(feature = "pyo3-bindings", pyclass(get_all, set_all))]
 pub struct MapMetadata {
-    line_number: i32,
-    column_number: i32,
-    source_index: Option<i32>,
-    source_line: Option<i32>,
-    source_column: Option<i32>,
-    symbol_index: Option<i32>,
+    pub line_number: i32,
+    pub column_number: i32,
+    pub source_index: Option<i32>,
+    pub source_line: Option<i32>,
+    pub source_column: Option<i32>,
+    pub symbol_index: Option<i32>,
 }
 
-#[pymethods]
 impl MapMetadata {
-    #[new]
-    fn new(line_number: i32, column_number: i32) -> Self {
+    pub fn new(line_number: i32, column_number: i32) -> Self {
         Self {
             line_number,
             column_number,
@@ -29,6 +28,15 @@ impl MapMetadata {
             source_column: None,
             symbol_index: None,
         }
+    }
+}
+
+#[cfg(feature = "pyo3-bindings")]
+#[pymethods]
+impl MapMetadata {
+    #[new]
+    fn py_new(line_number: i32, column_number: i32) -> Self {
+        Self::new(line_number, column_number)
     }
 }
 

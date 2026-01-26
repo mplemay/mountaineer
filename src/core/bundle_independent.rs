@@ -1,12 +1,13 @@
 use log::debug;
+#[cfg(feature = "pyo3-bindings")]
 use pyo3::prelude::*;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
-use crate::bundle_common::{bundle_common, BundleError, BundleMode};
-use crate::code_gen;
+use super::bundle_common::{bundle_common, BundleError, BundleMode};
+use super::code_gen;
 
 /// Compile independent bundles using bundle_common.
 ///
@@ -24,6 +25,7 @@ use crate::code_gen;
 ///   - `live_reload_import`: An extra import string (if needed) for live reload.
 ///   - `is_ssr`: Whether the bundle is for server-side (affects entrypoint generation).
 ///   - `tsconfig_path`: Path to tsconfig file for bundling.
+#[cfg(feature = "pyo3-bindings")]
 #[pyfunction]
 #[pyo3(signature = (paths, node_modules_path, environment, live_reload_port, live_reload_import, is_ssr, tsconfig_path=None))]
 #[allow(clippy::too_many_arguments)]
@@ -157,6 +159,7 @@ fn validate_absolute_paths(path_group: &[String]) -> Result<(), String> {
 /// Create an entrypoint file in the given temporary directory that wraps a core
 /// view in its layouts. See `code_gen::build_entrypoint` for the construction logic.
 /// The file is named "entrypoint.jsx".
+#[cfg(feature = "pyo3-bindings")]
 fn create_entrypoint(
     temp_dir: &TempDir,
     path_group: &[String],
