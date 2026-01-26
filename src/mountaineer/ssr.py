@@ -4,7 +4,7 @@ from pathlib import Path
 from re import finditer as re_finditer
 from typing import Any, cast
 
-from mountaineer import mountaineer as mountaineer_rs  # type: ignore
+from mountaineer import _core as mountaineer_rs
 from mountaineer.cache import extended_lru_cache
 from mountaineer.client_compiler.source_maps import SourceMapParser
 from mountaineer.logging import debug_log_artifact

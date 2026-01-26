@@ -3,7 +3,7 @@ from re import sub as re_sub
 
 import pytest
 
-from mountaineer import mountaineer as mountaineer_rs  # type: ignore
+from mountaineer import _core as mountaineer_rs
 from mountaineer.__tests__.fixtures import get_fixture_path
 from mountaineer.client_compiler.source_maps import (
     SourceMapParser,

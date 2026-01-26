@@ -281,7 +281,7 @@ def test_invalidate_view_clears_cache(tmp_path: Path):
     assert isinstance(controller_definition.cache_args, DevCacheConfig)
 
     # Mock the Rust compilation to avoid actual compilation
-    with patch("mountaineer.mountaineer.compile_independent_bundles") as mock_compile:
+    with patch("mountaineer._core.compile_independent_bundles") as mock_compile:
         mock_compile.return_value = (
             ["console.log('test script');"],  # script_payloads
             ["// sourcemap"],  # sourcemap_payloads
@@ -357,7 +357,7 @@ def test_invalidate_view_clears_all_dev_caches(tmp_path: Path):
     controller2_def = app.graph.get_definitions_for_cls(TestController2)[0]
 
     # Mock compilation and create caches
-    with patch("mountaineer.mountaineer.compile_independent_bundles") as mock_compile:
+    with patch("mountaineer._core.compile_independent_bundles") as mock_compile:
         mock_compile.return_value = (
             ["console.log('test script');"],
             ["// sourcemap"],
@@ -417,7 +417,7 @@ def test_invalidate_view_ignores_files_outside_view_root(tmp_path: Path):
     controller_definition = app.graph.get_definitions_for_cls(TestController)[0]
 
     # Mock compilation and create cache
-    with patch("mountaineer.mountaineer.compile_independent_bundles") as mock_compile:
+    with patch("mountaineer._core.compile_independent_bundles") as mock_compile:
         mock_compile.return_value = (
             ["console.log('test script');"],
             ["// sourcemap"],
@@ -469,7 +469,7 @@ def test_root_mount_routes(tmp_path: Path):
         metadata=get_function_metadata(fn=TestController.echo)
     )
 
-    with patch("mountaineer.mountaineer.compile_independent_bundles") as mock_compile:
+    with patch("mountaineer._core.compile_independent_bundles") as mock_compile:
         mock_compile.return_value = (["console.log('test script');"], ["// sourcemap"])
         with patch("mountaineer.app.render_ssr", return_value=""):
             with TestClient(app=host_app) as client:
