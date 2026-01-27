@@ -102,3 +102,8 @@ def test_page_path_validation() -> None:
 
     with raises(ValueError):
         Page(view=Path("views/Post.tsx"), path="/post//details")
+
+
+def test_page_root_path_is_valid() -> None:
+    page = Page(view=Path("views/Home.tsx"), path="/")
+    assert page.path == "/"

@@ -40,11 +40,11 @@ def test_compiled_page_router() -> None:
         ssr_timeout=7,
     )
 
-    router = compiled()
+    router = compiled(path=page.path)
 
     assert len(router.routes) == 1
     route = router.routes[0]
-    assert getattr(route, "path", None) == ""
+    assert getattr(route, "path", None) == "/post/{post_id}"
     assert "GET" in getattr(route, "methods", set())
 
 

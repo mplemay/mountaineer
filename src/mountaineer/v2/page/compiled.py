@@ -14,10 +14,10 @@ class CompiledPage:
     client_js: str
     ssr_timeout: int
 
-    def __call__(self) -> APIRouter:
+    def __call__(self, *, path: str) -> APIRouter:
         router = APIRouter()
         router.add_api_route(
-            path="",
+            path=path,
             endpoint=self.get,
             methods=["GET"],
             response_class=HTMLResponse,

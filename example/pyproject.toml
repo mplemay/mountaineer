@@ -17,8 +17,6 @@ dependencies = [
 
 [project.scripts]
 runserver = "example.cli:runserver"
-watch = "example.cli:watch"
-build = "example.cli:build"
 
 [tool.uv.sources]
 mountaineer = { path = "../", editable = true }

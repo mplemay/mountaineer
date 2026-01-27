@@ -30,8 +30,10 @@ class Page:
     def __post_init__(self) -> None:
         if not self.path.startswith("/"):
             raise ValueError("Page path must start with '/'")
+        if self.path == "/":
+            return  # Root path is valid
         trimmed = self.path[1:]
-        if trimmed == "" or any(segment == "" for segment in trimmed.split("/")):
+        if any(segment == "" for segment in trimmed.split("/")):
             raise ValueError("Page path must not contain empty segments")
 
     def __call__(

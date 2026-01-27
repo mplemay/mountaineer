@@ -26,5 +26,5 @@ class Mountaineer:
             client_js=bundle.client_js,
             ssr_timeout=self._settings.ssr_timeout,
         )
-        self._app.include_router(router=compiled_page(), prefix=page.path)
+        self._app.include_router(router=compiled_page(path=page.path))
         self._registered_paths.add(page.path)
