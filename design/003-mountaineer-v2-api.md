@@ -539,77 +539,77 @@ Mock `mountaineer._core` calls for unit tests.
 
 ### Tasks
 
-- [ ] Implement `Settings` using `pydantic_settings.BaseSettings`
-  - [ ] Define fields: `view_root`, `node_modules_path`, `PRODUCTION`, `live_reload_port`, `public_path`, `ssr_timeout`
-  - [ ] Add `SettingsConfigDict` with `env_prefix="MOUNTAINEER_"` and `env_file=".env"`
-  - [ ] Add minimal validation (positive `ssr_timeout`)
-  - [ ] Provide a helper to derive `environment` string from `PRODUCTION`
-  - [ ] Validate `view_root` and `node_modules_path` are not empty paths
-  - [ ] Document env var names in code comments (e.g., `MOUNTAINEER_VIEW_ROOT`)
-  - [ ] Add unit tests for env precedence and defaults (`test_settings.py`)
+- [x] Implement `Settings` using `pydantic_settings.BaseSettings`
+  - [x] Define fields: `view_root`, `node_modules_path`, `PRODUCTION`, `live_reload_port`, `public_path`, `ssr_timeout`
+  - [x] Add `SettingsConfigDict` with `env_prefix="MOUNTAINEER_"` and `env_file=".env"`
+  - [x] Add minimal validation (positive `ssr_timeout`)
+  - [x] Provide a helper to derive `environment` string from `PRODUCTION`
+  - [x] Validate `view_root` and `node_modules_path` are not empty paths
+  - [x] Document env var names in code comments (e.g., `MOUNTAINEER_VIEW_ROOT`)
+  - [x] Add unit tests for env precedence and defaults (`test_settings.py`)
 
-- [ ] Implement `DataDefinition` and `ActionDefinition`
-  - [ ] `DataDefinition` stores name, handler, ssr flag
-  - [ ] `ActionDefinition` stores name, handler, update mapping
-  - [ ] Ensure update mapping uses data loader names, not callables
-  - [ ] Keep `update` as `tuple[str, ...] | None` for stable serialization
-  - [ ] Add unit tests for basic construction and naming
+- [x] Implement `DataDefinition` and `ActionDefinition`
+  - [x] `DataDefinition` stores name, handler, ssr flag
+  - [x] `ActionDefinition` stores name, handler, update mapping
+  - [x] Ensure update mapping uses data loader names, not callables
+  - [x] Keep `update` as `tuple[str, ...] | None` for stable serialization
+  - [x] Add unit tests for basic construction and naming
 
-- [ ] Implement `Page` registry and decorators
-  - [ ] `Page.data(ssr=...)` decorator registers definition and returns original fn
-  - [ ] Preserve registration order of data loaders
-  - [ ] `Page.action(update=...)` decorator registers action definition
-  - [ ] Resolve update entries to data loader names (error on unknown)
-  - [ ] Prevent duplicate action names
-  - [ ] Preserve function annotations and name on decorated callables
-  - [ ] Validate `path` format (must start with `/`, no empty segments)
-  - [ ] Keep `_data` and `_actions` updated only on successful registration
-  - [ ] Add tests for success/error/ordering (`test_page.py`)
+- [x] Implement `Page` registry and decorators
+  - [x] `Page.data(ssr=...)` decorator registers definition and returns original fn
+  - [x] Preserve registration order of data loaders
+  - [x] `Page.action(update=...)` decorator registers action definition
+  - [x] Resolve update entries to data loader names (error on unknown)
+  - [x] Prevent duplicate action names
+  - [x] Preserve function annotations and name on decorated callables
+  - [x] Validate `path` format (must start with `/`, no empty segments)
+  - [x] Keep `_data` and `_actions` updated only on successful registration
+  - [x] Add tests for success/error/ordering (`test_page.py`)
 
-- [ ] Implement `Bundler` wrapper
-  - [ ] Build `paths` as `[[str(view_path)]]` for Rust core
-  - [ ] Map `PRODUCTION` to `environment` string for Rust core calls
-  - [ ] Resolve relative `view_path` against `settings.view_root`
-  - [ ] Compile server JS with `is_server=True`
-  - [ ] Compile client JS with `is_server=False`
-  - [ ] Thread through `PRODUCTION` and `live_reload_port` from Settings
-  - [ ] Add clear error message when compilation fails
-  - [ ] Return `BundleResult` with both outputs
-  - [ ] Add tests with mocked `compile_independent_bundles` (`test_bundler.py`)
+- [x] Implement `Bundler` wrapper
+  - [x] Build `paths` as `[[str(view_path)]]` for Rust core
+  - [x] Map `PRODUCTION` to `environment` string for Rust core calls
+  - [x] Resolve relative `view_path` against `settings.view_root`
+  - [x] Compile server JS with `is_server=True`
+  - [x] Compile client JS with `is_server=False`
+  - [x] Thread through `PRODUCTION` and `live_reload_port` from Settings
+  - [x] Add clear error message when compilation fails
+  - [x] Return `BundleResult` with both outputs
+  - [x] Add tests with mocked `compile_independent_bundles` (`test_bundler.py`)
 
-- [ ] Implement HTML builder (`build_page_html`)
-  - [ ] Call `_core.render_ssr(server_js, hard_timeout=ssr_timeout)`
-  - [ ] Inject SSR markup into `<div id="root">` container
-  - [ ] Serialize `initial_data` into `window.__DATA__`
-  - [ ] Embed client JS inline as `type="module"` script
-  - [ ] Ensure `<script>` contents are escaped to avoid premature tag close
-  - [ ] Return a complete HTML document with `<head>` and `<body>`
-  - [ ] Add tests validating HTML structure (`test_compiled_page.py`)
+- [x] Implement HTML builder (`build_page_html`)
+  - [x] Call `_core.render_ssr(server_js, hard_timeout=ssr_timeout)`
+  - [x] Inject SSR markup into `<div id="root">` container
+  - [x] Serialize `initial_data` into `window.__DATA__`
+  - [x] Embed client JS inline as `type="module"` script
+  - [x] Ensure `<script>` contents are escaped to avoid premature tag close
+  - [x] Return a complete HTML document with `<head>` and `<body>`
+  - [x] Add tests validating HTML structure (`test_compiled_page.py`)
 
-- [ ] Implement `CompiledPage`
-  - [ ] Store `Page` reference, server/client JS, and `ssr_timeout`
-  - [ ] Create `APIRouter` and register GET "" handler
-  - [ ] GET handler returns `HTMLResponse` with `build_page_html`
-  - [ ] Ensure GET handler is async and does not accept request body
-  - [ ] Add tests verifying router and response details (`test_compiled_page.py`)
+- [x] Implement `CompiledPage`
+  - [x] Store `Page` reference, server/client JS, and `ssr_timeout`
+  - [x] Create `APIRouter` and register GET "" handler
+  - [x] GET handler returns `HTMLResponse` with `build_page_html`
+  - [x] Ensure GET handler is async and does not accept request body
+  - [x] Add tests verifying router and response details (`test_compiled_page.py`)
 
-- [ ] Implement `Mountaineer`
-  - [ ] Instantiate internal FastAPI app
-  - [ ] Initialize `Bundler` with Settings
-  - [ ] `include_page` compiles bundles and mounts router with prefix
-  - [ ] Pass `ssr_timeout` into `Page.__call__`
-  - [ ] Validate `page.path` is unique per mounted app
-  - [ ] Add tests for route registration and ASGI dispatch (`test_mountaineer.py`)
-  - [ ] Provide `__call__` to delegate ASGI
-  - [ ] Add tests for mount behavior (`test_mountaineer.py`)
+- [x] Implement `Mountaineer`
+  - [x] Instantiate internal FastAPI app
+  - [x] Initialize `Bundler` with Settings
+  - [x] `include_page` compiles bundles and mounts router with prefix
+  - [x] Pass `ssr_timeout` into `Page.__call__`
+  - [x] Validate `page.path` is unique per mounted app
+  - [x] Add tests for route registration and ASGI dispatch (`test_mountaineer.py`)
+  - [x] Provide `__call__` to delegate ASGI
+  - [x] Add tests for mount behavior (`test_mountaineer.py`)
 
-- [ ] Add integration tests
-  - [ ] Mount into FastAPI and verify SSR GET
-  - [ ] Verify path parameters and multiple pages
-  - [ ] Validate that `Settings` values do not block routing
-  - [ ] Confirm content type and status codes for GET responses
+- [x] Add integration tests
+  - [x] Mount into FastAPI and verify SSR GET
+  - [x] Verify path parameters and multiple pages
+  - [x] Validate that `Settings` values do not block routing
+  - [x] Confirm content type and status codes for GET responses
 
-- [ ] Run `uv run pytest`
+- [x] Run `uv run pytest`
 
 ## Open Questions
 
