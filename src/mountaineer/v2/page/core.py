@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Awaitable, Callable, Protocol, TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Protocol, TypeVar
 
 from mountaineer.v2.page.action import ActionDefinition
 from mountaineer.v2.page.data import DataDefinition
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+    from pathlib import Path
+
     from mountaineer.v2.page.compiled import CompiledPage
 
 
@@ -29,19 +31,25 @@ class Page:
 
     def __post_init__(self) -> None:
         if not self.path.startswith("/"):
-            raise ValueError("Page path must start with '/'")
+            msg = "Page path must start with '/'"
+            raise ValueError(msg)
         if self.path == "/":
             return  # Root path is valid
         trimmed = self.path[1:]
         if any(segment == "" for segment in trimmed.split("/")):
-            raise ValueError("Page path must not contain empty segments")
+            msg = "Page path must not contain empty segments"
+            raise ValueError(msg)
 
     def __call__(
-        self, *, server_js: str, client_js: str, ssr_timeout: int
+        self,
+        *,
+        server_js: str,
+        client_js: str,
+        ssr_timeout: int,
     ) -> CompiledPage:
-        from mountaineer.v2.page.compiled import CompiledPage
+        from mountaineer.v2.page.compiled import CompiledPage as _CompiledPage  # noqa: PLC0415
 
-        return CompiledPage(
+        return _CompiledPage(
             page=self,
             server_js=server_js,
             client_js=client_js,
@@ -57,30 +65,24 @@ class Page:
         return decorator
 
     def action(
-        self, *, update: tuple[NamedCallable, ...] | None = None
+        self,
+        *,
+        update: tuple[NamedCallable, ...] | None = None,
     ) -> Callable[[F], F]:
         def decorator(handler: F) -> F:
             name = handler.__name__
             if name in self._actions:
-                raise ValueError(f"Action '{name}' is already registered")
+                msg = f"Action '{name}' is already registered"
+                raise ValueError(msg)
 
             update_names: tuple[str, ...] | None = None
             if update is not None:
-                data_lookup = {
-                    definition.handler: definition.name for definition in self._data
-                }
-                missing_handlers = [
-                    handler_item
-                    for handler_item in update
-                    if handler_item not in data_lookup
-                ]
+                data_lookup = {definition.handler: definition.name for definition in self._data}
+                missing_handlers = [handler_item for handler_item in update if handler_item not in data_lookup]
                 if missing_handlers:
-                    missing = ", ".join(
-                        handler_item.__name__ for handler_item in missing_handlers
-                    )
-                    raise ValueError(
-                        f"Unknown data loader(s) referenced in update: {missing}"
-                    )
+                    missing = ", ".join(handler_item.__name__ for handler_item in missing_handlers)
+                    msg = f"Unknown data loader(s) referenced in update: {missing}"
+                    raise ValueError(msg)
                 update_names = tuple(data_lookup[handler_item] for handler_item in update)
 
             self._actions[name] = ActionDefinition(

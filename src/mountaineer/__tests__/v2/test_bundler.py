@@ -1,9 +1,9 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from pytest import raises
+import pytest
 
-from mountaineer.v2.bundler import BundleResult, Bundler
+from mountaineer.v2.bundler import Bundler, BundleResult
 from mountaineer.v2.settings import Settings
 
 
@@ -23,7 +23,7 @@ def test_bundler_compiles_dev_bundle(tmp_path: Path) -> None:
     expected_view_path = (view_root / "page.tsx").resolve()
 
     with patch(
-        "mountaineer.v2.bundler.mountaineer_rs.compile_independent_bundles"
+        "mountaineer.v2.bundler.mountaineer_rs.compile_independent_bundles",
     ) as mock_compile:
         mock_compile.side_effect = [
             (["server_js"], ["server_map"]),
@@ -66,7 +66,7 @@ def test_bundler_production_environment(tmp_path: Path) -> None:
     bundler = Bundler(settings=settings)
 
     with patch(
-        "mountaineer.v2.bundler.mountaineer_rs.compile_independent_bundles"
+        "mountaineer.v2.bundler.mountaineer_rs.compile_independent_bundles",
     ) as mock_compile:
         mock_compile.side_effect = [
             (["server_js"], ["server_map"]),
@@ -88,9 +88,11 @@ def test_bundler_wraps_compile_error(tmp_path: Path) -> None:
     settings = Settings(view_root=view_root, node_modules_path=node_modules)
     bundler = Bundler(settings=settings)
 
-    with patch(
-        "mountaineer.v2.bundler.mountaineer_rs.compile_independent_bundles",
-        side_effect=ValueError("boom"),
+    with (
+        patch(
+            "mountaineer.v2.bundler.mountaineer_rs.compile_independent_bundles",
+            side_effect=ValueError("boom"),
+        ),
+        pytest.raises(RuntimeError, match="Failed to compile view"),
     ):
-        with raises(RuntimeError):
-            bundler.compile(view_path=Path("page.tsx"))
+        bundler.compile(view_path=Path("page.tsx"))

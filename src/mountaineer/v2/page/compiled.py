@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
-from mountaineer.v2.html import build_page_html
 from mountaineer.v2.page.core import Page
+from mountaineer.v2.page_renderer import build_page_html
 
 
 @dataclass(slots=True, kw_only=True)

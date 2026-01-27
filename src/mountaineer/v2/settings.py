@@ -25,14 +25,16 @@ class Settings(BaseSettings):
     @classmethod
     def _validate_required_path(cls, value: object) -> object:
         if isinstance(value, str) and value.strip() == "":
-            raise ValueError("Path values cannot be empty")
+            msg = "Path values cannot be empty"
+            raise ValueError(msg)
         return value
 
     @field_validator("ssr_timeout")
     @classmethod
     def _validate_ssr_timeout(cls, value: int) -> int:
         if value <= 0:
-            raise ValueError("ssr_timeout must be positive")
+            msg = "ssr_timeout must be positive"
+            raise ValueError(msg)
         return value
 
     @property

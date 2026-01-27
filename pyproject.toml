@@ -60,19 +60,65 @@ python-source = "src"
 [tool.ruff]
 target-version = "py311"
 line-length = 120
+ignore = [
+    "D", # pydocstyle (i.e. ignore missing/malformed docstrings)
+]
+src = [
+    "src/mountaineer/v2",
+    "src/mountaineer/__tests__/v2",
+    "example",
+]
+force-exclude = true
 extend-exclude = [
-    "src/mountaineer/*.py",
-    "src/mountaineer/*.pyi",
-    "src/mountaineer/__*",
-    "src/mountaineer/[!_v]*",
-    "example/**",
+    # v1 top-level files
+    "src/mountaineer/__init__.py",
+    "src/mountaineer/_core.pyi",
+    "src/mountaineer/annotation_helpers.py",
+    "src/mountaineer/app.py",
+    "src/mountaineer/cache.py",
+    "src/mountaineer/cli.py",
+    "src/mountaineer/compat.py",
+    "src/mountaineer/config.py",
+    "src/mountaineer/console.py",
+    "src/mountaineer/constants.py",
+    "src/mountaineer/controller.py",
+    "src/mountaineer/controller_layout.py",
+    "src/mountaineer/cropper.py",
+    "src/mountaineer/exceptions.py",
+    "src/mountaineer/generics.py",
+    "src/mountaineer/io.py",
+    "src/mountaineer/logging.py",
+    "src/mountaineer/paths.py",
+    "src/mountaineer/render.py",
+    "src/mountaineer/ssr.py",
+    "src/mountaineer/test_utilities.py",
+    # v1 directories
+    "src/mountaineer/actions/",
+    "src/mountaineer/client_builder/",
+    "src/mountaineer/client_compiler/",
+    "src/mountaineer/dependencies/",
+    "src/mountaineer/development/",
+    "src/mountaineer/graph/",
+    "src/mountaineer/static/",
+    # v1 test files and directories
+    "src/mountaineer/__tests__/__init__.py",
+    "src/mountaineer/__tests__/common.py",
+    "src/mountaineer/__tests__/conftest.py",
+    "src/mountaineer/__tests__/test_*.py",
+    "src/mountaineer/__tests__/actions/",
+    "src/mountaineer/__tests__/client_builder/",
+    "src/mountaineer/__tests__/client_compiler/",
+    "src/mountaineer/__tests__/dependencies/",
+    "src/mountaineer/__tests__/development/",
+    "src/mountaineer/__tests__/fixtures/",
+    "src/mountaineer/__tests__/graph/",
+    "src/mountaineer/__tests__/metadata/",
+    "src/mountaineer/__tests__/page/",
+    "src/mountaineer/__tests__/render/",
 ]
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = [
-    "D", # pydocstyle (i.e. ignore missing/malformed docstrings)
-]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
@@ -85,17 +131,10 @@ ignore = [
     "ANN201",  # missing return type annotation for public function
     "ANN202",  # missing return type annotation for private function
     "ANN204",  # missing return type annotation for special method
-    "ARG001",  # unused function argument
-    "ARG005",  # unused lambda argument
-    "B008",    # function call in argument defaults (required for FastAPI Depends)
     "EM101",   # exception must not use string literal
-    "F841",    # local variable assigned but never used
-    "FAST002", # FastAPI dependency without Annotated
     "INP001",  # implicit namespace package (tests dir may not need __init__.py)
-    "PLC0415", # import should be at top-level
     "PLR0913", # too many arguments in function definition
     "PLR2004", # magic value used in comparison (fine in test cases)
-    "PT012",   # pytest.raises should contain single statement
     "S101",    # use of assert (tests typically use assert directly)
     "S106",    # possible hardcoded password (test secrets are fine)
     "SLF001",  # private member accessed
@@ -127,7 +166,6 @@ exclude = [
     "src/mountaineer/**",
     "!src/mountaineer/v2/**",
     "!src/mountaineer/__tests__/v2/**",
-    "example/**",
 ]
 
 [tool.pytest.ini_options]

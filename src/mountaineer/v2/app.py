@@ -18,7 +18,8 @@ class Mountaineer:
 
     def include_page(self, *, page: Page) -> None:
         if page.path in self._registered_paths:
-            raise ValueError(f"Page path already registered: {page.path}")
+            msg = f"Page path already registered: {page.path}"
+            raise ValueError(msg)
 
         bundle = self._bundler.compile(view_path=page.view)
         compiled_page = page(

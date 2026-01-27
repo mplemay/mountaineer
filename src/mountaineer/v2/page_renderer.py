@@ -23,12 +23,12 @@ def build_page_html(
         "<!DOCTYPE html>"
         "<html>"
         "<head>"
-        "<meta charset=\"utf-8\">"
+        '<meta charset="utf-8">'
         "</head>"
         "<body>"
-        f"<div id=\"root\">{ssr_markup}</div>"
+        f'<div id="root">{ssr_markup}</div>'
         f"<script>{data_script}</script>"
-        f"<script type=\"module\">{client_script}</script>"
+        f'<script type="module">{client_script}</script>'
         "</body>"
         "</html>"
     )

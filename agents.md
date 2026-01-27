@@ -132,6 +132,16 @@
   - Use `urlparse()` and `urlunparse()` for URL composition
   - Example: `urlunparse((parsed.scheme, parsed.netloc, parsed.path, "", urlencode(params), ""))`
   - This ensures proper encoding and avoids common URL injection vulnerabilities
+- Exception raising:
+  - Define the error message before the `raise` statement, not inline
+  - Example:
+
+    ```python
+    msg = f"Invalid value: {value}"
+    raise ValueError(msg)
+    ```
+
+  - **Not**: `raise ValueError(f"Invalid value: {value}")`
 
 ### Style
 

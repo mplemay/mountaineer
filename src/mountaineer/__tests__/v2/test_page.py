@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from pytest import raises
+import pytest
 
 from mountaineer.v2.page.compiled import CompiledPage
 from mountaineer.v2.page.core import Page
@@ -48,7 +48,7 @@ def test_page_action_rejects_unknown_updates() -> None:
     async def missing_loader() -> int:
         return 0
 
-    with raises(ValueError):
+    with pytest.raises(ValueError, match="Unknown data loader"):
         page.action(update=(missing_loader,))(missing_loader)
 
 
@@ -59,7 +59,7 @@ def test_page_action_rejects_duplicate_names() -> None:
     async def do_work() -> None:
         return None
 
-    with raises(ValueError):
+    with pytest.raises(ValueError, match="already registered"):
         page.action()(do_work)
 
 
@@ -94,13 +94,13 @@ def test_page_decorators_preserve_function_identity() -> None:
 
 
 def test_page_path_validation() -> None:
-    with raises(ValueError):
+    with pytest.raises(ValueError, match="must start with"):
         Page(view=Path("views/Post.tsx"), path="post/{post_id}")
 
-    with raises(ValueError):
+    with pytest.raises(ValueError, match="empty segments"):
         Page(view=Path("views/Post.tsx"), path="/post/")
 
-    with raises(ValueError):
+    with pytest.raises(ValueError, match="empty segments"):
         Page(view=Path("views/Post.tsx"), path="/post//details")
 
 

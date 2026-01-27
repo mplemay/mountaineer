@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from fastapi import FastAPI
-
 from mountaineer.v2 import Mountaineer, Page, Settings
 
 settings = Settings(

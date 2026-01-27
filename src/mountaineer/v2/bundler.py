@@ -44,10 +44,9 @@ class Bundler:
                 live_reload_import=live_reload_import,
                 is_server=False,
             )
-        except Exception as exc:  # noqa: BLE001
-            raise RuntimeError(
-                f"Failed to compile view at {resolved_view_path}"
-            ) from exc
+        except Exception as exc:
+            msg = f"Failed to compile view at {resolved_view_path}"
+            raise RuntimeError(msg) from exc
 
         return BundleResult(
             client_js=client_scripts[0],
