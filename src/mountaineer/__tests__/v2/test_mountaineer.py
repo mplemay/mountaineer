@@ -15,7 +15,7 @@ def test_mountaineer_include_page_registers_route() -> None:
     mountaineer = Mountaineer(settings=settings)
     page = Page(view=Path("views/Post.tsx"), path="/post/{post_id}")
 
-    def fake_compile(*, _view_path: Path) -> BundleResult:
+    def fake_compile(*, view_path: Path) -> BundleResult:  # noqa: ARG001
         return BundleResult(client_js="client", server_js="server")
 
     mountaineer._bundler.compile = fake_compile
@@ -31,7 +31,7 @@ def test_mountaineer_rejects_duplicate_paths() -> None:
     mountaineer = Mountaineer(settings=settings)
     page = Page(view=Path("views/Post.tsx"), path="/post/{post_id}")
 
-    def fake_compile(*, _view_path: Path) -> BundleResult:
+    def fake_compile(*, view_path: Path) -> BundleResult:  # noqa: ARG001
         return BundleResult(client_js="client", server_js="server")
 
     mountaineer._bundler.compile = fake_compile
@@ -47,7 +47,7 @@ def test_mountaineer_asgi_dispatch() -> None:
     mountaineer = Mountaineer(settings=settings)
     page = Page(view=Path("views/Post.tsx"), path="/post/{post_id}")
 
-    def fake_compile(*, _view_path: Path) -> BundleResult:
+    def fake_compile(*, view_path: Path) -> BundleResult:  # noqa: ARG001
         return BundleResult(client_js="client", server_js="server")
 
     mountaineer._bundler.compile = fake_compile
