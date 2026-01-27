@@ -286,8 +286,9 @@ const handleStreamOutputFormat = async (
 };
 
 type ApiFunctionReturnType<S, P> = {
-  sideeffect: S;
+  sideeffect?: S;
   passthrough?: P;
+  reload?: string[];
 };
 
 export function applySideEffect<
@@ -305,7 +306,27 @@ export function applySideEffect<
    */
   return async (...args: ARG) => {
     const result = await apiFunction(...args);
-    setControllerState(result.sideeffect);
+    if (result.sideeffect) {
+      setControllerState(result.sideeffect);
+      return result;
+    }
+
+    if (result.reload) {
+      const reloadUrl = (apiFunction as any).__mountaineer_reload_url;
+      if (!reloadUrl) {
+        throw new Error("Missing reload URL for action");
+      }
+
+      const reloadPayload = await __request({
+        method: "POST",
+        url: reloadUrl,
+        body: {
+          loaders: result.reload,
+        },
+        mediaType: "application/json",
+      });
+      setControllerState(reloadPayload);
+    }
     return result;
   };
 }

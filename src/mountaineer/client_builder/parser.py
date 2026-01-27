@@ -74,6 +74,7 @@ class ModelWrapper(CoreWrapper):
     superclasses: list["ModelWrapper"]
     value_models: list[FieldWrapper]
     body_type: str = "application/json"
+    root_type: Any | None = None
 
 
 @dataclass
@@ -359,6 +360,36 @@ class ControllerParser:
         # Return cached if already parsed
         if model in self.parsed_models:
             return self.parsed_models[model]
+
+        root_type_hint = getattr(model, "__mountaineer_root_type__", None)
+        if root_type_hint is not None:
+            root_definition = self.type_parser.parse_type(root_type_hint)
+
+            def update_children(type_definition: TypeDefinition | type):
+                if isinstance(type_definition, TypeDefinition):
+                    type_definition.update_children(
+                        [update_children(child) for child in type_definition.children]
+                    )
+                    return type_definition
+                if isclass(type_definition) and issubclass(type_definition, BaseModel):
+                    return self._parse_model(type_definition)
+                if isclass(type_definition) and issubclass(type_definition, Enum):
+                    return self._parse_enum(type_definition)
+                return type_definition
+
+            root_definition = update_children(root_definition)
+
+            wrapper = ModelWrapper(
+                name=WrapperName(model.__name__),
+                module_name=model.__module__,
+                model=model,
+                isolated_model=model,
+                superclasses=[],
+                value_models=[],
+                root_type=root_definition,
+            )
+            self.parsed_models[model] = wrapper
+            return wrapper
 
         # Get all valid superclasses in MRO order, excluding BaseModel and above
         model_classes = self._get_valid_parent_classes(

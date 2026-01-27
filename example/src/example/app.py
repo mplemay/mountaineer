@@ -1,9 +1,9 @@
 from example.config import AppConfig
-from example.controllers.complex import ComplexController
-from example.controllers.detail import DetailController
-from example.controllers.home import HomeController
-from example.controllers.root_layout import RootLayoutController
-from example.controllers.stream import StreamController
+from example.controllers.complex import page as complex_page
+from example.controllers.detail import page as detail_page
+from example.controllers.home import page as home_page
+from example.controllers.root_layout import page as root_layout_page
+from example.controllers.stream import page as stream_page
 from mountaineer import LinkAttribute, Metadata, Mountaineer
 from mountaineer.client_compiler.postcss import PostCSSBundler
 
@@ -16,8 +16,8 @@ mountaineer = Mountaineer(
     ],
     config=AppConfig(),
 )
-mountaineer.register(HomeController())
-mountaineer.register(DetailController())
-mountaineer.register(ComplexController())
-mountaineer.register(StreamController())
-mountaineer.register(RootLayoutController())
+mountaineer.include_page(root_layout_page)
+mountaineer.include_page(home_page)
+mountaineer.include_page(detail_page)
+mountaineer.include_page(complex_page)
+mountaineer.include_page(stream_page)

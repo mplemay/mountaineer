@@ -42,6 +42,11 @@ const Home = () => {
 export default Home;
 ```
 
+<Note>
+    The recommended API is now `Page` with loader functions via `@page.data` and actions via `@page.action`.
+    The `ControllerBase` examples below are legacy and will be updated.
+</Note>
+
 ## Controllers
 
 A controller backs a view in a 1:1 relationship. It provides the backend plumbing to render the view, and can also provide sideeffects and passthroughs actions. The main entrypoint into this is the `render` function, which is called on your initial view to serialize all the data that your frontend will need when displaying the initial state of the page. All your data heavy lifting (database queries, manipulation, etc) should go here.

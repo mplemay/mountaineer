@@ -17,9 +17,19 @@ class ModelInterface(InterfaceBase):
     body: str
     include_superclasses: list[str]
     include_export: bool = True
+    is_type_alias: bool = False
 
     @classmethod
     def from_model(cls, value: ModelWrapper):
+        if value.root_type is not None:
+            root_type = cls._get_annotated_value(value.root_type)
+            return cls(
+                name=value.name.global_name,
+                body=root_type,
+                include_superclasses=[],
+                is_type_alias=True,
+            )
+
         fields: dict[str, Any] = {}
         for field in value.value_models:
             field_name = f"{field.name}{'?' if not field.required else ''}"
@@ -33,6 +43,12 @@ class ModelInterface(InterfaceBase):
         )
 
     def to_js(self) -> str:
+        if self.is_type_alias:
+            schema_def = f"type {self.name} = {self.body};"
+            if self.include_export:
+                schema_def = f"export {schema_def}"
+            return schema_def
+
         schema_def = f"interface {self.name}"
 
         if self.include_superclasses:

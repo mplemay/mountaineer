@@ -8,10 +8,10 @@ from re import match as re_match
 from time import monotonic_ns
 from typing import Any, Callable, Type, overload
 
-from fastapi import APIRouter, FastAPI, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError as RequestValidationErrorRaw
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from inflection import underscore
@@ -32,6 +32,7 @@ from mountaineer.config import ConfigBase
 from mountaineer.constants import DEFAULT_STATIC_DIR
 from mountaineer.controller import ControllerBase
 from mountaineer.controller_layout import LayoutControllerBase
+from mountaineer.dependencies import get_function_dependencies
 from mountaineer.exceptions import (
     APIException,
     RequestValidationError,
@@ -45,8 +46,18 @@ from mountaineer.graph.cache import (
     ProdCacheConfig,
 )
 from mountaineer.logging import LOGGER, debug_log_artifact
+from mountaineer.page import Page
 from mountaineer.paths import ManagedViewPath, resolve_package_path
-from mountaineer.render import Metadata, RenderBase, RenderNull
+from mountaineer.render import (
+    LinkAttribute,
+    Metadata,
+    RenderBase,
+    RenderNull,
+    ScriptAttribute,
+    ThemeColorMeta,
+    ViewportMeta,
+)
+from mountaineer.render_resolver import RenderResolver
 from mountaineer.ssr import render_ssr
 
 
@@ -246,6 +257,13 @@ class Mountaineer:
         if not isinstance(controller, ControllerBase):
             raise TypeError(f"Unknown controller type: {type(controller)}")
 
+        self._register_controller(controller)
+
+    def include_page(self, page: Page) -> None:
+        if not isinstance(page, Page):
+            raise TypeError(f"Unknown page type: {type(page)}")
+
+        controller = page.build()
         self._register_controller(controller)
 
     def _register_controller(self, controller: ControllerBase):
@@ -456,6 +474,16 @@ class Mountaineer:
             prefix=controller_url_prefix,
         )
 
+        reload_path = f"/internal/reload/{underscore(controller.__class__.__name__)}"
+
+        async def reload_handler(request: Request):
+            return await self._handle_reload(
+                request=request,
+                controller_definition=controller_definition,
+            )
+
+        self.app.post(reload_path)(reload_handler)
+
         LOGGER.debug(f"Did register controller: {controller}")
 
         controller_definition.route = ControllerRoute(
@@ -466,6 +494,172 @@ class Mountaineer:
         )
 
         return controller_definition
+
+    def _merge_metadata_chain(
+        self,
+        *,
+        metadata_chain: list[Metadata],
+        include_global: bool,
+    ) -> Metadata | None:
+        merged = Metadata()
+
+        def merge_items(
+            items: list[Any],
+            new_items: list[Any],
+            key_fn: Callable[[Any], tuple],
+        ):
+            seen: dict[tuple, Any] = {key_fn(item): item for item in items}
+            for item in new_items:
+                key = key_fn(item)
+                if key in seen:
+                    items.remove(seen[key])
+                items.append(item)
+                seen[key] = item
+            return items
+
+        def meta_key(meta: Any) -> tuple:
+            if isinstance(meta, ViewportMeta):
+                return ("viewport",)
+            if isinstance(meta, ThemeColorMeta):
+                return ("theme-color", meta.media or "")
+            name = getattr(meta, "name", None)
+            if name:
+                return ("name", name)
+            optional_attrs = getattr(meta, "optional_attributes", {}) or {}
+            if "property" in optional_attrs:
+                return ("property", optional_attrs["property"])
+            return ("meta", hash(meta))
+
+        def link_key(link: LinkAttribute) -> tuple:
+            return ("link", link.rel, link.href)
+
+        def script_key(script: ScriptAttribute) -> tuple:
+            return ("script", script.src)
+
+        layers: list[Metadata] = []
+        if include_global and self.global_metadata:
+            layers.append(self.global_metadata)
+        layers.extend(metadata_chain)
+
+        if not layers:
+            return None
+
+        for layer in layers:
+            if layer.title is not None:
+                merged.title = layer.title
+
+            if layer.explicit_response is not None:
+                merged.explicit_response = layer.explicit_response
+
+            merged.metas = merge_items(merged.metas, layer.metas, meta_key)
+            merged.links = merge_items(merged.links, layer.links, link_key)
+            merged.scripts = merge_items(merged.scripts, layer.scripts, script_key)
+
+        return merged
+
+    async def _handle_reload(
+        self,
+        *,
+        request: Request,
+        controller_definition: ControllerDefinition,
+    ):
+        controller = controller_definition.controller
+
+        payload: dict[str, Any] = {}
+        try:
+            raw_payload = await request.json()
+            if isinstance(raw_payload, dict):
+                payload = raw_payload
+        except Exception:
+            payload = {}
+
+        if not payload:
+            body_values = await RenderResolver._read_body_values(request)
+            if isinstance(body_values, dict):
+                payload = body_values
+
+        loaders: list[str]
+        raw_loaders = payload.get("loaders", [])
+        if raw_loaders is None:
+            raw_loaders = []
+        if isinstance(raw_loaders, str):
+            loaders = [raw_loaders]
+        elif isinstance(raw_loaders, list):
+            loaders = raw_loaders
+        else:
+            raise HTTPException(status_code=400, detail="Invalid loaders payload")
+
+        if hasattr(controller, "_page_data_defs"):
+            data_defs = controller._page_data_defs  # type: ignore[attr-defined]
+            loader_names = [data_def.name for data_def in data_defs]
+            ssr_loader_names = [data_def.name for data_def in data_defs if data_def.ssr]
+
+            if loaders:
+                unknown = [name for name in loaders if name not in loader_names]
+                if unknown:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Unknown loaders: {', '.join(unknown)}",
+                    )
+                target_loaders = loaders
+            else:
+                target_loaders = ssr_loader_names
+
+            result = await RenderResolver.resolve(
+                controller=controller,
+                request=request,
+                loaders=target_loaders,
+                metadata_loader=None,
+            )
+
+            if isinstance(result, dict):
+                return JSONResponse(content=result)
+            if isinstance(result, RenderBase):
+                return JSONResponse(
+                    content=result.model_dump(mode="json", exclude={"metadata"})
+                )
+            return result
+
+        view_request = RenderResolver._get_page_request(controller, request)
+        if not view_request:
+            raise HTTPException(status_code=400, detail="Reload request missing context")
+
+        async with get_function_dependencies(
+            callable=controller.render,
+            url=(
+                controller.url
+                if not isinstance(controller, LayoutControllerBase)
+                else None
+            ),
+            request=view_request,
+        ) as values:
+            server_data = controller.render(**values)
+            if isawaitable(server_data):
+                server_data = await server_data
+
+        if server_data is None:
+            return JSONResponse(content={})
+
+        if isinstance(server_data, Response):
+            return server_data
+
+        if not isinstance(server_data, RenderBase):
+            raise HTTPException(
+                status_code=500,
+                detail="Reload render did not return a RenderBase",
+            )
+
+        payload_data = server_data.model_dump(mode="json")
+        if loaders:
+            unknown = [name for name in loaders if name not in payload_data]
+            if unknown:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unknown loaders: {', '.join(unknown)}",
+                )
+            payload_data = {name: payload_data[name] for name in loaders}
+
+        return JSONResponse(content=payload_data)
 
     async def _generate_controller_html(
         self,
@@ -494,9 +688,15 @@ class Mountaineer:
             render_values = self._get_value_mask_for_signature(
                 signature(node.controller.render), kwargs
             )
-            server_data = node.controller.render(**render_values)
-            if isawaitable(server_data):
-                server_data = await server_data
+            request_value = render_values.get("request")
+            if request_value is None and isinstance(request, Request):
+                request_value = request
+            server_data = await RenderResolver.resolve(
+                controller=node.controller,
+                request=request_value,
+                values=render_values,
+                metadata_loader=getattr(node.controller, "_page_metadata_loader", None),
+            )
             if server_data is None:
                 server_data = RenderNull()
             render_overhead_by_controller[node.controller.__class__.__name__] = (
@@ -512,6 +712,27 @@ class Mountaineer:
             return controller_output
         if controller_output.metadata and controller_output.metadata.explicit_response:
             return controller_output.metadata.explicit_response
+
+        metadata_chain: list[Metadata] = []
+        for node in direct_hierarchy:
+            node_output = render_output.get(node.controller.__class__.__name__)
+            if isinstance(node_output, RenderBase) and node_output.metadata:
+                metadata_chain.append(node_output.metadata)
+
+        ignore_global = any(
+            metadata.ignore_global_metadata for metadata in metadata_chain if metadata
+        )
+        merged_metadata = self._merge_metadata_chain(
+            metadata_chain=metadata_chain,
+            include_global=not ignore_global,
+        )
+        if merged_metadata:
+            if merged_metadata.explicit_response:
+                return merged_metadata.explicit_response
+            controller_output = controller_output.model_copy(
+                update={"metadata": merged_metadata}
+            )
+            render_output[controller.__class__.__name__] = controller_output
 
         LOGGER.debug(
             f"Controller {controller.__class__.__name__} data acquired in {(monotonic_ns() - start) / 1e9}"
@@ -617,22 +838,12 @@ class Mountaineer:
         values hydrated into the page.
 
         """
-        header_str: str
-        if page_metadata.metadata:
-            metadata = page_metadata.metadata
-            if not metadata.ignore_global_metadata and self.global_metadata:
-                metadata = metadata.merge(self.global_metadata)
-            header_str = "\n".join(
-                metadata.build_header(build_metadata=self.get_build_metadata())
-            )
-        else:
-            if self.global_metadata:
-                metadata = self.global_metadata
-                header_str = "\n".join(
-                    metadata.build_header(build_metadata=self.get_build_metadata())
-                )
-            else:
-                header_str = ""
+        metadata = page_metadata.metadata or self.global_metadata
+        header_str = (
+            "\n".join(metadata.build_header(build_metadata=self.get_build_metadata()))
+            if metadata
+            else ""
+        )
 
         # Client-side react scripts that will hydrate the server side contents on load
         server_data_json = {

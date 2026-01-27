@@ -8,8 +8,10 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError as RequestValidationErrorRaw
 from fastapi.responses import RedirectResponse
 from fastapi.testclient import TestClient
+from inflection import underscore
 from pydantic import BaseModel, ValidationError
 
+from mountaineer import Page
 from mountaineer.actions.fields import get_function_metadata
 from mountaineer.actions.passthrough_dec import passthrough
 from mountaineer.app import Mountaineer
@@ -551,3 +553,62 @@ def test_root_path_injected_into_html(tmp_path: Path):
             response = client.get("/sub/test")
             assert response.status_code == status.HTTP_200_OK
             assert 'window.__MOUNTAINEER_ROOT_PATH = "/sub"' in response.text
+
+
+def test_page_reload_endpoint():
+    class ExampleParams(BaseModel):
+        item_id: int
+
+    page = Page(view=Path("page.tsx"), path="/items/{item_id}", params=ExampleParams)
+
+    state = {"count": 0}
+    metadata_calls: list[int] = []
+
+    @page.data(name="count")
+    def get_count() -> int:
+        return state["count"]
+
+    @page.data(name="item_id")
+    def get_item_id(params: ExampleParams) -> int:
+        return params.item_id
+
+    @page.metadata
+    def get_metadata(params: ExampleParams) -> Metadata:
+        metadata_calls.append(params.item_id)
+        return Metadata(title=f"Item {params.item_id}")
+
+    @page.action(update=(get_count,))
+    def increment() -> None:
+        state["count"] += 1
+
+    mountaineer = Mountaineer(view_root=Path())
+    mountaineer.include_page(page)
+
+    controller_definition = mountaineer.graph.controllers[0]
+    controller = controller_definition.controller
+
+    action_url = controller_definition.get_url_for_metadata(
+        get_function_metadata(controller.increment)
+    )
+    reload_url = f"/internal/reload/{underscore(controller.__class__.__name__)}"
+
+    client = TestClient(mountaineer.app)
+    action_response = client.post(action_url)
+    assert action_response.status_code == status.HTTP_200_OK
+    assert action_response.json() == {"passthrough": None, "reload": ["count"]}
+
+    reload_response = client.post(
+        reload_url,
+        json={"loaders": ["count"]},
+        headers={"referer": "http://example.com/items/5"},
+    )
+    assert reload_response.status_code == status.HTTP_200_OK, f"Got {reload_response.status_code}: {reload_response.text}"
+    assert reload_response.json() == {"count": 1}
+    assert metadata_calls == []
+
+    invalid_response = client.post(
+        reload_url,
+        json={"loaders": ["missing"]},
+        headers={"referer": "http://example.com/items/5"},
+    )
+    assert invalid_response.status_code == status.HTTP_400_BAD_REQUEST

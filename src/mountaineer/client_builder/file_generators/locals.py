@@ -221,16 +221,30 @@ class LocalActionGenerator(LocalGeneratorBase):
         """
         # Convert each action. We also include the superclass methods, since they're
         # actually bound to the controller instance with separate urls.
-        all_actions = [
-            ActionInterface.from_action(
+        action_defs: list[str] = []
+        for action in controller.all_actions:
+            action_url = action.controller_to_url[controller.controller]
+            typescript_action = ActionInterface.from_action(
                 action,
-                action.controller_to_url[controller.controller],
+                action_url,
                 controller.controller,
             )
-            for action in controller.all_actions
-        ]
+            action_defs.append(typescript_action.to_js())
 
-        return [typescript_action.to_js() for typescript_action in all_actions]
+            controller_name = (
+                action_url.split("/internal/api/")[-1].split("/")[0]
+                if "/internal/api/" in action_url
+                else action_url.strip("/").split("/")[1]
+                if len(action_url.strip("/").split("/")) > 1
+                else ""
+            )
+            if controller_name:
+                reload_url = f"/internal/reload/{controller_name}"
+                action_defs.append(
+                    f"{action.name}.__mountaineer_reload_url = '{reload_url}';"
+                )
+
+        return action_defs
 
     def _get_dependent_imports(self, parsed_controller: ControllerWrapper):
         deps = set()

@@ -4,6 +4,11 @@ Conventionally, server mutations that affect a page state are a bit of a hassle.
 You need to keep track of modified attributes, issue an API call, then reload or merge them into the current page.
 All of this to mostly just update the state that the original page was initialized with in the first place.
 
+<Note>
+    The recommended API is now `Page` with `@page.action(update=...)`, which returns a reload instruction.
+    The `@sideeffect` and `@passthrough` decorators are deprecated shims and will be removed in a future release.
+</Note>
+
 Actions are a way to simplify this process.
 They allow you to define server-side mutations that can be called from the client as if they're regular Javascript functions.
 Their request and response payloads are typehinted so you can statically verify their behavior.

@@ -186,13 +186,14 @@ class TestLocalActionGenerator:
 
     def test_generate_controller_actions(self, generator: LocalActionGenerator) -> None:
         actions = list(generator._generate_controller_actions(generator.controller))
-        assert len(actions) == 4  # base_action, get_data, update_data, upload_file
+        assert len(actions) == 8  # actions + reload url assignments
         action_names: set[str] = {
             action
             for action in " ".join(actions).split()
             if action in ["base_action", "get_data", "update_data", "upload_file"]
         }
         assert len(action_names) == 4
+        assert sum("__mountaineer_reload_url" in action for action in actions) == 4
 
     def test_get_dependent_imports(self, generator: LocalActionGenerator) -> None:
         deps = generator._get_dependent_imports(generator.controller)

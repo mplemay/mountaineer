@@ -312,18 +312,15 @@ class TestControllerParser:
         assert a_response
         assert b_response
 
-        response_a_sideeffect = next(
-            field for field in a_response.value_models if field.name == "sideeffect"
+        response_a_reload = next(
+            field for field in a_response.value_models if field.name == "reload"
         )
-        response_b_sideeffect = next(
-            field for field in b_response.value_models if field.name == "sideeffect"
+        response_b_reload = next(
+            field for field in b_response.value_models if field.name == "reload"
         )
 
-        assert isinstance(response_a_sideeffect.value, ModelWrapper)
-        assert isinstance(response_b_sideeffect.value, ModelWrapper)
-
-        assert response_a_sideeffect.value.model == ResponseA
-        assert response_b_sideeffect.value.model == ResponseB
+        assert isinstance(response_a_reload.value, ListOf)
+        assert isinstance(response_b_reload.value, ListOf)
 
 
 class TestInheritanceHandling:

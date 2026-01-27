@@ -48,7 +48,7 @@ def basic_compare_model_fields(
 
 
 @pytest.mark.parametrize(
-    "metadata, render_model, expected_model_name, expected_sideeffect_fields, expected_passthrough_fields",
+    "metadata, render_model, expected_model_name, expected_sideeffect_fields, expected_passthrough_fields, expect_reload",
     [
         # Case 1: Basic passthrough only
         (
@@ -64,8 +64,22 @@ def basic_compare_model_fields(
                 "passthrough_value_a": FieldInfo.from_annotation(annotation=str),
                 "passthrough_value_b": FieldInfo.from_annotation(annotation=int),
             },
+            False,
         ),
-        # Case 2: Full sideeffect model (no reload states)
+        # Case 2: Reload action (no sideeffect payload)
+        (
+            FunctionMetadata(
+                action_type=FunctionActionType.SIDEEFFECT,
+                function_name="example_function",
+                reload_action=True,
+            ),
+            ExampleRenderModel,
+            "ExampleFunctionResponseWrapped",
+            None,
+            None,
+            True,
+        ),
+        # Case 3: Legacy sideeffect model (no reload action)
         (
             FunctionMetadata(
                 action_type=FunctionActionType.SIDEEFFECT,
@@ -79,8 +93,9 @@ def basic_compare_model_fields(
                 "metadata": FieldInfo(annotation=Metadata | None, default=None),  # type: ignore
             },
             None,
+            False,
         ),
-        # Case 3: Sideeffect with reload states
+        # Case 4: Legacy sideeffect with reload states
         (
             FunctionMetadata(
                 action_type=FunctionActionType.SIDEEFFECT,
@@ -93,24 +108,24 @@ def basic_compare_model_fields(
                 "render_value_a": FieldInfo.from_annotation(annotation=str),
             },
             None,
+            False,
         ),
-        # Case 4: Combined passthrough and sideeffect
+        # Case 5: Reload action with passthrough
         (
             FunctionMetadata(
                 action_type=FunctionActionType.SIDEEFFECT,
                 function_name="example_function",
                 passthrough_model=ExamplePassthroughModel,
-                reload_states=tuple([ExampleRenderModel.render_value_a]),  # type: ignore
+                reload_action=True,
             ),
             ExampleRenderModel,
             "ExampleFunctionResponseWrapped",
-            {
-                "render_value_a": FieldInfo.from_annotation(annotation=str),
-            },
+            None,
             {
                 "passthrough_value_a": FieldInfo.from_annotation(annotation=str),
                 "passthrough_value_b": FieldInfo.from_annotation(annotation=int),
             },
+            True,
         ),
     ],
 )
@@ -120,6 +135,7 @@ def test_fuse_metadata_to_response_typehint(
     expected_model_name: str,
     expected_sideeffect_fields: dict[str, FieldInfo] | None,
     expected_passthrough_fields: dict[str, FieldInfo] | None,
+    expect_reload: bool,
 ):
     sample_controller = ExampleController()
     result_model = fuse_metadata_to_response_typehint(
@@ -128,6 +144,13 @@ def test_fuse_metadata_to_response_typehint(
 
     # Verify model name
     assert result_model.__name__ == expected_model_name
+
+    # Check reload field if expected
+    if expect_reload:
+        assert "reload" in result_model.model_fields
+        assert result_model.model_fields["reload"].annotation == list[str]
+    else:
+        assert "reload" not in result_model.model_fields
 
     # Check sideeffect fields if expected
     if expected_sideeffect_fields:
@@ -272,6 +295,12 @@ def test_extract_response_model_from_signature():
     async def example_async_iterator_typehint(self) -> AsyncIterator[ExampleModel]:
         yield ExampleModel(value="example")
 
+    def example_int_typehint(self) -> int:
+        return 1
+
+    def example_dict_typehint(self) -> dict[str, int]:
+        return {"value": 1}
+
     def no_typehint(self):
         pass
 
@@ -301,6 +330,18 @@ def test_extract_response_model_from_signature():
     assert extract_response_model_from_signature(
         explicit_starlette_response,
     ) == (None, ResponseModelType.SINGLE_RESPONSE)
+
+    root_model, response_type = extract_response_model_from_signature(
+        example_int_typehint,
+    )
+    assert response_type == ResponseModelType.SINGLE_RESPONSE
+    assert getattr(root_model, "__mountaineer_root_type__") == int
+
+    root_model, response_type = extract_response_model_from_signature(
+        example_dict_typehint,
+    )
+    assert response_type == ResponseModelType.SINGLE_RESPONSE
+    assert getattr(root_model, "__mountaineer_root_type__") == dict[str, int]
 
     # Deprecated but test until we move support for explicit_response
     with pytest.warns(DeprecationWarning):

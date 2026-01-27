@@ -2,6 +2,7 @@
 # be used across projects
 from fastapi import Depends as Depends
 
+from mountaineer.actions.action_dec import action as action
 from mountaineer.actions.passthrough_dec import passthrough as passthrough
 from mountaineer.actions.sideeffect_dec import sideeffect as sideeffect
 from mountaineer.app import Mountaineer as Mountaineer
@@ -11,6 +12,7 @@ from mountaineer.controller import ControllerBase as ControllerBase
 from mountaineer.controller_layout import LayoutControllerBase as LayoutControllerBase
 from mountaineer.dependencies import CoreDependencies as CoreDependencies
 from mountaineer.exceptions import APIException as APIException
+from mountaineer.page import Page as Page
 from mountaineer.paths import ManagedViewPath as ManagedViewPath
 from mountaineer.render import (
     LinkAttribute as LinkAttribute,

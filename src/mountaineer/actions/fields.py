@@ -30,7 +30,7 @@ from typing import (
 import starlette.responses
 from fastapi.responses import JSONResponse, Response
 from inflection import camelize
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, Field, RootModel, create_model
 from pydantic.fields import FieldInfo
 
 from mountaineer.annotation_helpers import MountaineerUnsetValue
@@ -117,6 +117,9 @@ class FunctionMetadata(BaseModel):
     # that's inherited by multiple child controllers. This lookup lets us track which
     # URL is associated with which controller.
     controller_mounts: dict[Any, str] = Field(default_factory=dict)
+
+    # Indicates that a sideeffect response should return reload instructions
+    reload_action: bool = False
 
     model_config = {
         "arbitrary_types_allowed": True,
@@ -256,42 +259,49 @@ def fuse_metadata_to_response_typehint(
     ):
         passthrough_model = metadata.passthrough_model
 
-    if metadata.action_type == FunctionActionType.SIDEEFFECT and render_model:
-        # By default, reload all fields
-        sideeffect_model = render_model
-
-        if metadata.reload_states is not None and not isinstance(
-            metadata.reload_states, MountaineerUnsetValue
-        ):
-            # Make sure this class actually aligns to the response model
-            # If not the user mis-specified the reload states
-            #
-            # We allow the reload state to be a subclass of the render model, in case the method
-            # was originally defined in the superclass. This will result in us sending a subset
-            # of the child controller's fields - but since our differential update is based on the
-            # original state and modified, this will resolve correctly for the client
-            reload_classes = {field.root_model for field in metadata.reload_states}
-            reload_keys = {field.key for field in metadata.reload_states}
-            if len(reload_classes) != 1 or not issubclass(
-                render_model, next(iter(reload_classes))
-            ):
-                raise ValueError(
-                    f"Reload states {reload_classes} do not align to response model {render_model}"
-                )
-            sideeffect_model = create_model(
-                base_response_name + "SideEffectWrapped",
-                __module__=base_module,
-                **{
-                    field_name: (field_definition.annotation, field_definition)  # type: ignore
-                    for field_name, field_definition in render_model.model_fields.items()
-                    if field_name in reload_keys
-                },
+    if metadata.action_type == FunctionActionType.SIDEEFFECT:
+        if metadata.reload_action:
+            base_response_params["reload"] = (
+                list[str],
+                FieldInfo(alias="reload"),
             )
+        elif render_model:
+            # By default, reload all fields
+            sideeffect_model = render_model
 
-    if passthrough_model:
+            if metadata.reload_states is not None and not isinstance(
+                metadata.reload_states, MountaineerUnsetValue
+            ):
+                # Make sure this class actually aligns to the response model
+                # If not the user mis-specified the reload states
+                #
+                # We allow the reload state to be a subclass of the render model, in case the method
+                # was originally defined in the superclass. This will result in us sending a subset
+                # of the child controller's fields - but since our differential update is based on the
+                # original state and modified, this will resolve correctly for the client
+                reload_classes = {field.root_model for field in metadata.reload_states}
+                reload_keys = {field.key for field in metadata.reload_states}
+                if len(reload_classes) != 1 or not issubclass(
+                    render_model, next(iter(reload_classes))
+                ):
+                    raise ValueError(
+                        f"Reload states {reload_classes} do not align to response model {render_model}"
+                    )
+                sideeffect_model = create_model(
+                    base_response_name + "SideEffectWrapped",
+                    __module__=base_module,
+                    **{
+                        field_name: (field_definition.annotation, field_definition)  # type: ignore
+                        for field_name, field_definition in render_model.model_fields.items()
+                        if field_name in reload_keys
+                    },
+                )
+
+    if metadata.reload_action or passthrough_model:
+        passthrough_type = passthrough_model if passthrough_model else type(None)
         base_response_params["passthrough"] = (
-            passthrough_model,
-            FieldInfo(alias="passthrough"),
+            passthrough_type,
+            FieldInfo(alias="passthrough", default=None),
         )
 
     if sideeffect_model:
@@ -379,11 +389,19 @@ def extract_response_model_from_signature(
         )
         return None, ResponseModelType.SINGLE_RESPONSE
 
-    return extract_model_from_decorated_types(typehinted_response)
+    model_name = camelize(func.__name__) + "Response"
+    return extract_model_from_decorated_types(
+        typehinted_response,
+        model_name=model_name,
+        module_name=func.__module__,
+    )
 
 
 def extract_model_from_decorated_types(
     type_hint: Any,
+    *,
+    model_name: str | None = None,
+    module_name: str | None = None,
 ) -> tuple[Type[BaseModel] | None, ResponseModelType]:
     """
     Support response_model typehints like Iterator[Type[BaseModel]] and AsyncIterator[Type[BaseModel]].
@@ -413,9 +431,37 @@ def extract_model_from_decorated_types(
         # will just return the raw value
         return None, ResponseModelType.SINGLE_RESPONSE
 
+    if model_name and module_name and _is_allowed_raw_type(type_hint):
+        root_model = _create_root_model(type_hint, model_name, module_name)
+        return root_model, ResponseModelType.SINGLE_RESPONSE
+
     raise ValueError(
         f"Invalid response_model typehint for standard action: {type_hint}"
     )
+
+
+def _create_root_model(type_hint: Any, model_name: str, module_name: str):
+    base = RootModel[type_hint]
+    model = type(model_name, (base,), {"__module__": module_name})
+    setattr(model, "__mountaineer_root_type__", type_hint)
+    return model
+
+
+def _is_allowed_raw_type(type_hint: Any) -> bool:
+    origin_type = get_origin(type_hint)
+    if origin_type is not None:
+        return True
+    return type_hint in {
+        str,
+        int,
+        float,
+        bool,
+        dict,
+        list,
+        set,
+        tuple,
+        Any,
+    }
 
 
 def create_original_fn(fn):

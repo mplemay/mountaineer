@@ -1,25 +1,30 @@
-from mountaineer import LayoutControllerBase, RenderBase
-from mountaineer.actions import sideeffect
+from pathlib import Path
+
+from pydantic import BaseModel
+
+from mountaineer import Page
 
 
-class RootLayoutRender(RenderBase):
-    layout_value: int
-    layout_arg: int
+class RootLayoutParams(BaseModel):
+    layout_arg: int | None = None
 
 
-class RootLayoutController(LayoutControllerBase):
-    view_path = "/app/layout.tsx"
+page = Page(view=Path("app/layout.tsx"), layout=True, params=RootLayoutParams)
 
-    def __init__(self):
-        super().__init__()
-        self.layout_value = 0
+_layout_value = 0
 
-    def render(self, layout_arg: int | None = None) -> RootLayoutRender:
-        return RootLayoutRender(
-            layout_value=self.layout_value,
-            layout_arg=layout_arg or 0,
-        )
 
-    @sideeffect
-    async def increment_layout_value(self) -> None:
-        self.layout_value += 1
+@page.data(ssr=True, name="layout_value")
+async def get_layout_value() -> int:
+    return _layout_value
+
+
+@page.data(ssr=True, name="layout_arg")
+async def get_layout_arg(params: RootLayoutParams) -> int:
+    return params.layout_arg or 0
+
+
+@page.action(update=(get_layout_value,))
+async def increment_layout_value() -> None:
+    global _layout_value
+    _layout_value += 1

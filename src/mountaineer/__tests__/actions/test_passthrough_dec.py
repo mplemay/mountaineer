@@ -43,7 +43,7 @@ def test_markup_passthrough():
     assert metadata.action_type == FunctionActionType.PASSTHROUGH
     assert metadata.get_passthrough_model() == ExamplePassthroughModel
     assert metadata.function_name == "get_external_data"
-    assert isinstance(metadata.reload_states, MountaineerUnsetValue)
+    assert metadata.reload_states is None
     assert isinstance(metadata.render_model, MountaineerUnsetValue)
 
 
@@ -334,7 +334,7 @@ def test_passthrough_typechecking(
         class InputModel(BaseModel):
             pass
 
-        class TestController:
+        class TestController(ControllerBase):
             @passthrough  # type: ignore
             async def get_external_data(self) -> str:
                 return "{output_value}"
@@ -343,9 +343,13 @@ def test_passthrough_typechecking(
     function_lines = getsource(run_function).split("\n")[1:]
     value = dedent("\n".join(function_lines))
 
-    value = value.replace("@passthrough", passthrough_value)
+    value = value.replace(
+        "@passthrough",
+        f"{passthrough_value}  # type: ignore[arg-type]",
+    )
     value = value.replace("-> str", f"-> {return_typehint}")
     value = value.replace('return "{output_value}"', return_value)
+    value = value.replace("# type: ignore[arg-type]", "")
     value = value.replace("# type: ignore", "")
 
     LOGGER.debug(f"Input value:\n{value}")

@@ -1,23 +1,28 @@
+from pathlib import Path
 from uuid import UUID
 
 from fastapi import Request
+from pydantic import BaseModel
 
-from mountaineer import ControllerBase, Metadata, RenderBase
-
-
-class DetailRender(RenderBase):
-    client_ip: str
+from mountaineer import Metadata, Page
 
 
-class DetailController(ControllerBase):
-    url = "/detail/{detail_id}/"
-    view_path = "/app/detail/page.tsx"
+class DetailParams(BaseModel):
+    detail_id: UUID
 
-    def __init__(self):
-        super().__init__()
 
-    def render(self, detail_id: UUID, request: Request) -> DetailRender:
-        return DetailRender(
-            client_ip=request.client.host if request.client else "unknown",
-            metadata=Metadata(title=f"Detail: {detail_id}"),
-        )
+page = Page(
+    view=Path("app/detail/page.tsx"),
+    path="/detail/{detail_id}/",
+    params=DetailParams,
+)
+
+
+@page.data(ssr=True, name="client_ip")
+async def get_client_ip(params: DetailParams, request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+@page.metadata
+async def get_metadata(params: DetailParams) -> Metadata:
+    return Metadata(title=f"Detail: {params.detail_id}")

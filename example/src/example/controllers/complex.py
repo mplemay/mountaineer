@@ -1,48 +1,45 @@
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import Request
+from pydantic import BaseModel
 
-from mountaineer import ControllerBase, Metadata, RenderBase
-
-
-class ComplexRender(RenderBase):
-    client_ip: str
-    random_uuid: UUID
-    delay_loops: int
-    throw_client_error: bool
+from mountaineer import Metadata, Page
 
 
-class ComplexController(ControllerBase):
-    """
-    We set up our Complex controller and view to simulate what a long running
-    React render looks on the client side. Because of our naive prime-number loop,
-    each "delay_loop" is expected to saturate the process with work for about 2s.
+class ComplexParams(BaseModel):
+    detail_id: UUID
+    delay_loops: int | None = None
+    throw_client_error: bool = False
 
-    Adusting the `delay_loops` parameter on the view will allow you to set
-    the number of loops and therefore the total rendering time that it takes.
-    This in-turn lets you test our timeout of 10s for a rendering job.
 
-    """
+page = Page(
+    view=Path("app/complex/page.tsx"),
+    path="/complex/{detail_id}/",
+    params=ComplexParams,
+)
 
-    url = "/complex/{detail_id}/"
-    view_path = "/app/complex/page.tsx"
 
-    def __init__(self):
-        super().__init__(
-            hard_ssr_timeout=5,
-        )
+@page.data(ssr=True, name="client_ip")
+async def get_client_ip(params: ComplexParams, request: Request) -> str:
+    return request.client.host if request.client else "unknown"
 
-    def render(
-        self,
-        detail_id: UUID,
-        request: Request,
-        delay_loops: int | None = None,
-        throw_client_error: bool = False,
-    ) -> ComplexRender:
-        return ComplexRender(
-            client_ip=request.client.host if request.client else "unknown",
-            random_uuid=uuid4(),
-            metadata=Metadata(title=f"Complex: {detail_id}"),
-            delay_loops=delay_loops or 0,
-            throw_client_error=throw_client_error,
-        )
+
+@page.data(ssr=True, name="random_uuid")
+async def get_random_uuid(params: ComplexParams) -> UUID:
+    return uuid4()
+
+
+@page.data(ssr=True, name="delay_loops")
+async def get_delay_loops(params: ComplexParams) -> int:
+    return params.delay_loops or 0
+
+
+@page.data(ssr=True, name="throw_client_error")
+async def get_throw_client_error(params: ComplexParams) -> bool:
+    return params.throw_client_error
+
+
+@page.metadata
+async def get_metadata(params: ComplexParams) -> Metadata:
+    return Metadata(title=f"Complex: {params.detail_id}")
