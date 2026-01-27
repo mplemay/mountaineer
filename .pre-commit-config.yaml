@@ -41,18 +41,14 @@ repos:
         language: python
         types: [markdown]
         require_serial: true
-      - id: mypy
-        name: mypy
-        entry: uv run mypy
+      - id: ty-check
+        name: ty check
+        entry: uv run ty check
+        args: [src]
         language: python
-        types: [python]
+        types_or: [python, pyi, jupyter]
         require_serial: true
-      - id: pyright
-        name: pyright
-        entry: uv run pyright
-        language: python
-        types: [python]
-        require_serial: true
+        pass_filenames: false
       - id: cargo-fmt
         name: cargo fmt
         entry: cargo fmt
