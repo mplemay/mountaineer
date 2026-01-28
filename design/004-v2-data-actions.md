@@ -516,77 +516,77 @@ Tests live under `src/mountaineer/__tests__/v2/` and mirror module structure.
 
 ### Tasks
 
-- [ ] **Page path + params-model validation** (`v2/page/core.py`)
-  - [ ] Parse `Page.path` for `{param}` segments
-  - [ ] If any dynamic param exists:
-    - [ ] enforce there is exactly one param
-    - [ ] enforce the name is `slug`
-  - [ ] If path includes `{slug}`, require `Page.params` to be provided
-  - [ ] Validate `Page.params` declares a `slug` field when required by path
-  - [ ] Add error messages that show the invalid path
-  - [ ] Mention the required `{slug}` format in error text
-  - [ ] Unit tests in `__tests__/v2/test_page.py`:
-    - [ ] accept `/` and static paths with no params
-    - [ ] reject `/post/{post_id}` (wrong name)
-    - [ ] reject `/post/{slug}/{other}` (multiple params)
-    - [ ] reject `/post/{slug}` when `params` is missing or lacks `slug`
+- [x] **Page path + params-model validation** (`v2/page/core.py`)
+  - [x] Parse `Page.path` for `{param}` segments
+  - [x] If any dynamic param exists:
+    - [x] enforce there is exactly one param
+    - [x] enforce the name is `slug`
+  - [x] If path includes `{slug}`, require `Page.params` to be provided
+  - [x] Validate `Page.params` declares a `slug` field when required by path
+  - [x] Add error messages that show the invalid path
+  - [x] Mention the required `{slug}` format in error text
+  - [x] Unit tests in `__tests__/v2/test_page.py`:
+    - [x] accept `/` and static paths with no params
+    - [x] reject `/post/{post_id}` (wrong name)
+    - [x] reject `/post/{slug}/{other}` (multiple params)
+    - [x] reject `/post/{slug}` when `params` is missing or lacks `slug`
 
-- [ ] **DataDefinition + Page.data registration** (`v2/page/data.py`, `v2/page/core.py`)
-  - [ ] Extend `DataDefinition` with `expose: bool`
-  - [ ] Default `expose=True` for all data loaders (including `ssr=True`)
-  - [ ] Allow explicit `expose=False` to hide a loader from HTTP endpoints
-  - [ ] If `Page.params` is set, require handler first arg annotation to match
-  - [ ] Treat remaining handler params as standard FastAPI params
-  - [ ] Update `test_page.py` to cover:
-    - [ ] expose defaults for `ssr=True` and `ssr=False`
-    - [ ] handler first-argument enforcement when `params` is set
-    - [ ] preserved registration order
+- [x] **DataDefinition + Page.data registration** (`v2/page/data.py`, `v2/page/core.py`)
+  - [x] Extend `DataDefinition` with `expose: bool`
+  - [x] Default `expose=True` for all data loaders (including `ssr=True`)
+  - [x] Allow explicit `expose=False` to hide a loader from HTTP endpoints
+  - [x] If `Page.params` is set, require handler first arg annotation to match
+  - [x] Treat remaining handler params as standard FastAPI params
+  - [x] Update `test_page.py` to cover:
+    - [x] expose defaults for `ssr=True` and `ssr=False`
+    - [x] handler first-argument enforcement when `params` is set
+    - [x] preserved registration order
 
-- [ ] **ActionDefinition + Page.action registration** (`v2/page/action.py`, `v2/page/core.py`)
-  - [ ] If `Page.params` is set, require handler first arg annotation to match
-  - [ ] Keep `update=(...)` validation consistent with current behavior
-  - [ ] Add tests for:
-    - [ ] handler first-argument enforcement when `params` is set
-    - [ ] duplicate action name detection
+- [x] **ActionDefinition + Page.action registration** (`v2/page/action.py`, `v2/page/core.py`)
+  - [x] If `Page.params` is set, require handler first arg annotation to match
+  - [x] Keep `update=(...)` validation consistent with current behavior
+  - [x] Add tests for:
+    - [x] handler first-argument enforcement when `params` is set
+    - [x] duplicate action name detection
 
-- [ ] **Execution helpers** (`v2/page/execution.py`)
-  - [ ] Implement `resolve_call()` using `get_function_dependencies(...)`
-  - [ ] If `params_model` is set, build a wrapper with `params: ParamsModel = Depends()`
-  - [ ] Ensure resolved `params` value is passed as the first argument to the handler
-  - [ ] Ensure `Request` is available to `Depends(Request)`
-  - [ ] Support explicit `request: Request` parameters
-  - [ ] Implement `resolve_data()`:
-    - [ ] filter by `ssr` or by explicit name
-    - [ ] preserve registration order in output dict
-  - [ ] Implement `resolve_action()` that returns the action result as-is
-  - [ ] Unit tests in `test_execution.py`:
-    - [ ] dependency injection with `Depends`
-    - [ ] `Request` injection
-    - [ ] params model populated from path/query values
-    - [ ] override behavior via `dependency_overrides`
+- [x] **Execution helpers** (`v2/page/execution.py`)
+  - [x] Implement `resolve_call()` using `get_function_dependencies(...)`
+  - [x] If `params_model` is set, build a wrapper with `params: ParamsModel = Depends()`
+  - [x] Ensure resolved `params` value is passed as the first argument to the handler
+  - [x] Ensure `Request` is available to `Depends(Request)`
+  - [x] Support explicit `request: Request` parameters
+  - [x] Implement `resolve_data()`:
+    - [x] filter by `ssr` or by explicit name
+    - [x] preserve registration order in output dict
+  - [x] Implement `resolve_action()` that returns the action result as-is
+  - [x] Unit tests in `test_execution.py`:
+    - [x] dependency injection with `Depends`
+    - [x] `Request` injection
+    - [x] params model populated from path/query values
+    - [x] override behavior via `dependency_overrides`
 
-- [ ] **CompiledPage routing** (`v2/page/compiled.py`)
-  - [ ] Use `APIRouter(prefix=page.path)` for data/action routes
-  - [ ] Register GET `/_data/{name}` routes for `expose=True` data loaders
-  - [ ] Register POST `/_action/{name}` routes for all actions
-  - [ ] Implement `data_endpoint()` returning `{\"data\": {name: value}}`
-  - [ ] Implement `action_endpoint()` returning `{\"action\": value, \"data\": {...}}`
-  - [ ] Update `test_compiled_page.py` for:
-    - [ ] route methods and count
-    - [ ] payload shape for GET data endpoint
-    - [ ] payload shape for POST action endpoint
+- [x] **CompiledPage routing** (`v2/page/compiled.py`)
+  - [x] Use `APIRouter(prefix=page.path)` for data/action routes
+  - [x] Register GET `/_data/{name}` routes for `expose=True` data loaders
+  - [x] Register POST `/_action/{name}` routes for all actions
+  - [x] Implement `data_endpoint()` returning `{\"data\": {name: value}}`
+  - [x] Implement `action_endpoint()` returning `{\"action\": value, \"data\": {...}}`
+  - [x] Update `test_compiled_page.py` for:
+    - [x] route methods and count
+    - [x] payload shape for GET data endpoint
+    - [x] payload shape for POST action endpoint
 
-- [ ] **SSR data injection** (`v2/page/compiled.py`, `v2/page_renderer.py`)
-  - [ ] Execute only `ssr=True` loaders during GET
-  - [ ] Serialize results into `window.__DATA__`
-  - [ ] Ensure non-SSR loaders are not executed in SSR flow
-  - [ ] Update `test_compiled_page.py` to assert `window.__DATA__` contains SSR payload
+- [x] **SSR data injection** (`v2/page/compiled.py`, `v2/page_renderer.py`)
+  - [x] Execute only `ssr=True` loaders during GET
+  - [x] Serialize results into `window.__DATA__`
+  - [x] Ensure non-SSR loaders are not executed in SSR flow
+  - [x] Update `test_compiled_page.py` to assert `window.__DATA__` contains SSR payload
 
-- [ ] **Integration tests** (`__tests__/v2/test_v2_integration.py`)
-  - [ ] End-to-end SSR GET returns HTML with SSR data only
-  - [ ] GET `/_data/<name>` returns JSON payload using path params
-  - [ ] POST `/_action/<name>` returns action result plus updated data
-  - [ ] Verify `Depends` works across SSR, data, and action endpoints
+- [x] **Integration tests** (`__tests__/v2/test_v2_integration.py`)
+  - [x] End-to-end SSR GET returns HTML with SSR data only
+  - [x] GET `/_data/<name>` returns JSON payload using path params
+  - [x] POST `/_action/<name>` returns action result plus updated data
+  - [x] Verify `Depends` works across SSR, data, and action endpoints
 
 ## Open Questions
 

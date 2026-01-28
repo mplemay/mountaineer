@@ -13,7 +13,7 @@ from mountaineer.v2.settings import Settings
 def test_mountaineer_include_page_registers_route() -> None:
     settings = Settings(view_root=Path("views"), node_modules_path=Path("node_modules"))
     mountaineer = Mountaineer(settings=settings)
-    page = Page(view=Path("views/Post.tsx"), path="/post/{post_id}")
+    page = Page(view=Path("views/Post.tsx"), path="/post")
 
     def fake_compile(*, view_path: Path) -> BundleResult:  # noqa: ARG001
         return BundleResult(client_js="client", server_js="server")
@@ -23,13 +23,13 @@ def test_mountaineer_include_page_registers_route() -> None:
     mountaineer.include_page(page=page)
 
     paths = [route.path for route in mountaineer._app.routes]
-    assert "/post/{post_id}" in paths
+    assert "/post" in paths
 
 
 def test_mountaineer_rejects_duplicate_paths() -> None:
     settings = Settings(view_root=Path("views"), node_modules_path=Path("node_modules"))
     mountaineer = Mountaineer(settings=settings)
-    page = Page(view=Path("views/Post.tsx"), path="/post/{post_id}")
+    page = Page(view=Path("views/Post.tsx"), path="/post")
 
     def fake_compile(*, view_path: Path) -> BundleResult:  # noqa: ARG001
         return BundleResult(client_js="client", server_js="server")
@@ -45,7 +45,7 @@ def test_mountaineer_rejects_duplicate_paths() -> None:
 def test_mountaineer_asgi_dispatch() -> None:
     settings = Settings(view_root=Path("views"), node_modules_path=Path("node_modules"))
     mountaineer = Mountaineer(settings=settings)
-    page = Page(view=Path("views/Post.tsx"), path="/post/{post_id}")
+    page = Page(view=Path("views/Post.tsx"), path="/post")
 
     def fake_compile(*, view_path: Path) -> BundleResult:  # noqa: ARG001
         return BundleResult(client_js="client", server_js="server")
@@ -57,7 +57,7 @@ def test_mountaineer_asgi_dispatch() -> None:
         mountaineer.include_page(page=page)
 
         client = TestClient(app=mountaineer)
-        response = client.get("/post/123")
+        response = client.get("/post")
 
     assert response.status_code == 200
     assert "<span>SSR</span>" in response.text

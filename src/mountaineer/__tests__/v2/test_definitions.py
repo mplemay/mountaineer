@@ -11,11 +11,12 @@ async def _action_handler() -> str:
 
 
 def test_data_definition_fields() -> None:
-    definition = DataDefinition(name="get_value", handler=_data_handler, ssr=True)
+    definition = DataDefinition(name="get_value", handler=_data_handler, ssr=True, expose=True)
 
     assert definition.name == "get_value"
     assert definition.handler is _data_handler
     assert definition.ssr is True
+    assert definition.expose is True
 
 
 def test_action_definition_fields() -> None:

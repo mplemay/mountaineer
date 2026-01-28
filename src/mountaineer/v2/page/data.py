@@ -10,3 +10,4 @@ class DataDefinition(Generic[T]):
     name: str
     handler: Callable[..., Awaitable[T]]
     ssr: bool
+    expose: bool
