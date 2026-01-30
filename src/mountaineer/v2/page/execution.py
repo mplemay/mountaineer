@@ -30,7 +30,7 @@ async def resolve_call(
     path: str,
     params_model: type[BaseModel] | None = None,
     dependency_overrides: dict[Callable, Callable] | None = None,
-) -> Any:
+) -> Any:  # noqa: ANN401
     target_handler = handler
 
     if params_model:
@@ -42,13 +42,13 @@ async def resolve_call(
             if p0.default == p0.empty:
                 # Use our custom dependency that pulls from path_params + query_params
                 new_p0 = p0.replace(default=Depends(_get_params_dependency(params_model)))
-                new_params = [new_p0] + params[1:]
+                new_params = [new_p0, *params[1:]]
                 new_sig = sig.replace(parameters=new_params)
 
-                async def wrapper(*args: Any, **kwargs: Any) -> Any:
+                async def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
                     pass
 
-                wrapper.__signature__ = new_sig  # type: ignore
+                wrapper.__signature__ = new_sig  # type: ignore[attr-defined]
                 wrapper.__name__ = handler.__name__
                 target_handler = wrapper
 

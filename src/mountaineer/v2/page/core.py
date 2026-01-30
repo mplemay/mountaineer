@@ -4,14 +4,14 @@ import inspect
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol, TypeVar
 
-from pydantic import BaseModel
-
 from mountaineer.v2.page.action import ActionDefinition
 from mountaineer.v2.page.data import DataDefinition
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
     from pathlib import Path
+
+    from pydantic import BaseModel
 
     from mountaineer.v2.page.compiled import CompiledPage
 
@@ -32,6 +32,14 @@ class Page:
     params: type[BaseModel] | None = None
     _data: list[DataDefinition[object]] = field(default_factory=list)
     _actions: dict[str, ActionDefinition] = field(default_factory=dict)
+
+    @property
+    def data_definitions(self) -> list[DataDefinition[object]]:
+        return self._data
+
+    @property
+    def action_definitions(self) -> dict[str, ActionDefinition]:
+        return self._actions
 
     def __post_init__(self) -> None:
         if not self.path.startswith("/"):

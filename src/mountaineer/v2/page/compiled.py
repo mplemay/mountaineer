@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -28,7 +29,7 @@ class CompiledPage:
         )
 
         # Data Endpoints
-        for definition in self.page._data:
+        for definition in self.page.data_definitions:
             if definition.expose:
                 router.add_api_route(
                     path=f"/_data/{definition.name}",
@@ -38,7 +39,7 @@ class CompiledPage:
                 )
 
         # Action Endpoints
-        for name in self.page._actions:
+        for name in self.page.action_definitions:
             router.add_api_route(
                 path=f"/_action/{name}",
                 endpoint=self._create_action_endpoint(name),
@@ -49,7 +50,7 @@ class CompiledPage:
         return router
 
     async def get(self, request: Request) -> HTMLResponse:
-        ssr_definitions = [d for d in self.page._data if d.ssr]
+        ssr_definitions = [d for d in self.page.data_definitions if d.ssr]
 
         initial_data = await resolve_data(
             definitions=ssr_definitions,
@@ -67,20 +68,20 @@ class CompiledPage:
         )
         return HTMLResponse(content=html)
 
-    def _create_data_endpoint(self, name: str):
+    def _create_data_endpoint(self, name: str) -> Callable[[Request], Awaitable[JSONResponse]]:
         async def endpoint(request: Request) -> JSONResponse:
             return await self.data_endpoint(name=name, request=request)
 
         return endpoint
 
-    def _create_action_endpoint(self, name: str):
+    def _create_action_endpoint(self, name: str) -> Callable[[Request], Awaitable[JSONResponse]]:
         async def endpoint(request: Request) -> JSONResponse:
             return await self.action_endpoint(name=name, request=request)
 
         return endpoint
 
     async def data_endpoint(self, *, name: str, request: Request) -> JSONResponse:
-        definitions = [d for d in self.page._data if d.name == name]
+        definitions = [d for d in self.page.data_definitions if d.name == name]
         # Should be exactly one match if registered correctly
 
         data = await resolve_data(
@@ -93,7 +94,7 @@ class CompiledPage:
         return JSONResponse({"data": data})
 
     async def action_endpoint(self, *, name: str, request: Request) -> JSONResponse:
-        definition = self.page._actions[name]
+        definition = self.page.action_definitions[name]
 
         action_result = await resolve_action(
             definition=definition,
@@ -105,7 +106,7 @@ class CompiledPage:
 
         data_results: dict[str, Any] = {}
         if definition.update:
-            update_defs = [d for d in self.page._data if d.name in definition.update]
+            update_defs = [d for d in self.page.data_definitions if d.name in definition.update]
             data_results = await resolve_data(
                 definitions=update_defs,
                 request=request,
@@ -118,5 +119,5 @@ class CompiledPage:
             {
                 "action": action_result,
                 "data": data_results,
-            }
+            },
         )

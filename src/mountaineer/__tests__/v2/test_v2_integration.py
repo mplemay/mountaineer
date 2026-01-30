@@ -30,7 +30,7 @@ def test_v2_integration_data_and_actions() -> None:
         return ["first", params.slug]
 
     @page.action(update=(get_post,))
-    async def upvote(params: PostParams) -> int:
+    async def upvote(_params: PostParams) -> int:
         return 1
 
     with (

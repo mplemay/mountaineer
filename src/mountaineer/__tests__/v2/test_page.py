@@ -112,7 +112,7 @@ def test_page_path_validation() -> None:
 
 def test_page_path_params_validation() -> None:
     # 1. Reject non-slug param name
-    with pytest.raises(ValueError, match="must be named '{slug}'"):
+    with pytest.raises(ValueError, match=r"must be named '\{slug\}'"):
         Page(view=Path("views/Post.tsx"), path="/post/{id}")
 
     # 2. Reject multiple params
@@ -139,7 +139,7 @@ def test_handler_params_validation() -> None:
 
     # Success
     @page.data(ssr=True)
-    async def valid_handler(params: PostParams) -> int:
+    async def valid_handler(_params: PostParams) -> int:
         return 1
 
     # Fail: No args
@@ -153,5 +153,5 @@ def test_handler_params_validation() -> None:
     with pytest.raises(ValueError, match="first argument must be of type 'PostParams'"):
 
         @page.data(ssr=True)
-        async def wrong_type(params: int) -> int:
+        async def wrong_type(_params: int) -> int:
             return 1

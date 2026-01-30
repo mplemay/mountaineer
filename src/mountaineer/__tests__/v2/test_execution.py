@@ -65,7 +65,7 @@ async def test_resolve_call_with_params_model() -> None:
             "path_params": {"slug": "my-slug"},  # FastAPI router usually populates this
             "query_string": b"",
             "headers": [],
-        }
+        },
     )
 
     result = await resolve_call(

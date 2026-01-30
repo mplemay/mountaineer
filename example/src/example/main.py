@@ -2,6 +2,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from mountaineer.v2 import Mountaineer, Page, Settings
+from pydantic import BaseModel
 
 settings = Settings(
     view_root=Path(__file__).parent / "views",
@@ -9,9 +10,14 @@ settings = Settings(
     PRODUCTION=False,
 )
 
+
+class DetailParams(BaseModel):
+    slug: str
+
+
 # Define pages
 home_page = Page(view=Path("home/page.tsx"), path="/")
-detail_page = Page(view=Path("detail/page.tsx"), path="/detail/{detail_id}")
+detail_page = Page(view=Path("detail/page.tsx"), path="/detail/{slug}", params=DetailParams)
 
 # Create Mountaineer app
 mountaineer = Mountaineer(settings=settings)

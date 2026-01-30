@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from unittest.mock import patch
 
@@ -105,7 +106,6 @@ async def test_data_endpoint() -> None:
         response = await compiled.data_endpoint(name="loader1", request=request)
 
     assert isinstance(response, JSONResponse)
-    import json
 
     body = json.loads(response.body)
     assert body == {"data": {"loader1": 99}}
@@ -140,8 +140,6 @@ async def test_action_endpoint() -> None:
         mock_resolve_data.return_value = {"loader1": 100}
 
         response = await compiled.action_endpoint(name="action1", request=request)
-
-    import json
 
     body = json.loads(response.body)
     assert body == {
