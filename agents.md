@@ -1,103 +1,96 @@
 # Agent Instructions
 
+## Coding Guidelines
+
+### 1. Think Before Coding
+
+**Don't assume.**
+
+**Don't hide confusion.**
+
+**Surface tradeoffs.**
+
+Before implementing:
+
+- State your assumptions explicitly.
+  If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so.
+  Push back when warranted.
+- If something is unclear, stop.
+  Name what's confusing.
+  Ask.
+
+### 2. Simplicity First
+
+**Minimum code that solves the problem.**
+
+**Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is over complicated?"
+If yes, simplify.
+
+### 3. Surgical Changes
+
+**Touch only what you must.**
+
+**Clean up only your own mess.**
+
+When editing existing code:
+
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+
+When your changes create orphans:
+
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove preexisting dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+
+**Define success criteria.**
+
+**Loop until verified.**
+
+Transform tasks into verifiable goals:
+
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multistep tasks, state a brief plan:
+
+```text
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
 ## Tooling
 
-### Package management
+### Package Management
 
 - The package manger for the project is [uv](https://docs.astral.sh/uv/)
 - Make `uv add` for core dependencies, `uv add --dev` for developer dependencies, and add optional features to groups
 - It is also possible to remove packages using `uv remove`
 
-## Testing
-
-- The project uses `pytest` for testing
-- Test files are located in the `src/belgie/__test__/` directory
-- Test files should mirror the folder structure and use corresponding file names
-  - Test file with matching name contains unit tests
-  - Integration tests use `_integration` suffix
-  - Example: `module_x/test_corresponding_file.py` (unit tests)
-  - Example: `module_x/test_corresponding_file_integration.py` (integration tests)
-- Test functions should be prefixed with `test_`
-- Mark integration tests with `@pytest.mark.integration` and run them via `uv run pytest -m "integration"` (or
-  `-m "not integration"` for unit-only).
-- Run tests using `uv run pytest`
-- The `pytest` settings can be found in the `pyproject.toml`
-
-## Linting
-
-- The project relies on [ruff](https://docs.astral.sh/ruff/) for linting
-- The enabled / disabled rules rules can be found in the `pyproject.toml`
-- If there is a linter error / warning, try to fix it
-- If an error is an edge cases (i.e. requires significant work to fix or is impossible) - add a rule specific ignore
-
-## Type Checking
-
-- The project uses [ty](https://docs.astral.sh/ty/) for type checking
-- Similar to the linter, if there is an error that is invalid or extraneous use rule specific suppression
-  - For example: `# ty: ignore[unsupported-operator]`
-- **When to use `# ty: ignore`**:
-  - Type checker reports false positives due to dynamic code
-  - Third-party library has incorrect or missing type stubs
-  - Valid code that the type checker cannot understand (e.g., certain metaclass patterns)
-  - Edge cases where adding correct types would make code significantly more complex
-- **Best practices for type ignore comments**:
-  - Always use specific error codes: `# ty: ignore[error-code]` (not bare `# ty: ignore`)
-  - Add inline explanation when the reason isn't obvious:
-    `# ty: ignore[attr-defined]  # Dynamic attribute from metaclass`
-  - Consider if the code can be refactored to avoid the ignore
-  - Common error codes:
-    - `[attr-defined]` - Attribute doesn't exist on type
-    - `[arg-type]` - Argument has wrong type
-    - `[return-value]` - Return type doesn't match annotation
-    - `[assignment]` - Assignment target incompatible with value
-    - `[union-attr]` - Attribute only on some union members
-    - `[index]` - Invalid index operation
-
-## Pre-Commit Hooks
-
-- The project relies on `pre-commit` to handle the linting, type checking, etc. automatically
-- It is configured in the `.pre-commit-config.yaml`
-
 ## Conventions
-
-### Git
-
-- Before you commit code, **make sure** you have added comprehensive test cases
-- **Commit messages**:
-  - Follow the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) format
-  - **Must be a single line** - no multi-line messages or bullet points
-  - Keep it short and concise (under 72 characters when possible)
-  - Use all lowercase characters
-  - Avoid special characters
-  - Focus on **what** changed, not the detailed **how** or **why**
-  - Examples of good commit messages:
-    - `feat: added config validator with schema builder`
-    - `fix: corrected validation error message formatting`
-    - `refactor: simplified schema field definition logic`
-    - `docs: updated design template with usage examples`
-    - `test: added edge case tests for range validator`
-  - Examples of bad commit messages:
-    - ❌ Multi-line messages with detailed explanations
-    - ❌ `feat: added config validator\n\n- Added schema builder\n- Added validators`
-    - ❌ `Fixed stuff` (too vague, no type prefix)
-    - ❌ `FEAT: Added Config Validator` (not lowercase)
-- **Branch naming conventions**:
-  - Use descriptive, kebab-case branch names
-  - Prefix branches by type: `feature/`, `bugfix/`, `refactor/`, `docs/`, `test/`
-  - Include brief description of the work
-  - Examples:
-    - `feature/config-validator`
-    - `bugfix/fix-validation-error-messages`
-    - `refactor/simplify-schema-builder`
-    - `docs/update-readme-examples`
 
 ### Python
 
 - The targets python versions greater than or equal to 3.12
 - Given the project targets a more modern python, use functionality such as:
   - The walrus operator (`:=`)
-  - Prefer keyword arguments (strict assignment) over positional calls for clarity and linting, e.g., `my_func(a=1)`
-    instead of `my_func(1)`
   - Modern type hints (`dict`)
   - Type parameters `class MyClass[T: MyParent]: ...`
   - The `Self` type for return types (`from typing import Self`)
@@ -132,20 +125,3 @@
   - Use `urlparse()` and `urlunparse()` for URL composition
   - Example: `urlunparse((parsed.scheme, parsed.netloc, parsed.path, "", urlencode(params), ""))`
   - This ensures proper encoding and avoids common URL injection vulnerabilities
-- Exception raising:
-  - Define the error message before the `raise` statement, not inline
-  - Example:
-
-    ```python
-    msg = f"Invalid value: {value}"
-    raise ValueError(msg)
-    ```
-
-  - **Not**: `raise ValueError(f"Invalid value: {value}")`
-
-### Style
-
-- Default to keyword arguments for function calls when parameters are known (`call(x=val, y=other)`), which aids
-  readability and static analysis.
-- Prefer keyword arguments (strict assignment) over positional calls for clarity and lintability, e.g., write
-  `my_func(a=1)` instead of `my_func(1)` whenever feasible.
